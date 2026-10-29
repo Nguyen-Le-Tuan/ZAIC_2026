@@ -6,7 +6,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 - Mỗi việc ghi người phụ trách: **[Anh]**, **[Leader]** hoặc **[Cả hai]**.
 - Xong việc nào thì đánh dấu `[x]` và ghi kết quả ngắn ngay dưới việc đó. Commit thẳng lên `main` (tài liệu không cần PR).
-- **Laptop của Anh đang train, nên không chạy gì dùng GPU trên máy này.** Mọi lệnh dưới đây chỉ dùng CPU.
+- Lượt train qua đêm đã xong lúc 02:40 ngày 2026-10-29 (dev_random 9,9 → 53,9), nên GPU trên laptop của Anh đã trống. Các lệnh ở mục 2–6 chỉ dùng CPU.
 - Các lệnh chạy trong thư mục `lifemate/`, trên nhánh `agent-pipeline` (code chưa vào `main`, đang nằm ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1)).
 - Mọi lệnh trong file đã được Claude chạy thử trên máy của Anh ngày 2026-10-28.
 

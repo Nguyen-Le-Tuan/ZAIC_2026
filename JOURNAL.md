@@ -36,11 +36,13 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Đọc con số 53,9 cho đúng:**
   - Đây là điểm tham chiếu với chữ chuẩn `audio_text` (chưa qua ASR), chỉ gồm app đã có trong train.
   - Không phải cận trên của private. Private có ASR và app mới; chưa đo được ảnh hưởng.
-- **Bước tiếp theo đề xuất** (chờ Anh quyết):
-  - **Thí nghiệm B:** train `fit_lao`, chấm `dev_lao`, để đo app chưa thấy.
-  - Sau đó **A:** 2 epoch.
-  - Song song thiết kế **D:** dữ liệu phản thực tế cho điều kiện và hỏi lại.
-  - Lệnh chạy ở `docs/EVAL_2026-10-29.md` mục 5.3.
+- **Thí nghiệm B đã chạy** (train `fit_lao`, chấm `dev_lao`, chiều 29/10):
+  - Final đạt **35,53** trên `dev_lao` (zero-shot 10,88). Không có tiến bộ rõ sau bước 100.
+  - Trong cùng các mẫu, lời gọi thực hiện vào app mới không kém app đã thấy (54% so với 51%).
+  - Điểm yếu tập trung ở **hỏi lại về tool mới**: 0 điểm trên 23 mẫu. Chi tiết ở `docs/EVAL_2026-10-29.md` mục 7.
+- **Chờ Anh quyết:**
+  - Sửa lỗi bộ chấm do review của Codex chỉ ra (mẫu thiếu prediction mà gold rỗng vẫn được 1 điểm).
+  - Bước tiếp theo: thiết kế D, tập trung vào hỏi lại với schema mới, hoặc chạy A.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -484,6 +486,19 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Không mất file nào: step_100 đã xong; các bước sau chưa kịp ghi file.
     - Đã chạy lại trong unit systemd riêng, giới hạn 5–6,5GB. Mỗi lượt đánh giá chỉ đạt đỉnh khoảng 1,25GB, train thử 1 bước đạt 2,9GB. Áp lực bộ nhớ đến từ tổng các ứng dụng đang mở (app Claude, ChatGPT, trình duyệt…), không chỉ từ đánh giá.
     - **Quy tắc mới:** việc dài (train, đánh giá) chạy bằng `systemd-run --user` có `MemoryHigh`/`MemoryMax`, để app và phiên làm việc không bị kill theo. Lệnh mẫu ở `docs/EVAL_2026-10-29.md` mục 5.3.
+14. **Review của Codex và thí nghiệm B** (chiều 29/10).
+    - **Review** ([`docs/REVIEW_CLAUDE_EVAL_2026-10-29.md`](docs/REVIEW_CLAUDE_EVAL_2026-10-29.md)):
+      - Xác nhận lại mọi điểm checkpoint.
+      - Chỉ ra lỗi bộ chấm: mẫu thiếu prediction mà gold rỗng vẫn được 1 điểm. Claude đã tái hiện; lỗi không làm sai số nào đã báo.
+      - Bổ sung điều kiện cho lockbox; nhắc 225/262 mẫu `dev_lao` nằm trong `fit_random`; yêu cầu hạ mức khẳng định ở vài chỗ.
+      - Claude đồng ý cả bốn ý (EVAL mục 7.1).
+    - **Thí nghiệm B:** review khuyên chưa chạy vì Anh cần tắt máy, nhưng Anh chọn "Chạy B ngay" trong chat.
+      - Claude chạy trong unit systemd riêng, **không** chặn chế độ ngủ khi gập máy, để laptop không nóng trong balo. Chạy 09:20 → 12:45, không lỗi.
+      - Kết quả trên `dev_lao`: zero-shot 10,88 → step_100 33,02 → step_200 35,48 → final 35,53. Dev loss phẳng từ bước 100.
+      - Trong cùng các mẫu, tỉ lệ tìm lại lời gọi đáp án: app giữ riêng 54,4%, app đã thấy 51,2%.
+      - Hỏi lại về tool của app giữ riêng: 0 điểm trên 23 mẫu.
+      - Thành phần mẫu (lô id, history) giải thích khoảng 2–11 trong 18,4 điểm chênh với `dev_random`. Đây là ước lượng thô, không phải nhân quả.
+    - **Suy luận:** đòn bẩy rõ nhất cho app mới là chính sách hỏi lại với schema chưa thấy. Thí nghiệm A có giá trị thấp hơn dự kiến với protocol này.
 
 ---
 
@@ -496,7 +511,9 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Sửa `scripts/train_local.sh` để chọn được tập train và tập dev: [PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2), chờ review.
 - [x] Chấm step_100, step_200 và final trên đủ 233 mẫu; chọn final làm mốc (29/10).
 - [ ] Review và merge PR #2 (người review quyết).
-- [ ] **Thí nghiệm B:** train `fit_lao` → chấm `dev_lao` để đo app chưa thấy. Lệnh ở `docs/EVAL_2026-10-29.md` mục 5.3.
+- [x] **Thí nghiệm B:** train `fit_lao` → chấm `dev_lao`. Final đạt 35,53; hỏi lại về tool mới được 0 điểm (29/10, EVAL mục 7).
+- [ ] Sửa lỗi bộ chấm khi thiếu prediction (gold rỗng vẫn được 1 điểm), kèm test, trong PR #2 trước khi merge.
+- [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.
 - [ ] **Thí nghiệm D:** thiết kế dữ liệu phản thực tế từ fit cho điều kiện và ranh giới hỏi lại; mọi nhãn phải qua kiểm tra thực thi.

@@ -7,6 +7,10 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 **Quy tắc cập nhật:** sau mỗi buổi trao đổi hoặc mỗi mốc quan trọng, thêm một mục mới vào [Nhật ký theo thời gian](#7-nhật-ký-theo-thời-gian), sửa phần [Trạng thái hiện tại](#0-trạng-thái-hiện-tại), rồi commit và push. Mục cũ không xoá; nếu sai thì ghi đính chính ở mục mới.
 
+**Quy tắc git:** tài liệu (`JOURNAL.md`, `docs/`, `README.md`) được commit thẳng vào `main`. **Code mới phải đi qua Pull Request.**
+
+**Tài liệu liên quan:** [`docs/PIPELINE.md`](docs/PIPELINE.md) gồm moat, pipeline nền móng, tự đánh giá, đề án nâng cấp và 20 câu hỏi cho đội.
+
 ---
 
 ## 0. Trạng thái hiện tại
@@ -15,9 +19,11 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 - **Đã xong:**
   - Phân tích đề, chốt kiến trúc.
-  - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nhánh `agent-pipeline`.
+  - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nằm ở **PR `agent-pipeline` → `main`**, chờ review.
   - Chạy thử train trên RTX 4070 8GB thành công.
-- **Đang chạy:** train Qwen3-1.7B qua đêm trên máy của Anh (lệnh ở [mục 6.4](#lệnh-chạy-train-qua-đêm)). Kết quả sẽ có ở `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train).
+  - Viết tài liệu nghiên cứu [`docs/PIPELINE.md`](docs/PIPELINE.md).
+- **Sắp chạy:** train Qwen3-1.7B qua đêm trên máy của Anh (lệnh ở [mục 6.4](#lệnh-chạy-train-qua-đêm); thư mục làm việc phải ở nhánh `agent-pipeline` vì code chưa vào `main`). Kết quả sẽ có ở `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train).
+- **Trong lúc train:** Anh và leader đọc `docs/PIPELINE.md` và trả lời 20 câu hỏi.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -178,6 +184,23 @@ Final = 100/N * Σ Score_i
     - Phương ngữ: "mô, rứa, hông, coi, giùm".
     - Từ tiếng Anh xen vào: "book", "target", "deadline".
 11. **Các tool search tự bỏ dấu khi so khớp** (Hương / Hường đều thành "huong"), nên ASR nghe sai dấu ở tên người ít gây hại.
+12. **Tham số của lệnh ghi đến từ đâu** (2681 giá trị không fuzzy):
+
+    | Nguồn | Tỉ lệ |
+    |---|---|
+    | Kết quả tool ngay trong lượt | 46% |
+    | History | 15% |
+    | Ngày giờ tự tính | 15% |
+    | Số tự tính hoặc chuẩn hoá chữ thành số | 11% |
+    | Enum hoặc boolean | 9% |
+    | Chép nguyên văn lời nói | **gần 0%** |
+
+    605/1545 mẫu (39%) có tham số của lệnh ghi phải tính từ lời nói. Kỹ năng cốt lõi là chọn đúng đối tượng và tính đúng, không phải chép lời.
+13. **Query `contacts.search` là tên lưu trong danh bạ**, không phải lời người nói:
+    - 166/204 trùng nguyên văn lời nói.
+    - 31/204 chỉ khác chữ hoa ("bác Ba" → "Bác Ba").
+    - 7/204 là tên đầy đủ ("cô Mai" → "Cô giáo Mai"). Đây là trần điểm không vượt được.
+14. **Luật "đọc trước khi ghi":** cả 11/11 lần bật đèn mà không gọi `get_status` trước đều là do thông tin thiết bị đã có trong history.
 
 ---
 
@@ -222,6 +245,7 @@ audio lượt cuối + audio các lượt user trong history (ASR theo batch)
 
 - **Ngân sách không giới hạn**, thuê GPU cloud tuỳ ý.
 - **Repo:** https://github.com/Nguyen-Le-Tuan/ZAIC_2026. Bản clone local chính là thư mục `~/Zalo AI Challenge`. Nhánh làm việc của phần agent là `agent-pipeline`.
+- **Quy tắc git:** tài liệu commit thẳng vào `main`; code mới mở PR vào `main`.
 
 ---
 
@@ -326,11 +350,19 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 5. **Repo và script train.** Clone repo vào `~/Zalo AI Challenge`, nhánh `agent-pipeline`, commit `164b7a3`. Viết `train.py` tiết kiệm VRAM, backend HF, `train_local.sh`. Chạy thử train và zero-shot trên RTX 4070.
 6. **Lệnh train qua đêm** cho Anh tự chạy.
 7. **Tạo file nhật ký này.** Anh yêu cầu cập nhật liên tục và commit lên GitHub để leader theo dõi, đồng thời dùng làm context cho các đoạn chat sau.
+8. **Câu hỏi về moat và tài liệu pipeline.**
+   - **Anh hỏi:** nếu mọi đội đều có AI agent và tài nguyên như nhau thì khác biệt nằm ở đâu?
+   - **Trả lời:** moat nằm ở việc hiểu chính sách sinh nhãn, có bộ dev mô phỏng private, phân vai giữa LLM và code tất định, dữ liệu tổng hợp đúng chính sách, ASR thiết kế theo slot, vòng lặp phân tích lỗi, và độ tin cậy của hệ thống.
+   - **Nghiên cứu thêm:** đo nguồn gốc tham số của đáp án (phát hiện 12–14).
+   - **Kết quả:** viết [`docs/PIPELINE.md`](docs/PIPELINE.md) gồm pipeline nền móng (sơ đồ, mã giả, đi qua mẫu `train_0001`, tính điểm từng kiểu lỗi), tự đánh giá, đề án nâng cấp 5 tầng và 20 câu hỏi.
+   - **Quy tắc git mới:** tài liệu vào thẳng `main`, code qua PR. Đã mở PR `agent-pipeline` → `main` cho code.
 
 ---
 
 ## 8. Việc tiếp theo
 
+- [ ] Anh và leader trả lời 20 câu hỏi trong [`docs/PIPELINE.md`](docs/PIPELINE.md), rồi thảo luận với Claude để chốt kế hoạch nâng cấp.
+- [ ] Review và merge PR `agent-pipeline` → `main`.
 - [ ] Đọc kết quả train qua đêm: so điểm zero-shot với sau SFT trên dev_random, phân tích lỗi theo loại.
 - [ ] Nộp public lần đầu để kiểm chứng 3 giả định của bộ chấm (mục 6.1).
 - [ ] Cloud:

@@ -2,13 +2,13 @@
 
 Giải pháp Zalo AI Challenge 2026, đề LifeMate (giọng nói tiếng Việt → agent gọi tool).
 
-**Đọc [`JOURNAL.md`](JOURNAL.md) trước:** nhật ký dự án gồm đề bài, số liệu, quyết định, trạng thái hiện tại và việc tiếp theo. Sau đó đọc [`docs/PIPELINE.md`](docs/PIPELINE.md): pipeline, moat và câu hỏi nghiên cứu.
+**Đọc [`JOURNAL.md`](JOURNAL.md) trước:** nhật ký dự án gồm đề bài, số liệu, quyết định, trạng thái hiện tại và việc tiếp theo. Sau đó đọc [`docs/PIPELINE.md`](docs/PIPELINE.md): pipeline, moat và câu hỏi nghiên cứu. Việc của từng người nằm ở [`HUMAN_TODO.md`](HUMAN_TODO.md).
 
 **Quy tắc git:** tài liệu commit thẳng vào `main`; code mới phải qua Pull Request.
 
 | Thư mục | Nội dung |
 |---|---|
-| `JOURNAL.md`, `docs/` | Nhật ký và tài liệu nghiên cứu. |
+| `JOURNAL.md`, `docs/`, `HUMAN_TODO.md` | Nhật ký, tài liệu nghiên cứu, danh sách việc của người. |
 | `lifemate/` | Agent: prompt, vòng lặp gọi tool, bộ chấm local, sinh dữ liệu SFT, train LoRA. Xem `lifemate/README.md` *(hiện ở PR `agent-pipeline`)*. |
 | `data/` | **Không commit.** Giải nén `train+public_test.zip` vào `data/` để có `data/train+public_test/{train,public_test}/`. Thể lệ cấm phát tán bộ dữ liệu. |
 

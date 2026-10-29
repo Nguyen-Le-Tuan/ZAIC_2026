@@ -211,7 +211,9 @@ Một mẫu chỉ được điểm khi **mọi điều kiện sau cùng đúng**
 
 ## 5. Hai mươi câu hỏi cho đội
 
-Mỗi câu gồm: **vì sao quan trọng** và **gợi ý cách tìm câu trả lời**. Có thể trả lời bằng thí nghiệm nhỏ, đọc dữ liệu, hoặc lập luận. Ghi câu trả lời ngay dưới mỗi câu.
+Mỗi câu gồm: **vì sao quan trọng** và **gợi ý cách tìm câu trả lời**. Có thể trả lời bằng thí nghiệm nhỏ, đọc dữ liệu, hoặc lập luận.
+
+> **Ghi câu trả lời ở [`HUMAN_TODO.md`](../HUMAN_TODO.md) mục 8**, nơi có bản chép kèm checkbox và người phụ trách. Bản ở đây chỉ để đọc, tránh câu trả lời bị chia ra 2 nơi.
 
 ### A. Hiểu thước đo và chính sách sinh nhãn
 
@@ -311,6 +313,6 @@ Mỗi câu gồm: **vì sao quan trọng** và **gợi ý cách tìm câu trả 
 
 ## 6. Cách làm việc tiếp
 
-1. Trong lúc máy của Anh train, cả đội đọc tài liệu này, chạy thử các thí nghiệm nhỏ bằng code trong `lifemate/` (nhánh hoặc PR `agent-pipeline`), rồi điền câu trả lời.
+1. Trong lúc máy của Anh train, cả đội đọc tài liệu này, làm theo danh sách việc trong [`HUMAN_TODO.md`](../HUMAN_TODO.md), chạy thử các thí nghiệm nhỏ bằng code trong `lifemate/` (nhánh hoặc PR `agent-pipeline`), rồi điền câu trả lời.
 2. Commit câu trả lời lên `main` (tài liệu được commit thẳng vào `main`; code mới phải qua PR).
 3. Mở chat với Claude: *"Đọc `JOURNAL.md` và `docs/PIPELINE.md`, đây là câu trả lời của đội…"* → thảo luận → chốt kế hoạch nâng cấp → ghi vào `JOURNAL.md`.

@@ -23,7 +23,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Chạy thử train trên RTX 4070 8GB thành công.
   - Viết tài liệu nghiên cứu [`docs/PIPELINE.md`](docs/PIPELINE.md).
 - **Sắp chạy:** train Qwen3-1.7B qua đêm trên máy của Anh (lệnh ở [mục 6.4](#lệnh-chạy-train-qua-đêm); thư mục làm việc phải ở nhánh `agent-pipeline` vì code chưa vào `main`). Kết quả sẽ có ở `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train).
-- **Trong lúc train:** Anh và leader đọc `docs/PIPELINE.md` và trả lời 20 câu hỏi.
+- **Trong lúc train:** Anh và leader làm theo [`HUMAN_TODO.md`](HUMAN_TODO.md): hiểu code, nghe audio, làm việc với BTC, chuẩn bị GPU cloud, và trả lời 20 câu hỏi (ghi câu trả lời ở đó).
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -379,12 +379,17 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
      | Trả lời 20 câu hỏi trong `docs/PIPELINE.md` bằng phán đoán và thí nghiệm | Chạy thí nghiệm, phân tích dữ liệu |
      | Giữ chuẩn kiểm chứng ("số này đo ở đâu? sai thì thấy dấu hiệu gì?"); review PR | Viết test và kiểm chứng, báo cáo trung thực cả khi thất bại |
      | Giữ mạch ý đồ suốt 19 ngày; hiểu pipeline đủ sâu để bắt lỗi của Claude | Ghi nhật ký này sau mỗi phiên |
+10. **Tạo [`HUMAN_TODO.md`](HUMAN_TODO.md).** Anh yêu cầu gom việc của người trong lúc chờ train thành danh sách checkbox, kèm 20 câu hỏi.
+    - Việc được chia theo người phụ trách và theo giai đoạn: ngay bây giờ → hiểu bài và code → nghe audio → làm việc với BTC → chuẩn bị tài nguyên → tổ chức đội → sáng mai khi train xong.
+    - Mọi lệnh trong file đã được chạy thử.
+    - Đã chuẩn bị sẵn bài nộp rỗng cho public (`lifemate/runs/public_empty.jsonl`, qua bộ kiểm tra chính thức) để leader quyết định có dùng 1 lượt nộp đo tỉ lệ mẫu ngoài phạm vi hay không.
+    - 20 câu hỏi được chép tự động từ `docs/PIPELINE.md`. Từ nay **câu trả lời ghi ở `HUMAN_TODO.md`**; `PIPELINE.md` chỉ để đọc.
 
 ---
 
 ## 8. Việc tiếp theo
 
-- [ ] Anh và leader trả lời 20 câu hỏi trong [`docs/PIPELINE.md`](docs/PIPELINE.md), rồi thảo luận với Claude để chốt kế hoạch nâng cấp.
+- [ ] Anh và leader làm theo [`HUMAN_TODO.md`](HUMAN_TODO.md), trả lời 20 câu hỏi ngay trong file đó, rồi thảo luận với Claude để chốt kế hoạch nâng cấp.
 - [ ] Review và merge PR `agent-pipeline` → `main`.
 - [ ] Đọc kết quả train qua đêm: so điểm zero-shot với sau SFT trên dev_random, phân tích lỗi theo loại.
 - [ ] Nộp public lần đầu để kiểm chứng 3 giả định của bộ chấm (mục 6.1).

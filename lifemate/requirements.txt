@@ -1,0 +1,8 @@
+tokenizers
+huggingface_hub
+torch
+transformers>=5
+peft
+accelerate
+bitsandbytes
+# cloud / Docker inference only: vllm

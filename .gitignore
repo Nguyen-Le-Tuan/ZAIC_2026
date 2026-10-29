@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- ZAIC 2026 ----
+# competition data must never be committed (organiser licence forbids redistribution)
+data/
+*.zip
+# generated / heavy artifacts
+runs/
+sft/
+ckpt/
+.venv-gpu/

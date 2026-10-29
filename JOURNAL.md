@@ -15,15 +15,15 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-28, trước lượt train qua đêm đầu tiên.*
+*Cập nhật: 2026-10-29, sau lượt train qua đêm đầu tiên.*
 
 - **Đã xong:**
   - Phân tích đề, chốt kiến trúc.
   - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nằm ở **PR `agent-pipeline` → `main`**, chờ review.
-  - Chạy thử train trên RTX 4070 8GB thành công.
-  - Viết tài liệu nghiên cứu [`docs/PIPELINE.md`](docs/PIPELINE.md).
-- **Sắp chạy:** train Qwen3-1.7B qua đêm trên máy của Anh (lệnh ở [mục 6.4](#lệnh-chạy-train-qua-đêm); thư mục làm việc phải ở nhánh `agent-pipeline` vì code chưa vào `main`). Kết quả sẽ có ở `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train).
-- **Trong lúc train:** Anh và leader làm theo [`HUMAN_TODO.md`](HUMAN_TODO.md): hiểu code, nghe audio, làm việc với BTC, chuẩn bị GPU cloud, và trả lời 20 câu hỏi (ghi câu trả lời ở đó).
+  - Viết tài liệu nghiên cứu [`docs/PIPELINE.md`](docs/PIPELINE.md) và danh sách việc của người [`HUMAN_TODO.md`](HUMAN_TODO.md).
+  - **Train qua đêm Qwen3-1.7B (LoRA) trên laptop của Anh: điểm dev_random tăng từ 9,9 lên 53,9.** Chi tiết ở [mục 6.4](#kết-quả-train-qua-đêm-2026-10-29).
+- **Đọc con số 53,9 cho đúng:** dev_random dùng chữ chuẩn `audio_text` (chưa qua ASR) và chỉ gồm app đã có trong dữ liệu train. Private test có lỗi ASR và app mới, nên điểm thật sẽ thấp hơn. Chưa đo được mức giảm.
+- **Đang làm:** Anh và leader tự phân tích lỗi ([`HUMAN_TODO.md`](HUMAN_TODO.md) mục 7), trả lời 20 câu hỏi, rồi cùng Claude chốt bước tiếp theo.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -337,6 +337,45 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - Dừng train: `pkill -f "train_local.sh|lifemate\.(train|infer)"`.
 - Tổng khoảng 3 giờ 15 phút: baseline khoảng 10 phút → train khoảng 2 giờ 40 phút → đánh giá khoảng 15–20 phút.
 
+#### Kết quả train qua đêm (2026-10-29)
+
+- **Thiết lập:**
+  - Model Qwen3-1.7B, LoRA, 1 epoch trên `sft/fit_random.jsonl` (4.150 ví dụ, 13,3M token, trong đó 0,32M token tính loss).
+  - Chấm trên `dev_random` (233 mẫu); chữ đầu vào là `audio_text`, chưa qua ASR.
+  - Log đầy đủ ở `lifemate/runs/overnight.log`, chỉ có trên máy Anh.
+- **Thời gian:** chạy từ 23:52 đến 02:40, không lỗi. Riêng phần train mất 2 giờ 26 phút cho 260 bước, khoảng 1.540 token/giây, đỉnh 5,63GB VRAM.
+
+| | Zero-shot | Sau SFT |
+|---|---|---|
+| **Điểm** | 9,9 | **53,9** |
+| F1 của lời gọi (bỏ qua hash) | 13,7 | 67,2 |
+| Hash trạng thái đúng | 25,3% | 63,1% |
+| ask_missing (33 mẫu) | 2,0 | 49,4 |
+| execute (183 mẫu) | 9,5 | 51,0 |
+| out_of_scope (17 mẫu) | 29,4 | 94,1 |
+| Thời gian mỗi mẫu, trung bình / tối đa | 2,9 s / 15,3 s | 2,5 s / 7,3 s |
+
+- **Loss:**
+  - Loss train giảm từ 1,62 xuống 0,03.
+  - Dev loss qua các bước 50, 100, 150, 200, 250, 260: 0,060 → 0,041 → 0,028 → 0,0245 → 0,0233 → 0,0234. Đã chững lại ở cuối.
+- **Phân bố điểm sau SFT:** 113 mẫu đúng hoàn toàn, 20 mẫu đúng một phần, 100 mẫu 0 điểm.
+- **Điểm bị mất (107,4 trên 233 mẫu):** execute mất 89,7; ask_missing mất 16,7; out_of_scope mất 1,0.
+- **Nhóm lỗi trong execute (183 mẫu):**
+
+  | Nhóm | Số mẫu | Điểm |
+  |---|---|---|
+  | Có lời gọi khớp đáp án nhưng hash sai: trạng thái cuối khác đáp án (sai tham số ghi, thiếu hoặc thừa lệnh ghi) | **51** | 0 |
+  | Hash sai và không lời gọi nào khớp | 22 | 0 |
+  | Hash đúng nhưng không lời gọi nào khớp | 11 | 0 |
+  | Hash đúng, F1 một phần: lời gọi thừa hoặc thiếu không làm đổi trạng thái (ví dụ lệnh đọc) | 17 | một phần |
+
+- **Nhóm lỗi trong ask_missing (33 mẫu):** 12 mẫu hash sai, 3 mẫu hash đúng nhưng không lời gọi nào khớp, 3 mẫu đúng một phần.
+- **Nhận xét:**
+  - **Không chọn checkpoint theo loss.** Dev loss rất thấp (0,023) mà điểm chỉ 54, nghĩa là lỗi dồn vào vài token quyết định: ID, ngày giờ, số phải tính. Phải chấm bằng bộ chấm.
+  - **Chưa đo được khả năng xử lý app mới.** Checkpoint này đã thấy mọi app của dev_random khi train. Muốn đo phải train lại trên `fit_lao` rồi chấm `dev_lao`. Hiện `scripts/train_local.sh` cố định dùng `fit_random`, nên cần sửa script.
+  - **Tốc độ đã đủ.** Trên RTX 4070 laptop với backend HF (chưa dùng vLLM), mẫu chậm nhất mất 7,3 giây, dưới xa giới hạn 30 giây.
+- Claude mới chỉ đếm nhóm lỗi, chưa đọc từng mẫu, để đội tự phân loại nguyên nhân trước ([`HUMAN_TODO.md`](HUMAN_TODO.md) mục 7).
+
 ---
 
 ## 7. Nhật ký theo thời gian
@@ -385,18 +424,27 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Đã chuẩn bị sẵn bài nộp rỗng cho public (`lifemate/runs/public_empty.jsonl`, qua bộ kiểm tra chính thức) để leader quyết định có dùng 1 lượt nộp đo tỉ lệ mẫu ngoài phạm vi hay không.
     - 20 câu hỏi được chép tự động từ `docs/PIPELINE.md`. Từ nay **câu trả lời ghi ở `HUMAN_TODO.md`**; `PIPELINE.md` chỉ để đọc.
 
+### 2026-10-29 — Kết quả train qua đêm
+
+11. **Train qua đêm chạy xong, không lỗi** (23:52 → 02:40). Anh dán log vào chat và hỏi đã xong chưa.
+    - Đã xong: log có dòng cuối `done:`, process đã thoát, GPU đã trống. Lệnh `tail -f` vẫn giữ terminal; bấm Ctrl+C để thoát.
+    - **Điểm dev_random: 9,9 (zero-shot) → 53,9 (sau SFT).** out_of_scope lên 94, ask_missing lên 49, execute lên 51. Bảng chi tiết ở [mục 6.4](#kết-quả-train-qua-đêm-2026-10-29).
+    - Chỗ yếu nhất là execute: 51 mẫu có lời gọi đúng nhưng trạng thái cuối sai, nên bị 0 điểm.
+    - Con số này chưa tính lỗi ASR và app mới, nên là mức trần lạc quan so với private test.
+
 ---
 
 ## 8. Việc tiếp theo
 
 - [ ] Anh và leader làm theo [`HUMAN_TODO.md`](HUMAN_TODO.md), trả lời 20 câu hỏi ngay trong file đó, rồi thảo luận với Claude để chốt kế hoạch nâng cấp.
 - [ ] Review và merge PR `agent-pipeline` → `main`.
-- [ ] Đọc kết quả train qua đêm: so điểm zero-shot với sau SFT trên dev_random, phân tích lỗi theo loại.
+- [x] Đọc kết quả train qua đêm: dev_random 9,9 → 53,9 (2026-10-29).
+- [ ] Phân tích lỗi của checkpoint `q17b_fit_random`: đội tự phân loại trước theo `HUMAN_TODO.md` mục 7, sau đó so với phân tích của Claude. Ưu tiên 51 mẫu execute có lời gọi đúng nhưng hash sai.
+- [ ] Đo khả năng xử lý app mới: sửa `scripts/train_local.sh` để chọn được tập train và tập dev (qua PR), train `fit_lao`, chấm `dev_lao`.
 - [ ] Nộp public lần đầu để kiểm chứng 3 giả định của bộ chấm (mục 6.1).
 - [ ] Cloud:
   - Baseline zero-shot Qwen3-4B-Instruct-2507 (`scripts/cloud_baseline.sh`).
   - SFT 4B trên `all.jsonl`.
-  - Chạy `fit_lao` → `dev_lao` để đo khả năng xử lý app chưa thấy.
   - Thử nghiệm so sánh `--history tagged` và `--rename 0/2/4`.
 - [ ] Phần ASR (leader):
   - Benchmark Whisper-turbo và PhoWhisper trên audio train: WER và độ đúng của số, giờ, tên.

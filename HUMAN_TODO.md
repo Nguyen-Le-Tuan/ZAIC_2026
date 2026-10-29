@@ -199,6 +199,11 @@ Ngày 29/10 đã điền câu trả lời làm việc, lấy từ handoff của 
     - Tập đo: dev_random đo tiến bộ trong cùng miền; fit_lao → dev_lao đo app chưa thấy (chưa chạy).
     - **Claude đo (29/10):** điểm giảm theo lô id (68 → 35) và theo history (59,8 khi không có history → 33,1 khi từ 6 lượt). Từ nay báo điểm kèm lát cắt.
     - Vì dev_random đã bị phân tích kỹ, nên giữ riêng một tập kiểm tra kín (lockbox). Xem [docs/EVAL_2026-10-29.md](docs/EVAL_2026-10-29.md).
+    - **Thí nghiệm B (chiều 29/10):**
+      - fit_lao → dev_lao đạt 35,53 điểm (zero-shot 10,88).
+      - Trong cùng các mẫu, lời gọi thực hiện vào app mới không kém app đã thấy, nhưng hỏi lại về tool mới được 0/23.
+      - Lockbox chỉ dùng được cho model train lại từ model gốc, theo review của Codex.
+      - Chi tiết ở EVAL mục 7.
 - [ ] **[Leader]** **Q7. Dùng 5 lần nộp public mỗi ngày vào việc gì để không overfit?** Đặt quy tắc cho đội, ví dụ "chỉ nộp khi dev nội bộ tăng ít nhất X điểm" hoặc "dành một lần nộp mỗi ngày để dò thước đo hoặc đo ASR".
   - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (đề xuất của Anh; leader chưa chốt).**
     - Coi public là kiểm tra tích hợp. Chỉ nộp khi có candidate rõ checkpoint, config và mục đích đo; ghi lịch sử nộp.

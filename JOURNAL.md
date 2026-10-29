@@ -9,21 +9,38 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 **Quy tắc git:** tài liệu (`JOURNAL.md`, `docs/`, `README.md`) được commit thẳng vào `main`. **Code mới phải đi qua Pull Request.**
 
-**Tài liệu liên quan:** [`docs/PIPELINE.md`](docs/PIPELINE.md) gồm moat, pipeline nền móng, tự đánh giá, đề án nâng cấp và 20 câu hỏi cho đội.
+**Tài liệu liên quan:**
+- [`docs/PIPELINE.md`](docs/PIPELINE.md): moat, pipeline nền móng, tự đánh giá, đề án nâng cấp và 20 câu hỏi cho đội.
+- [`HUMAN_TODO.md`](HUMAN_TODO.md): việc của người, kèm câu trả lời làm việc cho 20 câu hỏi.
+- Ngày 29/10:
+  - [`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md): audit lượt train đầu, Anh làm với Codex hỗ trợ.
+  - [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md): yêu cầu của Anh cho phiên 29/10.
+  - [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md): Claude đối chiếu audit, chấm các checkpoint và đề xuất thí nghiệm tiếp theo.
 
 ---
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-29, sau lượt train qua đêm đầu tiên.*
+*Cập nhật: 2026-10-29, sau audit và đánh giá các checkpoint.*
 
 - **Đã xong:**
   - Phân tích đề, chốt kiến trúc.
-  - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nằm ở **PR `agent-pipeline` → `main`**, chờ review.
-  - Viết tài liệu nghiên cứu [`docs/PIPELINE.md`](docs/PIPELINE.md) và danh sách việc của người [`HUMAN_TODO.md`](HUMAN_TODO.md).
-  - **Train qua đêm Qwen3-1.7B (LoRA) trên laptop của Anh: điểm dev_random tăng từ 9,9 lên 53,9.** Chi tiết ở [mục 6.4](#kết-quả-train-qua-đêm-2026-10-29).
-- **Đọc con số 53,9 cho đúng:** dev_random dùng chữ chuẩn `audio_text` (chưa qua ASR) và chỉ gồm app đã có trong dữ liệu train. Private test có lỗi ASR và app mới, nên điểm thật sẽ thấp hơn. Chưa đo được mức giảm.
-- **Đang làm:** Anh và leader tự phân tích lỗi ([`HUMAN_TODO.md`](HUMAN_TODO.md) mục 7), trả lời 20 câu hỏi, rồi cùng Claude chốt bước tiếp theo.
+  - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nằm ở **[PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) (`agent-pipeline` → `main`)**, chờ review.
+  - Sửa đường đánh giá (dev loss trên toàn dev, file provenance, chặn ghi đè, chấm mọi checkpoint): **[PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) (`eval-protocol` → `agent-pipeline`)**, chờ review. Thư mục làm việc trên máy Anh đang ở nhánh `eval-protocol`.
+  - Train Qwen3-1.7B (LoRA), 1 epoch. Trên đủ 233 mẫu dev_random, cùng protocol:
+    - **step_100: 38,95**
+    - **step_200: 52,47**
+    - **final: 53,92**, chọn làm mốc. Final và step_200 không phân biệt được.
+  - Chạy lại final cho kết quả giống hệt 233/233 mẫu.
+  - Final đạt **80,2 trên 233 mẫu đã train**, cho thấy khoảng cách tổng quát hoá lớn. Chi tiết ở [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
+- **Đọc con số 53,9 cho đúng:**
+  - Đây là điểm tham chiếu với chữ chuẩn `audio_text` (chưa qua ASR), chỉ gồm app đã có trong train.
+  - Không phải cận trên của private. Private có ASR và app mới; chưa đo được ảnh hưởng.
+- **Bước tiếp theo đề xuất** (chờ Anh quyết):
+  - **Thí nghiệm B:** train `fit_lao`, chấm `dev_lao`, để đo app chưa thấy.
+  - Sau đó **A:** 2 epoch.
+  - Song song thiết kế **D:** dữ liệu phản thực tế cho điều kiện và hỏi lại.
+  - Lệnh chạy ở `docs/EVAL_2026-10-29.md` mục 5.3.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -375,6 +392,10 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - **Chưa đo được khả năng xử lý app mới.** Checkpoint này đã thấy mọi app của dev_random khi train. Muốn đo phải train lại trên `fit_lao` rồi chấm `dev_lao`. Hiện `scripts/train_local.sh` cố định dùng `fit_random`, nên cần sửa script.
   - **Tốc độ đã đủ.** Trên RTX 4070 laptop với backend HF (chưa dùng vLLM), mẫu chậm nhất mất 7,3 giây, dưới xa giới hạn 30 giây.
 - Claude mới chỉ đếm nhóm lỗi, chưa đọc từng mẫu, để đội tự phân loại nguyên nhân trước ([`HUMAN_TODO.md`](HUMAN_TODO.md) mục 7).
+- **Đính chính 29/10** (xem mục 7, entry 12):
+  - Dev loss 0,023 ở trên chỉ đo **100 mẫu đầu** của file dev, vì `--eval-n 100` lấy đầu một file sắp theo id. Loss trên toàn 233 mẫu là **0,0685**: 100 mẫu đầu 0,0234, 133 mẫu sau 0,1153. Nhận xét "loss rất thấp mà điểm chỉ 54" vì vậy so hai tập mẫu khác nhau.
+  - Kết luận vẫn giữ: chọn checkpoint chủ yếu bằng điểm rollout. Nhưng vẫn theo dõi loss toàn dev để chẩn đoán.
+  - Tốc độ mới đo phần agent trên RTX 4070, chưa có ASR, chưa trên A30, chưa dùng vLLM.
 
 ---
 
@@ -432,6 +453,38 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Chỗ yếu nhất là execute: 51 mẫu có lời gọi đúng nhưng trạng thái cuối sai, nên bị 0 điểm.
     - Con số này chưa tính lỗi ASR và app mới, nên là mức trần lạc quan so với private test.
 
+### 2026-10-29 — Audit, sửa đường đánh giá, chấm các checkpoint
+
+12. **Anh gửi audit lượt train đầu, làm với Codex hỗ trợ** ([`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md)), kèm yêu cầu cho phiên này ([`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md)): đối chiếu, sửa đường đánh giá, chấm các checkpoint có sẵn và chốt thí nghiệm kế tiếp. Chưa thuê cloud, chưa nộp public, chưa train dài. Kết quả ở [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
+    - **Đối chiếu 21 nhận định của Codex:** 13 đồng ý, 6 đồng ý kèm bổ sung hoặc sửa, 2 chưa đủ bằng chứng. Phát hiện lớn nhất của Codex được xác nhận: dev loss trong log chỉ đo 100 mẫu đầu.
+    - **Claude đo thêm:**
+      - id train đi theo lô có đặc điểm khác nhau. Lô 1501+ có trung bình 7 lượt user trong history; lô 1–300 có 12 app cài và 3 call đáp án mỗi mẫu. Điểm dev giảm theo lô id và theo độ dài history.
+      - Ranh giới hỏi lại (30 mẫu, 12,7 điểm) là nhóm hành vi mất điểm lớn nhất; ưu tiên "51 mẫu" hôm qua đã đánh giá thấp nhóm này.
+      - `done=false` chỉ xuất hiện ở 7/233 rollout.
+      - Ở `train_0098`, model đã thấy `done=false` rồi vẫn gửi SMS.
+    - **Sửa đường đánh giá ([PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2)):**
+      - Dev loss tính trên toàn dev.
+      - Mỗi file SFT có manifest; mỗi lượt chạy có meta (commit, sha256 của adapter, id, latency).
+      - Không ghi đè kết quả cũ; trace lưu kết quả tool.
+      - Thêm `eval_loss`, `compare` (so theo cặp kèm bootstrap và lát cắt), `eval_ckpt.sh`; `train_local.sh` chọn được `FIT`/`DEV` và chấm mọi checkpoint.
+      - Ba file SFT cũ dựng lại giống từng byte.
+    - **Kết quả trên đủ 233 mẫu:**
+      - step_100: 38,95.
+      - step_200: 52,47.
+      - final: 53,92. Final hơn step_200 +1,45, khoảng tin cậy [−1,85; +4,78].
+      - Chạy lại final cho kết quả giống hệt 233/233 mẫu.
+      - Tập dò 233 mẫu lấy từ fit: 80,2.
+    - **Quyết định đề xuất:**
+      - Giữ final làm mốc.
+      - Thí nghiệm B (fit_lao → dev_lao) tối nay, A (2 epoch) sau đó, thiết kế D (dữ liệu phản thực tế) song song.
+      - Cân nhắc tách lockbox vì dev_random đã bị đọc kỹ từng mẫu.
+    - `HUMAN_TODO.md`: điền câu trả lời làm việc cho 20 câu, mỗi câu có trạng thái (đã xác minh / giả thuyết / chưa đo / chờ BTC). Chỉ đánh dấu xong 3 việc có bằng chứng: lệnh train, xem file điểm, mở chat.
+13. **Sự cố bộ nhớ lúc 08:26.** Anh báo máy hết bộ nhớ và tự tắt.
+    - Kiểm tra cho thấy máy không khởi động lại. `systemd-oomd` kill cả nhóm tiến trình của app Claude, khi đó dùng 6,6GB, vì áp lực bộ nhớ toàn máy. Các lượt đánh giá đang chạy trong nhóm đó nên chết theo.
+    - Không mất file nào: step_100 đã xong; các bước sau chưa kịp ghi file.
+    - Đã chạy lại trong unit systemd riêng, giới hạn 5–6,5GB. Mỗi lượt đánh giá chỉ đạt đỉnh khoảng 1,25GB, train thử 1 bước đạt 2,9GB. Áp lực bộ nhớ đến từ tổng các ứng dụng đang mở (app Claude, ChatGPT, trình duyệt…), không chỉ từ đánh giá.
+    - **Quy tắc mới:** việc dài (train, đánh giá) chạy bằng `systemd-run --user` có `MemoryHigh`/`MemoryMax`, để app và phiên làm việc không bị kill theo. Lệnh mẫu ở `docs/EVAL_2026-10-29.md` mục 5.3.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -439,8 +492,15 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] Anh và leader làm theo [`HUMAN_TODO.md`](HUMAN_TODO.md), trả lời 20 câu hỏi ngay trong file đó, rồi thảo luận với Claude để chốt kế hoạch nâng cấp.
 - [ ] Review và merge PR `agent-pipeline` → `main`.
 - [x] Đọc kết quả train qua đêm: dev_random 9,9 → 53,9 (2026-10-29).
-- [ ] Phân tích lỗi của checkpoint `q17b_fit_random`: đội tự phân loại trước theo `HUMAN_TODO.md` mục 7, sau đó so với phân tích của Claude. Ưu tiên 51 mẫu execute có lời gọi đúng nhưng hash sai.
-- [ ] Đo khả năng xử lý app mới: sửa `scripts/train_local.sh` để chọn được tập train và tập dev (qua PR), train `fit_lao`, chấm `dev_lao`.
+- [x] Phân tích lỗi của checkpoint `q17b_fit_random`: Anh audit với Codex hỗ trợ, Claude đối chiếu (29/10, [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md)). Việc hai người tự phân loại bằng mắt vẫn mở trong `HUMAN_TODO.md`.
+- [x] Sửa `scripts/train_local.sh` để chọn được tập train và tập dev: [PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2), chờ review.
+- [x] Chấm step_100, step_200 và final trên đủ 233 mẫu; chọn final làm mốc (29/10).
+- [ ] Review và merge PR #2 (người review quyết).
+- [ ] **Thí nghiệm B:** train `fit_lao` → chấm `dev_lao` để đo app chưa thấy. Lệnh ở `docs/EVAL_2026-10-29.md` mục 5.3.
+- [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
+- [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.
+- [ ] **Thí nghiệm D:** thiết kế dữ liệu phản thực tế từ fit cho điều kiện và ranh giới hỏi lại; mọi nhãn phải qua kiểm tra thực thi.
+- [ ] Quyết có tách lockbox khoảng 200 mẫu từ fit hay không.
 - [ ] Nộp public lần đầu để kiểm chứng 3 giả định của bộ chấm (mục 6.1).
 - [ ] Cloud:
   - Baseline zero-shot Qwen3-4B-Instruct-2507 (`scripts/cloud_baseline.sh`).

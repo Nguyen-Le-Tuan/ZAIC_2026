@@ -8,13 +8,14 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - Xong việc nào thì đánh dấu `[x]` và ghi kết quả ngắn ngay dưới việc đó. Commit thẳng lên `main` (tài liệu không cần PR).
 - Lượt train qua đêm đã xong lúc 02:40 ngày 2026-10-29 (dev_random 9,9 → 53,9), nên GPU trên laptop của Anh đã trống. Các lệnh ở mục 2–6 chỉ dùng CPU.
 - Các lệnh chạy trong thư mục `lifemate/`, trên nhánh `agent-pipeline` (code chưa vào `main`, đang nằm ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1)).
+- *29/10:* công cụ đánh giá mới (`scripts/eval_ckpt.sh`, `lifemate.compare`, `train_local.sh` chọn `FIT`/`DEV`) nằm ở nhánh `eval-protocol`, [PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2), xếp chồng lên PR #1. Thư mục làm việc trên máy Anh đang ở nhánh này.
 - Mọi lệnh trong file đã được Claude chạy thử trên máy của Anh ngày 2026-10-28.
 
 ---
 
 ## 1. Ngay bây giờ (15 phút đầu)
 
-- [ ] **[Anh]** Mở terminal, paste lệnh train (lấy ở `JOURNAL.md`, mục "Lệnh chạy train qua đêm"):
+- [x] **[Anh]** Mở terminal, paste lệnh train (lấy ở `JOURNAL.md`, mục "Lệnh chạy train qua đêm"). *Đã chạy 28/10 23:52 → 29/10 02:40, không lỗi (theo log). Không chạy lại.*
   ```bash
   cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --what=sleep:idle:handle-lid-switch --why="LifeMate training" bash scripts/train_local.sh > runs/overnight.log 2>&1 & } && sleep 5 && tail -f runs/overnight.log
   ```
@@ -109,6 +110,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     PYTHONPATH=public_test python3 -m zaic_tools --split public_test --root . --validate ../../lifemate/runs/public_empty.jsonl
     ```
   - Kết quả (ghi thêm vào Q6): …
+  - *29/10:* handoff của Anh đề xuất **không ưu tiên** nộp bài rỗng trong giai đoạn này (xem Q7). Leader chưa quyết; chưa nộp.
 
 ## 5. Chuẩn bị tài nguyên
 
@@ -126,7 +128,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## 7. Sáng mai, khi train xong
 
-- [ ] **[Anh]** Xem 2 file điểm: `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train).
+- [x] **[Anh]** Xem 2 file điểm: `lifemate/runs/zs_q17b_fit_random_score.json` (trước khi train) và `lifemate/runs/sft_q17b_fit_random_score.json` (sau khi train). *29/10: Anh đã đọc và dán kết quả vào chat (9,9 → 53,9).*
 - [ ] **[Cả hai]** **Tự phân tích lỗi trước khi hỏi Claude.** In 15 mẫu sai, rồi tự phân nhóm nguyên nhân bằng mắt (sai ID, sai giờ, thiếu bước đọc, gọi thừa, hỏi lại sai lúc, gọi tool ở mẫu ngoài phạm vi…). Sau đó mới so với phân tích của Claude.
   ```bash
   cd lifemate && TAG=q17b_fit_random && .venv/bin/python -c "
@@ -139,7 +141,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
       for c in pred[r['id']]['tool_calls']: print('  MODEL :',json.dumps(c,ensure_ascii=False))
   " | less
   ```
-- [ ] **[Anh]** Mở chat với Claude: *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
+  - *29/10:* Anh đã audit lỗi với Codex hỗ trợ ([`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md)), Claude đã đối chiếu ([`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md)). Chưa ghi nhận việc hai người tự phân loại toàn bộ bằng mắt, nên việc này vẫn để mở.
+- [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
 
 ---
 
@@ -147,82 +150,143 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 Chép từ [`docs/PIPELINE.md`](docs/PIPELINE.md) mục 5. **Ghi câu trả lời ở đây**, không ghi bên `PIPELINE.md`, để chỉ có một nơi lưu câu trả lời. Người phụ trách chỉ là gợi ý; ai có ý tưởng thì cứ viết thêm.
 
+Ngày 29/10 đã điền câu trả lời làm việc, lấy từ handoff của Anh (soạn với Codex hỗ trợ). Mỗi câu ghi một trong bốn trạng thái: **đã xác minh**, **giả thuyết**, **chưa đo**, **chờ BTC**. Chưa câu nào được đánh dấu xong, vì có câu trả lời làm việc không có nghĩa là câu hỏi nghiên cứu đã giải quyết.
+
 ### A. Hiểu thước đo và chính sách sinh nhãn
 
 - [ ] **[Leader]** **Q1. Server so khớp tham số không fuzzy thế nào: có phân biệt chữ hoa không, có gộp khoảng trắng không, list có xét thứ tự không?**
   - *Vì sao:* quyết định có cần viết hoa query, sắp xếp list `params` của `ask_missing` hay không.
   - *Gợi ý:* thiết kế 1–2 lần nộp public **dùng để dò thước đo**, không phải để tối ưu. Ví dụ nộp cùng một bài nhưng viết thường toàn bộ query của call đọc, rồi so điểm.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chờ BTC.**
+    - Theo thể lệ: tham số non-fuzzy phải giống hệt; fuzzy được hạ chữ thường và chuẩn hoá NFC rồi so token-F1 > 0,6. Mặc định giữ so khớp chính xác, không tự hạ chữ thường hay gộp khoảng trắng.
+    - Chưa rõ: cách tách token và xử lý dấu câu của fuzzy; tham số tuỳ chọn để trống so với ghi rõ giá trị mặc định (ví dụ `train_1474` thêm `days: "daily"` nên bộ chấm local cho 0 điểm dù hash đúng); thứ tự phần tử trong list.
+    - Ưu tiên hỏi BTC; không coi điểm public là xác nhận.
 - [ ] **[Cả hai]** **Q2. BTC sinh đáp án như thế nào: bằng template, bằng LLM, hay bằng một simulator chạy chính sách cố định? Tìm thêm dấu vết** (ngoài chuyện query dùng tên trong danh bạ).
   - *Vì sao:* biết cách nhãn được sinh thì tái tạo được chính sách cho app mới.
   - *Gợi ý:* so sánh nhiều mẫu cùng kiểu yêu cầu; xem tham số fuzzy được viết theo văn phong nào; xem thứ tự các call.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Nhãn có nhiều quy luật, nhưng chưa biết sinh bằng template, LLM hay pipeline kết hợp.
+    - **Đã xác minh (Claude đo 29/10):** id của train đi theo từng lô có đặc điểm khác nhau. Lô id 1501+ có trung bình 7,0 lượt user trong history (96% mẫu có history). Lô id 1–300 có 12,2 app cài và 3,1 call đáp án mỗi mẫu. Các lô khác khoảng 8–9 app và khoảng 2 call.
+    - Hướng làm: phân tích quy ước theo lô và nhóm trên fit; không ép một luật cho mọi lô.
 - [ ] **[Cả hai]** **Q3. Viết thành luật: khi nào đáp án gọi call đọc trước lệnh ghi, khi nào đọc kèm bộ lọc, khi nào bỏ qua bước đọc?**
   - *Vì sao:* call đọc chiếm phần lớn F1, và luật tổng quát dùng được cho app mới.
   - *Gợi ý:* thống kê theo từng cặp (call đọc, lệnh ghi); đã biết 113/126 lần bật đèn có `get_status` trước, và 11 lần còn lại đều do đã có trong history.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Nguyên tắc làm việc: đọc khi thiếu đối tượng, thuộc tính hoặc điều kiện; dùng lại thông tin trong history nếu còn hiệu lực; theo dõi thay đổi sau mỗi lệnh ghi.
+    - Tách hai mục tiêu: đủ thông tin để thực thi đúng, và khớp quy ước call của đáp án.
+    - Cần thống kê các ngoại lệ (đọc có bộ lọc so với đọc `{}`) trên fit.
 - [ ] **[Cả hai]** **Q4. Ranh giới giữa hỏi lại, tự quyết và bỏ qua: các "tín hiệu" nào dẫn tới `ask_missing_info`?**
   - *Vì sao:* 14% mẫu là hỏi lại, và danh sách `params` phải khớp chính xác.
   - *Gợi ý:* đọc 217 mẫu hỏi lại, phân nhóm: trùng tên, thiếu giờ, thiếu số tiền, yêu cầu mơ hồ ("hạ xuống chút")… Rút ra danh sách kiểm tra.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (nguyên tắc); đã xác minh (quy mô lỗi trên dev_random).**
+    - Nguyên tắc: chỉ hỏi khi thông tin bắt buộc không tra được hoặc đối tượng còn mơ hồ. Với x-one-of, có số điện thoại thì không cần `contact_id`. Tôn trọng lời tự sửa cuối cùng của người dùng.
+    - **Claude đo (29/10):** 14 mẫu execute bị hỏi thừa và 16 mẫu cần hỏi lại không hỏi, tổng 30 mẫu, mất 12,7 điểm. Đây là nhóm hành vi mất điểm lớn nhất; 22/30 mẫu nằm ngoài nhóm 51.
+    - Hướng làm: cặp mẫu gần giống nhau (đủ/thiếu slot, một/nhiều đối tượng) sinh từ fit. Đo riêng hỏi thừa, bỏ hỏi và sai `params`.
 - [ ] **[Cả hai]** **Q5. Phân loại 111 mẫu ngoài phạm vi theo nguyên nhân. Có mẫu "làm được một phần" không, và đáp án xử lý ra sao?**
   - *Vì sao:* gọi dù chỉ một call ở mẫu ngoài phạm vi là mất trắng; còn yêu cầu nhiều ý mà chỉ một ý làm được thì cách xử lý chưa rõ.
   - *Gợi ý:* lọc các mẫu có nhiều ý định mà thiếu một app; xem đáp án làm phần còn lại hay trả `[]`.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo.**
+    - Đã biết 111 mẫu gồm thiếu app, huỷ hoặc phủ định, trò chuyện, và thông tin đã có sẵn.
+    - Chưa phân loại đủ 111 mẫu, chưa rõ chính sách khi yêu cầu chỉ làm được một phần.
+    - Không suy luật từ từ khoá (ví dụ có chữ "thôi" thì trả rỗng).
 
 ### B. Tổng quát hoá và tín hiệu đánh giá
 
 - [ ] **[Cả hai]** **Q6. Private test có thể khác public ở những điểm nào** (app mới, phân bố loại mẫu, giọng nói, độ dài history)? **Bộ dev nào mô phỏng private tốt nhất?** Leave-apps-out đã đủ chưa, hay cần leave-groups-out?
   - *Gợi ý:* so phân bố của public với train (app đã cài, độ dài history, thành phố); đặt giả định "xấu nhất hợp lý".
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Rủi ro chính: app/schema mới, history dài, giọng nói, thứ tự entity, tổ hợp tác vụ.
+    - Tập đo: dev_random đo tiến bộ trong cùng miền; fit_lao → dev_lao đo app chưa thấy (chưa chạy).
+    - **Claude đo (29/10):** điểm giảm theo lô id (68 → 35) và theo history (59,8 khi không có history → 33,1 khi từ 6 lượt). Từ nay báo điểm kèm lát cắt.
+    - Vì dev_random đã bị phân tích kỹ, nên giữ riêng một tập kiểm tra kín (lockbox). Xem [docs/EVAL_2026-10-29.md](docs/EVAL_2026-10-29.md).
 - [ ] **[Leader]** **Q7. Dùng 5 lần nộp public mỗi ngày vào việc gì để không overfit?** Đặt quy tắc cho đội, ví dụ "chỉ nộp khi dev nội bộ tăng ít nhất X điểm" hoặc "dành một lần nộp mỗi ngày để dò thước đo hoặc đo ASR".
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (đề xuất của Anh; leader chưa chốt).**
+    - Coi public là kiểm tra tích hợp. Chỉ nộp khi có candidate rõ checkpoint, config và mục đích đo; ghi lịch sử nộp.
+    - Không dùng bài nộp rỗng để dò phân bố trong giai đoạn này; hỏi BTC về metric.
 - [ ] **[Cả hai]** **Q8. Nếu điểm dev nội bộ và điểm public lệch nhau, những nguyên nhân nào có thể giải thích, và kiểm tra từng nguyên nhân thế nào?** Ví dụ: ASR thật so với text chuẩn, app mới, khác biệt của bộ chấm, phiên bản `zaic_tools`.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo.**
+    - Nguồn có thể gây lệch: ASR, schema mới, tỉ lệ loại tác vụ, history, bộ chấm, runtime, phiên bản `zaic_tools`.
+    - Cách đo trên phần train giữ riêng: so oracle với ASR trên cùng agent; seen với unseen app theo đúng protocol; timeout và lỗi parse.
 
 ### C. ASR
 
 - [ ] **[Leader]** **Q9. Lỗi ASR nào thực sự làm mất điểm? Định nghĩa "tỉ lệ lỗi slot" thay cho WER thế nào?**
   - *Gợi ý:* từ bảng ở mục 3.2, lấy các tham số của lệnh ghi có nguồn là ngày giờ hoặc số, tìm cụm từ tương ứng trong `audio_text` (ví dụ "muộn 1 tiếng", "hai triệu tám"), rồi đo ASR nghe đúng các cụm đó bao nhiêu phần trăm. Đừng quên từ phủ định: "đừng", "thôi khỏi".
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo** (chưa có báo cáo nghe audio hay benchmark ASR).
+    - Ngoài WER, đo độ đúng theo loại thông tin: số tiền, số điện thoại, ngày giờ, khoảng thời gian, tên, phủ định, điều kiện, tự sửa. Báo cả tỉ lệ câu đúng toàn bộ thông tin quan trọng.
+    - Đo chênh lệch điểm agent giữa oracle và ASR theo cặp.
 - [ ] **[Leader]** **Q10. Có dùng được ngữ cảnh hợp lệ để sửa ASR không?** Ví dụ tên app đã cài, enum trong schema, tên kênh, và sau khi agent đọc danh bạ thì sửa lại tên người.
   - *Lưu ý:* chỉ được dùng dữ liệu lấy qua tool, không được đọc `state.json`.
   - *Gợi ý:* Whisper có `initial_prompt` hoặc hotword; hoặc sửa ở lớp sau, khi so khớp với kết quả tool.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết, chưa đo.**
+    - Dùng profile, thời gian, installed_apps, schema và history. Entity chỉ biết sau một lần gọi tool thì chỉ dùng sau khi tool đó trả về.
+    - Giữ transcript gốc để debug; đo số câu được sửa đúng và số câu bị làm hỏng.
+    - Nếu dùng model sửa riêng lúc inference, model đó tính vào giới hạn tham số và thời gian.
 - [ ] **[Leader]** **Q11. Lượt user trong history có cần ASR chất lượng cao không, hay model nhỏ, nhanh là đủ?**
   - *Gợi ý:* trên train, thay transcript history bằng ASR kém hơn (hoặc cố tình làm nhiễu) rồi đo điểm agent giảm bao nhiêu.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo.**
+    - Thí nghiệm 2×2: lượt cuối và history, mỗi phần dùng oracle hoặc ASR; cùng checkpoint, cùng mẫu.
 - [ ] **[Leader]** **Q12. Chuẩn hoá chữ thành số đặt ở đâu: ASR xuất thẳng chữ số, một bộ quy tắc riêng, hay để LLM tự hiểu?**
   - *Vì sao:* 11% tham số của lệnh ghi là số phải tính.
   - *Gợi ý:* thử cả 3 cách trên các mẫu có `amount`, `time`, `phone`.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo.**
+    - Đề xuất: ASR giữ nguyên lời nói; một bộ phân tích có kiểu xử lý số tiền, điện thoại, khoảng thời gian, giờ. LLM chọn ý định, mốc và phép toán; code tính kết quả.
+    - So ba cách (raw ASR, ASR + ITN, để LLM tự xử lý) trên cùng tập dev.
 
 ### D. Agent và mô hình
 
 - [ ] **[Anh]** **Q13. Phần nào nên chuyển từ LLM sang code tất định, và mỗi phần cứu được bao nhiêu điểm?**
   - *Gợi ý:* dùng mục 3.2 làm khung; với từng nhóm (ngày giờ, số, ID, quy ước call đọc), ước lượng số mẫu bị ảnh hưởng × xác suất LLM làm sai.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (chưa có ablation).**
+    - Ưu tiên thử: tính ngày giờ, số học và so sánh có kiểu; validate; enum và nguồn gốc ID; theo dõi việc còn dở; xử lý `done=false`; phục hồi lỗi JSON.
+    - **Claude đo (29/10), đây là trần trên dev_random, không phải điểm cứu chắc chắn:**
+      - `done=false` chỉ xuất hiện ở 7/233 rollout, tối đa khoảng 3,0 điểm.
+      - Lỗi JSON/schema có ở 5 trace, 1 trace tự sửa được.
+      - Nhóm số/giờ 15 mẫu, tối đa 6,4 điểm; nhóm điều kiện 11 mẫu, tối đa 4,7 điểm.
 - [ ] **[Anh]** **Q14. Có nên ép model chỉ được sinh ID đã xuất hiện trong kết quả tool hoặc history, và chỉ sinh enum hợp lệ** (constrained decoding)? Rủi ro là gì?
   - *Ví dụ rủi ro:* chặn nhầm ID hợp lệ được tạo trong lượt; làm chậm suy luận.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Enum theo schema. ID theo x-ref và dữ liệu đã thấy còn hiệu lực, kể cả ID vừa tạo trong lượt.
+    - Ràng buộc này không đủ: `train_1511` chọn một ID có thật nhưng sai xe.
+    - So hậu kiểm với constrained decoding trước khi áp dụng rộng.
 - [ ] **[Anh]** **Q15. Đánh đổi giữa model 4B và 1.7B, LoRA và full fine-tune, có thêm một dòng "kế hoạch ngắn" trước khi gọi tool hay không — trong giới hạn 30 giây và 16K token. Thí nghiệm nào trả lời rẻ nhất?**
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: đã xác minh (checkpoint 1.7B); giả thuyết (4B, full fine-tune, kế hoạch ngắn).**
+    - **Claude đo (29/10) trên đủ 233 mẫu dev:** step_100 38,95 → step_200 52,47 → final 53,92. Final và step_200 không phân biệt được.
+    - Final đạt 80,2 trên 233 mẫu đã train so với 53,9 trên dev.
+    - Thí nghiệm kế tiếp (A: 2 epoch; E: 4B cùng protocol) ở [docs/EVAL_2026-10-29.md](docs/EVAL_2026-10-29.md) mục 5. Chưa ưu tiên full fine-tune hay RL.
 - [ ] **[Anh]** **Q16. vLLM có cho kết quả giống hệt nhau qua 5 lần chạy không (greedy, batch 1, cùng GPU)? Nếu không, khử khác biệt bằng cách nào?**
   - *Vì sao:* nếu lần chạy lại của BTC khác kết quả đã nộp, họ lấy trung bình 5 lần, có thể tụt điểm.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: chưa đo (vLLM, A30, có ASR); đã xác minh (HF greedy trên RTX 4070, chỉ agent).**
+    - **Claude đo (29/10):** chạy lại checkpoint final cho cùng lời gọi, cùng hash và cùng output thô ở 233/233 mẫu.
+    - Chưa chứng minh tái lập với vLLM, trên A30, hay khi có ASR. Vẫn cần 5 lần chạy trên môi trường triển khai.
 
 ### E. Dữ liệu
 
 - [ ] **[Anh]** **Q17. Làm sao để dữ liệu tổng hợp tuân theo chính sách của BTC chứ không theo "thói quen" của LLM sinh dữ liệu? Kiểm chứng độ "giống thật" ra sao?**
   - *Gợi ý:* (a) chỉ train trên dữ liệu tổng hợp rồi đo trên train thật; (b) huấn luyện một bộ phân loại thật/giả; (c) so phân bố số call, tỉ lệ hỏi lại, tỉ lệ ngoài phạm vi.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Ưu tiên dữ liệu phản thực tế sinh từ fit: đổi số dư quanh ngưỡng, giờ, entity/ID, thứ tự danh sách, lời tự sửa, đủ/thiếu slot. Sinh lại nhãn rồi kiểm bằng thực thi.
+    - Cần thêm: kiểm tra theo chính sách (đọc, hỏi, tham số tuỳ chọn, văn phong fuzzy); ablation chỉ dữ liệu thật so với thật + tổng hợp; kiểm trên tập giữ riêng chưa dùng để sinh nhãn.
+    - Không đọc file environment của BTC để làm fixture.
 - [ ] **[Anh]** **Q18. Đa dạng hoá ngôn ngữ nói thế nào và theo tỉ lệ bao nhiêu?** Gồm phương ngữ, tự sửa giữa câu ("5 giờ, à không, 5 rưỡi"), phủ định, nhiều ý định trong một câu, từ tiếng Anh xen vào. Cần TTS cho ASR hay chỉ cần text cho LLM?
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
+    - Paraphrase từ fit: phủ định, tự sửa, tham chiếu history, nhiều ý trong một câu, phương ngữ, từ tiếng Anh xen vào.
+    - Thử vài mức trộn định trước và báo learning curve. Chỉ dùng TTS nếu thí nghiệm ASR cho thấy cần.
+    - Đội chưa nghe audio để xác nhận audio khớp kịch bản.
 
 ### F. Kỹ thuật và quản trị rủi ro
 
 - [ ] **[Leader]** **Q19. Liệt kê các kịch bản khiến bài nộp private về 0 hoặc mất nhiều điểm, và cách phòng cho từng kịch bản.**
   - *Ví dụ:* Docker cố tải model khi không có mạng; dùng sai bản `zaic_tools`; tràn bộ nhớ ở mẫu dài; quá 30 giây; đường dẫn `/data` sai; mã hoá UTF-8.
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (danh sách kiểm tra); chờ BTC (hướng dẫn Docker; cold-start có tính vào 30 giây không).**
+    - Cần kiểm: model và tokenizer có sẵn offline, đúng phiên bản `zaic_tools`, entrypoint, đủ mẫu, UTF-8, một ToolEnv mỗi mẫu, tổng tham số, latency toàn pipeline (p50/p95/max), tính tái lập, checksum.
+    - `time_budget` của agent hiện chỉ kiểm giữa các vòng, chưa chặn một lần generate chạy quá hạn.
 - [ ] **[Cả hai]** **Q20. Trong 19 ngày còn lại, đâu là đường găng (critical path)? Việc nào hai người làm song song được? Mốc "đóng băng tính năng" đặt ở ngày nào?**
-  - **Trả lời của đội:**
+  - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết (lịch đề xuất, chưa họp chốt).**
+    - 29–31/10: audit, sửa đánh giá, chọn checkpoint, baseline ASR, Docker smoke test.
+    - 01–05/11: ablation, fit_lao, cấu hình lớn hơn.
+    - 06–10/11: tích hợp ASR, đánh giá end-to-end.
+    - 11–13/11: đóng băng tính năng.
+    - 14–15/11: hoàn thiện, nộp sớm.
+    - 16/11: dự phòng.
+    - 20–23/11: chạy bản đã đóng băng trên private.

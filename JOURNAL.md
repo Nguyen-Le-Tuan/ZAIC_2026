@@ -355,7 +355,30 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
    - **Trả lời:** moat nằm ở việc hiểu chính sách sinh nhãn, có bộ dev mô phỏng private, phân vai giữa LLM và code tất định, dữ liệu tổng hợp đúng chính sách, ASR thiết kế theo slot, vòng lặp phân tích lỗi, và độ tin cậy của hệ thống.
    - **Nghiên cứu thêm:** đo nguồn gốc tham số của đáp án (phát hiện 12–14).
    - **Kết quả:** viết [`docs/PIPELINE.md`](docs/PIPELINE.md) gồm pipeline nền móng (sơ đồ, mã giả, đi qua mẫu `train_0001`, tính điểm từng kiểu lỗi), tự đánh giá, đề án nâng cấp 5 tầng và 20 câu hỏi.
-   - **Quy tắc git mới:** tài liệu vào thẳng `main`, code qua PR. Đã mở PR `agent-pipeline` → `main` cho code.
+   - **Quy tắc git mới:** tài liệu vào thẳng `main`, code qua PR. Đã mở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) `agent-pipeline` → `main` cho code.
+9. **Câu hỏi về vai trò của con người** (ghi lại để các phiên sau hiểu tâm lý hiện tại của đội).
+   - **Anh và leader băn khoăn:** khi đã có Claude Code với model tốt nhất, AI đọc nhiều paper và hiểu nhiều kỹ thuật cũng như giới hạn kỹ thuật, thì con người còn hơn AI ở đâu? Ngày xưa lợi thế nằm ở kỹ năng và kinh nghiệm fine-tune; giờ cuộc thi có thành "AI đấu AI" không? Bỏ qua thuyết trình, nộp bài, bỏ tiền, thì đóng góp riêng của người nằm ở đâu?
+   - **Tâm lý hiện tại:** lo rằng lợi thế kỹ năng truyền thống đã bị san phẳng, và chưa rõ mình đóng góp gì ngoài việc chạy lệnh.
+   - **Claude trả lời, tóm tắt:**
+     - Không phải AI đấu AI. Khi mọi đội dùng cùng một model, năng lực thực thi bị san phẳng, nên khác biệt nằm ở **con người điều khiển AI**: hỏi gì, kiểm chứng gì, nhận ra điều gì, quyết định gì.
+     - Lợi thế đã dịch chuyển: không còn ở chỗ biết nhiều kỹ thuật hơn, mà ở những việc AI không làm được hoặc làm kém.
+     - Bằng chứng ngay trong phiên này:
+       - Claude **không nghe được audio**. Dữ liệu gần 100% là giọng thật của 3 miền, và Claude chưa nghe file nào.
+       - Claude **chỉ biết điều được đưa cho**: ý kiến của BTC, quy tắc repo, ngân sách đều do Anh mang tới.
+       - Claude **sai một cách nghe rất hợp lý**: đã tự gây ra 4 lỗi trong phiên (bỏ trùng cả lệnh ghi, lộ app khi chia tập, app gây nhiễu không hiện schema, `dtype` của transformers 5), chỉ bắt được nhờ có kiểm chứng.
+       - Kiến thức về model của Claude dừng ở giữa năm 2026.
+       - Claude **không nhớ** qua các phiên; file này tồn tại vì lý do đó.
+       - Claude **tối ưu đúng thứ được giao**: chính câu hỏi về moat của Anh đã đổi hướng công việc, từ "train thêm" sang "hiểu chính sách sinh nhãn".
+   - **Phân vai đã thống nhất:**
+
+     | Người (Anh, leader) | Claude |
+     |---|---|
+     | Đặt mục tiêu và ràng buộc; quyết định đặt cược khi thiếu dữ liệu; chịu trách nhiệm kết quả | Đề xuất phương án kèm bằng chứng và rủi ro |
+     | Nghe audio, đánh giá lỗi ASR và phương ngữ theo cảm nhận của người bản ngữ | Viết công cụ để đo và gom lỗi |
+     | Làm việc với BTC, theo dõi forum và các đội khác; xác nhận các chỗ luật chưa rõ | Liệt kê các chỗ chưa rõ cần hỏi |
+     | Trả lời 20 câu hỏi trong `docs/PIPELINE.md` bằng phán đoán và thí nghiệm | Chạy thí nghiệm, phân tích dữ liệu |
+     | Giữ chuẩn kiểm chứng ("số này đo ở đâu? sai thì thấy dấu hiệu gì?"); review PR | Viết test và kiểm chứng, báo cáo trung thực cả khi thất bại |
+     | Giữ mạch ý đồ suốt 19 ngày; hiểu pipeline đủ sâu để bắt lỗi của Claude | Ghi nhật ký này sau mỗi phiên |
 
 ---
 

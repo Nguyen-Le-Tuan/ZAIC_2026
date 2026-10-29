@@ -2,6 +2,8 @@
 
 Giải pháp Zalo AI Challenge 2026, đề LifeMate (giọng nói tiếng Việt → agent gọi tool).
 
+**Đọc [`JOURNAL.md`](JOURNAL.md) trước:** nhật ký dự án gồm đề bài, số liệu, quyết định, trạng thái hiện tại và việc tiếp theo.
+
 | Thư mục | Nội dung |
 |---|---|
 | `lifemate/` | Agent: prompt, vòng lặp gọi tool, bộ chấm local, sinh dữ liệu SFT, train LoRA. Xem `lifemate/README.md`. |

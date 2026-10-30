@@ -1,0 +1,36 @@
+{
+ "name": "D phase 1 (D v1)",
+ "date": "2026-10-30",
+ "doc": "docs/D_PHASE1_2026-10-30.md",
+ "compare_to": "docs/baselines/d_review_2026-10-30.json",
+ "code": "701dcb4 (exp-d, PR #3)",
+ "frozen_local_artifacts_sha256": {
+  "lifemate/gen/tasks_v1.jsonl": "67f48ca1aa408015e0c223db529f54ee6ad8daa496376c8706312baf814a9a4b",
+  "lifemate/gen/rewrites_v1.jsonl": "90ac4e1676dbe5d80f9fa349b554efd8ecfafabdbbbfa10de2bcf1e4ba9ab3db",
+  "lifemate/gen/judgments_v1.jsonl": "87804bae56d072302ce4ddf1819551d03b145788ddcd632181379c6e2d76f497",
+  "lifemate/gen/d_v1.jsonl": "f49b6b2ad54360309c00f570e8604b08a60998e1b57c4f4525aa4667f254706c",
+  "lifemate/gen/d_v1_train.jsonl": "473627c5d0baf92f97c588a23fad9c8ee5f56b864ef59a32011194fec9100cd4",
+  "lifemate/gen/d_v1_eval.jsonl (contrast set D-eval-24)": "866477de2ab67954d0ca232f7ba77c1259bbe6ba896b755c02aad26492cf36f5",
+  "lifemate/gen/pilot_origins.txt": "fe00740face86c4c1f447450294adfe91ab30cc8fc86b70428295344b22fcfa6"
+ },
+ "pipeline": {"tasks": 130, "tasks_by_kind": {"C": 58, "B-vague": 72, "B-specific": 0},
+              "rewritten": 83, "writer_skipped": 47, "text_check_rejects": 0, "judge_rejects": 6,
+              "replay_failures": 0, "kept": 77, "kept_by_kind": {"C": 37, "B-vague": 40},
+              "d_train": 53, "d_eval": 24, "eval_frac": 0.25},
+ "gates": {"no_leakage": "pass", "writer_skip_rate_le_15pct": "fail (47/130 = 36%; 32% excluding deliberate template dedup)",
+           "human_review_ge_90pct": "pending (lifemate/gen/review_v1_30.md)"},
+ "metrics": {
+  "D-M8_writer_skip_rate": "47/130",
+  "R7_judge_rejects": "6/83",
+  "D-M10_top3_target_tool_share_kept": 0.27,
+  "D-M11_distinct_target_tools_kept": 29,
+  "D-M2_kept_with_precedent": "52/77",
+  "D-M13_contrast_D-eval-24": {
+   "q17b_fit_lao": {"synthetic_asks": "0/24", "origin_correct": "15/24", "flip_correct_pairs": "0/24",
+                    "by_kind": {"C": {"synthetic": "0/8", "origin": "5/8"}, "B-vague": {"synthetic": "0/16", "origin": "10/16"}}},
+   "q17b_fit_random": {"synthetic_asks": "0/24", "origin_correct": "17/24", "flip_correct_pairs": "0/24",
+                       "by_kind": {"C": {"synthetic": "0/8", "origin": "6/8"}, "B-vague": {"synthetic": "0/16", "origin": "11/16"}}}
+  },
+  "remaining_unused_sources": {"cap_8": {"C": 18, "B-vague": 16}, "cap_16": {"C": 26, "B-vague": 28}, "no_cap": {"C": 40, "B-vague": 66}}
+ }
+}

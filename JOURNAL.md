@@ -624,6 +624,28 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Giai đoạn 2 ngay với D-train 77 mẫu (B-up / B-D1 / B-D3, 254 bước); phép so quan trọng nhất là B-D với B-up.
       - Phương án thay thế: giai đoạn 3 (nới luật) trước.
       - Việc đọc tay `review_v1_30.md` và `review_1b.md` vẫn mở.
+20. **Giai đoạn 2 của D: bắt đầu train** (Anh chọn "Train giai đoạn 2", 30/10 18:17). Đang chạy; kết quả sẽ ghi vào báo cáo riêng.
+    - **Code** (PR #3, commit `8209095`):
+      - `train_local.sh` nhận `EXTRA_SAMPLES` và dựng file train riêng `sft/fit_lao_<TAG>.jsonl`, không đụng vào file của B0.
+      - `scripts/phase2_d.sh` chạy cả giai đoạn; chạy lại thì bỏ qua bước đã xong.
+    - **Ba lượt mới**, tất cả train lại từ Qwen3-1.7B gốc trên fit_lao, với đúng thiết lập của B0 (`q17b_fit_lao`):
+      - Cùng 254 bước (`--max-steps 254`), seed 0, LoRA r32, lr 2e-4, grad_accum 16.
+      - Chỉ đánh giá checkpoint final.
+
+      | Lượt | Dữ liệu thêm | Số dòng thêm |
+      |---|---|---:|
+      | `q17b_lao_d3` | D-train 1b lặp 3 lần | 734 |
+      | `q17b_lao_up` (đối chứng) | 232 bản sao mẫu hỏi lại thật kiểu B/C của fit_lao (112 mẫu gốc: 67 C, 45 B) | 734 |
+      | `q17b_lao_d1` | D-train 1b | 242 |
+
+    - **Đã kiểm trước khi chạy:**
+      - Phần gold của cả 3 file SFT giống B0 từng byte (4.051 dòng).
+      - B-D3 và B-up có cùng tổng số dòng (4.785). Với seed 0, hai lượt này thấy đúng cùng một tập dòng gold, chỉ khác phần dòng thêm.
+      - Vì giữ 254 bước, mỗi lượt chỉ đi qua 4.064 dòng đầu của lượt xáo trộn: khoảng 85% dữ liệu với D3 và B-up, khoảng 95% với D1. B0 thấy toàn bộ.
+    - **Chạy bằng** `systemd-run` (unit `lifemate-phase2-d`, MemoryHigh 6G / MemoryMax 8G); có chặn idle-sleep, không ghi đè hành vi gập nắp. Log ở `lifemate/runs/phase2_d.log`.
+    - **Đo được:** khoảng 150 phút train mỗi lượt (như B0), đỉnh VRAM 5,62GB.
+    - **Chấm mỗi lượt:** dev_lao (so theo cặp với B0), D-eval-24 và CS-pilot-23.
+    - **Ghi chú vận hành:** trong lúc train, không đổi nhánh trong thư mục repo. `main` không có code `lifemate/`, nên đổi nhánh sẽ xoá script đang chạy. Tài liệu trên `main` được sửa qua một git worktree riêng.
 
 ---
 
@@ -641,7 +663,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Thiết kế D: thống kê chính sách hỏi lại, thử luật tất định, viết bộ sinh dữ liệu, chạy thử 23 mẫu (30/10, PR #3, `docs/EXPERIMENT_D.md`).
 - [ ] Anh đọc tay 23 mẫu D (`lifemate/gen/review_fit_lao.md`).
 - [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
-- [ ] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước.
+- [x] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước. *Anh chọn giai đoạn 2 (30/10).*
+- [ ] Giai đoạn 2 của D: 3 lượt train đang chạy (`lifemate/runs/phase2_d.log`); viết báo cáo khi xong.
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".

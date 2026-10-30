@@ -45,7 +45,12 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Model bỏ hỏi ở kiểu B (chọn mơ hồ ID) và C (thiếu slot); kiểu A (trùng tên) đã học được.
   - Luật tất định đã thử và loại khỏi hướng chính.
   - Bộ sinh cặp đủ/thiếu đã chạy thử: 23 mẫu qua mọi kiểm tra. **Chưa train.**
-- **Chờ Anh:** đọc tay 23 mẫu D; quyết có sinh đủ bộ và chạy hai lượt D không; review PR #1 → #2 → #3.
+- **Review D và mốc đo** (30/10, [`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md), file số liệu [`docs/baselines/d_review_2026-10-30.json`](docs/baselines/d_review_2026-10-30.json)):
+  - Model hỏi lại 1/16 trên câu thiếu thông tin.
+  - Kiểm tra câu viết lại: bắt được 6/22 câu rò rỉ, sau khi sửa lên 15/22.
+  - Nhãn chưa kiểm chứng được chính sách: chỉ 4 cặp đối chứng, khoảng 1/3 nhãn là ngoại suy.
+  - Kế hoạch mới có đối chứng "nhân bản mẫu hỏi lại thật".
+- **Chờ Anh:** đọc tay 23 mẫu D; duyệt giai đoạn 1 (sinh D v1 sạch); review PR #1 → #2 → #3.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -541,6 +546,33 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Ước lượng bộ đầy đủ:** khoảng 230 mẫu, tương đương khoảng 700 dòng SFT.
     - **Đề xuất train:** 2 lượt giữ nguyên số bước (D-lao, D-random), tiêu chí ở EXPERIMENT_D mục 8. Chờ Anh duyệt.
     - **VieNeu** (TTS tiếng Việt Anh gợi ý): ghi cho leader ở Q18; ngoài phạm vi D vì D chỉ là văn bản. Cần kiểm licence và khả năng chạy offline.
+17. **Review thí nghiệm D và đặt mốc đo** (Anh yêu cầu đánh giá lại, định lượng nhược điểm, được chạy thử tuỳ ý, rồi lập kế hoạch; bản này là mốc so sánh). Xem [`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md).
+    - **Đo trên GPU, 23 cặp thử, cả hai checkpoint** (trong unit `systemd-run`; tiến trình dùng khoảng 1,2GB RAM, phần còn lại là page cache):
+      - Câu thiếu thông tin: model hỏi lại 1/16 lần, 15 lần tự làm.
+      - Mẫu hỏi lại kiểu B đã có trong train: model hỏi 0–1/7.
+      - Cặp đúng cả hai vế: 1/23 và 0/23.
+    - **Nhược điểm đã định lượng:**
+      - Chỉ có 4 cặp tự nhiên để đối chiếu nhãn (3 cặp khớp).
+      - 34–36% nhãn là ngoại suy.
+      - Chuỗi lệnh đọc khớp nhãn thật 70–78%.
+      - Kiểm tra câu bắt được 6/22 câu rò rỉ.
+      - Người viết phải bỏ 45% task.
+      - 3 tool đứng đầu chiếm 56–66% nguồn; B-specific chỉ có 5–8 nguồn.
+      - 15/21 lần bỏ hỏi với app giữ riêng không được phủ.
+      - Chưa có đối chứng cho D.
+    - **Đã sửa** (PR #3, commit `8799da5`):
+      - `vinum.py` nhận ra số và giờ viết bằng chữ, viết tắt: bắt rò rỉ lên 15/22, vẫn 0/27 loại nhầm.
+      - Bộ lọc nguồn: bắt trước 17/22 task người viết bỏ, loại nhầm 3/27, đo trên chính lần thử.
+      - Giới hạn số mẫu mỗi tool: tỉ trọng 3 tool đứng đầu còn khoảng 30%.
+      - Cờ tiền lệ; tách D-train / D-eval.
+      - `contrast_eval.py`, `d_quality.py`.
+      - 16 test bộ sinh dữ liệu đạt.
+    - **Kế hoạch:**
+      - Giai đoạn 1: D v1 sạch (đọc theo nghĩa, người đọc tay, tách D-eval).
+      - Giai đoạn 2: ba lượt B0 / B-up (đối chứng) / B-D với số bước giữ nguyên; giữ D chỉ khi thắng cả B0 lẫn B-up.
+      - Giai đoạn 3: mở rộng.
+      - Giai đoạn 4: đưa vào công thức train cuối.
+    - **Đính chính:** trong chat, số cặp tự nhiên là 4 cặp, 3 cặp khớp (không phải 5 và 4).
 
 ---
 

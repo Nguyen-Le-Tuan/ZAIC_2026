@@ -1,0 +1,60 @@
+{
+ "name": "D review baseline",
+ "date": "2026-10-30",
+ "doc": "docs/REVIEW_D_2026-10-30.md",
+ "code": {
+  "before_remedies": "55baf3f (exp-d, PR #3)",
+  "after_remedies": "8799da5 (exp-d, PR #3)"
+ },
+ "frozen_local_artifacts_sha256": {
+  "lifemate/gen/tasks_fit_lao.jsonl": "520559b5cd9ca8e29a01c913b30fb89e104335d4826b34fcbc2442104f0281f4",
+  "lifemate/gen/rewrites_fit_lao.jsonl": "bef62811a3c14dc448271b70bced0a6f4200f78f71d931f75af5b5b91f433597",
+  "lifemate/gen/mutations_fit_lao.jsonl": "5447f8266f744a7e8b23b12c7c6c72e666f8017b89f765f21a8a8ef27ef1a7a7",
+  "lifemate/gen/d_fit_lao.jsonl (contrast set CS-pilot-23)": "75a790c57c7801a399f0fee51e83d93c8817b4a13c1afdbdd52efa015cfd11b1"
+ },
+ "model_baselines": {
+  "q17b_fit_random_final_on_dev_random": {"n": 233, "score": 53.92, "ask": 49.4, "execute": 51.0, "oos": 94.1,
+                                           "execute_samples_that_asked": 14, "ask_misses_B": "7/11", "ask_misses_C": "9/14"},
+  "q17b_fit_lao_final_on_dev_lao": {"n": 262, "score": 35.53, "ask": 7.5, "execute": 39.7, "oos": 71.4,
+                                     "execute_samples_that_asked": 15, "ask_misses_B": "17/21", "ask_misses_C": "16/19",
+                                     "held_out_tool_asks_score": "0/23"},
+  "q17b_fit_random_final_on_probe_fit_233": {"score": 80.22, "ask": 64.7}
+ },
+ "metrics": {
+  "D-M1_natural_pairs": {"pairs": 4, "label_names_agree": 3, "similarity": 0.6},
+  "D-M2_with_precedent": {"no_prefilter": "281/423", "prefilter": "183/284"},
+  "D-M3_read_prefix_agrees": {"no_prefilter": "219/281", "prefilter": "129/183"},
+  "D-M4_leaky_rewrites_rejected": {"before": "6/22", "after": "15/22",
+                                   "after_by_kind": {"C": "12/14", "B-vague": "1/6", "B-specific": "2/2"}},
+  "D-M5_false_rejects_on_good_rewrites": {"before": "0/27", "after": "0/27"},
+  "D-M6_prefilter_catches_writer_skips": {"after": "17/22", "note": "in-sample on the pilot"},
+  "D-M7_prefilter_drops_good_tasks": {"after": "3/27", "note": "in-sample on the pilot"},
+  "D-M8_writer_skip_rate": {"pilot_no_prefilter": "22/49"},
+  "D-M9_sources": {"no_prefilter": {"C": 223, "B-vague": 200, "B-specific": 8},
+                   "prefilter": {"C": 117, "B-vague": 167, "B-specific": 5},
+                   "prefilter_cap8": {"C": 73, "B-vague": 79, "B-specific": 5}},
+  "D-M10_top3_tool_share": {"no_prefilter": {"C": 0.51, "B-vague": 0.62},
+                            "prefilter": {"C": 0.56, "B-vague": 0.66},
+                            "prefilter_cap8": {"C": 0.33, "B-vague": 0.29}},
+  "D-M11_distinct_tools": {"no_prefilter": {"C": 20, "B-vague": 31, "B-specific": 7},
+                           "prefilter": {"C": 14, "B-vague": 30, "B-specific": 5}},
+  "D-M12_dev_miss_coverage_by_prefiltered_sources": {
+   "dev_random_16_misses": {"seen/exact": 6, "seen/none": 8, "held-out/param_name": 1, "held-out/none": 1},
+   "dev_lao_33_misses": {"seen/exact": 7, "seen/param_name": 1, "seen/none": 4, "held-out/param_name": 6, "held-out/none": 15}},
+  "D-M13_contrast_CS-pilot-23": {
+   "q17b_fit_lao": {"C_synthetic_asks": "1/11", "C_origin_executes": "9/11", "Bvague_synthetic_asks": "0/5",
+                    "Bvague_origin_executes": "3/5", "Bspecific_synthetic_executes": "6/7", "Bspecific_origin_asks": "1/7",
+                    "flip_correct_pairs": "1/23"},
+   "q17b_fit_random": {"C_synthetic_asks": "1/11", "C_origin_executes": "7/11", "Bvague_synthetic_asks": "0/5",
+                       "Bvague_origin_executes": "4/5", "Bspecific_synthetic_executes": "6/7", "Bspecific_origin_asks": "0/7",
+                       "flip_correct_pairs": "0/23"}},
+  "D-M14_same_name_rule": {"false_positives_on_fit_executes": "0/2037", "fires_on_rollouts": {"probe_fit": "0/233", "dev_random": "0/233", "dev_lao": "1/262"},
+                           "score_change_dev_lao": 0.25},
+  "pilot_yield": {"tasks": 49, "rewritten": 27, "writer_skipped": 22, "kept_after_checks": 23, "dropped_dev_origin": 4}
+ },
+ "reproduce": {
+  "D-M1..D-M12": "cd lifemate && .venv/bin/python scripts/d_quality.py --tasks gen/tasks_fit_lao.jsonl --rewrites gen/rewrites_fit_lao.jsonl --mutations gen/mutations_fit_lao.jsonl --runs runs/sft_q17b_fit_random_rerun:splits/dev_random.txt runs/sft_q17b_fit_lao:splits/dev_lao.txt",
+  "D-M13": "cd lifemate && .venv/bin/python scripts/contrast_eval.py --samples gen/d_fit_lao.jsonl --adapter ckpt/<tag>/final --out runs/contrast_<tag>_pilot.jsonl",
+  "D-M14": "cd lifemate && .venv/bin/python scripts/ask_policy_stats.py --fit splits/fit_random.txt splits/fit_lao.txt --runs ..."
+ }
+}

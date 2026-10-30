@@ -21,43 +21,32 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-29, sau audit và đánh giá các checkpoint.*
+*Cập nhật: 2026-10-30 18:40, trong lúc chạy giai đoạn 2 của thí nghiệm D. Bản trước (29/10) xem lịch sử git.*
 
-- **Đã xong:**
-  - Phân tích đề, chốt kiến trúc.
-  - Viết bộ chấm điểm local, prompt, vòng lặp agent, sinh dữ liệu SFT, script train LoRA. Toàn bộ trong `lifemate/`, nằm ở **[PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) (`agent-pipeline` → `main`)**, chờ review.
-  - Sửa đường đánh giá (dev loss trên toàn dev, file provenance, chặn ghi đè, chấm mọi checkpoint): **[PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) (`eval-protocol` → `agent-pipeline`)**, chờ review. Thư mục làm việc trên máy Anh đang ở nhánh `eval-protocol`.
-  - Train Qwen3-1.7B (LoRA), 1 epoch. Trên đủ 233 mẫu dev_random, cùng protocol:
-    - **step_100: 38,95**
-    - **step_200: 52,47**
-    - **final: 53,92**, chọn làm mốc. Final và step_200 không phân biệt được.
-  - Chạy lại final cho kết quả giống hệt 233/233 mẫu.
-  - Final đạt **80,2 trên 233 mẫu đã train**, cho thấy khoảng cách tổng quát hoá lớn. Chi tiết ở [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
-- **Đọc con số 53,9 cho đúng:**
-  - Đây là điểm tham chiếu với chữ chuẩn `audio_text` (chưa qua ASR), chỉ gồm app đã có trong train.
-  - Không phải cận trên của private. Private có ASR và app mới; chưa đo được ảnh hưởng.
-- **Thí nghiệm B đã chạy** (train `fit_lao`, chấm `dev_lao`, chiều 29/10):
-  - Final đạt **35,53** trên `dev_lao` (zero-shot 10,88). Không có tiến bộ rõ sau bước 100.
-  - Trong cùng các mẫu, lời gọi thực hiện vào app mới không kém app đã thấy (54% so với 51%).
-  - Điểm yếu tập trung ở **hỏi lại về tool mới**: 0 điểm trên 23 mẫu. Chi tiết ở `docs/EVAL_2026-10-29.md` mục 7.
-- **Lỗi bộ chấm đã sửa** (30/10, PR #2): mẫu thiếu prediction giờ tính 0; điểm các lượt cũ không đổi.
-- **Thí nghiệm D đã thiết kế** (30/10, [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md), công cụ ở [PR #3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3)):
-  - Model bỏ hỏi ở kiểu B (chọn mơ hồ ID) và C (thiếu slot); kiểu A (trùng tên) đã học được.
-  - Luật tất định đã thử và loại khỏi hướng chính.
-  - Bộ sinh cặp đủ/thiếu đã chạy thử: 23 mẫu qua mọi kiểm tra. **Chưa train.**
-- **Review D và mốc đo** (30/10, [`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md), file số liệu [`docs/baselines/d_review_2026-10-30.json`](docs/baselines/d_review_2026-10-30.json)):
-  - Model hỏi lại 1/16 trên câu thiếu thông tin.
-  - Kiểm tra câu viết lại: bắt được 6/22 câu rò rỉ, sau khi sửa lên 15/22.
-  - Nhãn chưa kiểm chứng được chính sách: chỉ 4 cặp đối chứng, khoảng 1/3 nhãn là ngoại suy.
-  - Kế hoạch mới có đối chứng "nhân bản mẫu hỏi lại thật".
-- **Giai đoạn 1 của D xong** (30/10, [`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md)):
-  - D v1 có 77 mẫu: D-train 53, D-eval 24.
-  - Model hiện tại hỏi lại 0/24 trên D-eval.
-  - Cổng chống rò rỉ đạt; cổng tỉ lệ bỏ qua không đạt (36%); cổng người đọc tay đang chờ.
+- **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
+
+  | Mốc | Train → chấm | Điểm |
+  |---|---|---|
+  | Zero-shot Qwen3-1.7B | – → dev_random / dev_lao | 9,90 / 10,88 |
+  | **SFT Qwen3-1.7B LoRA, 1 epoch (mốc chính)** | fit_random → dev_random (233 mẫu) | **53,92** (chạy lại giống hệt 233/233 mẫu) |
+  | **B0** (đo trên app chưa thấy) | fit_lao → dev_lao (262 mẫu) | **35,53**: hỏi lại 7,48; execute 39,73; ngoài phạm vi 71,43 |
+
+  - Chi tiết: [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
+  - Code ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) → [#2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) → [#3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3), chưa merge.
+- **Baseline đầu-cuối theo đề (audio → ASR → agent → Docker offline): chưa có.**
+  - **Chưa có ASR trong pipeline** (việc của leader). Mọi điểm ở trên dùng chữ chuẩn, nên chưa đo được điểm sẽ giảm bao nhiêu khi có lỗi ASR. Ở test, các lượt user trong history cũng chỉ có audio.
+  - **Chưa nộp public lần nào**, nên chưa kiểm được các giả định của bộ chấm local.
+  - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
+  - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
+- **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao). Thí nghiệm D nhắm vào điểm này.
+- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17 (unit `lifemate-phase2-d`, dự kiến xong khoảng 3–4 giờ sáng 31/10).
+  - 3 lượt B-D3, B-up (đối chứng), B-D1, mỗi lượt 254 bước như B0.
+  - Chấm trên dev_lao, D-eval-24 và CS-pilot-23.
+  - Xem mục 7, entry 19–20.
 - **Chờ Anh:**
-  - Đọc tay `lifemate/gen/review_v1_30.md`.
-  - Chọn: giai đoạn 1b (bộ lọc v2, D-train khoảng 80–90 mẫu) rồi giai đoạn 2 có nhánh liều lượng; hay giai đoạn 2 ngay.
   - Review PR #1 → #2 → #3.
+  - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
+  - Quyết ưu tiên sau D: hoàn thiện baseline đầu-cuối (khuyến nghị) hay tiếp tục cải tiến agent.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---

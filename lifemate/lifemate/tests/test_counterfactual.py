@@ -69,6 +69,52 @@ def test_unchanged_text_rejected():
     assert check_rewrite(C_TASK, {"new_text": C_TASK["text"], "removed_span": "50 ngàn"}) == "empty or unchanged text"
 
 
+# ------------------------------------------------------------------ remedies of the 30/10 review
+
+def test_vinum_spoken_forms():
+    from lifemate.vinum import find_form, value_forms
+    cases = [("nạp 50 ngàn nha", 50000), ("trích 2tr cho Tuấn", 2000000), ("nạp hai trăm ngàn", 200000),
+             ("năm chục nghìn thôi", 50000), ("báo thức 5 rưỡi sáng", "2026-12-18T05:30:00+07:00"),
+             ("6h chiều hôm trước", "2026-10-08T18:00:00+07:00"), ("cứ 7 rưỡi tối", "19:30"),
+             ("sáu giờ kém mười lăm", "17:45")]
+    for text, v in cases:
+        assert find_form(text, value_forms(v)), (text, v)
+    assert find_form("qua số 18 phố Trúc Bạch", value_forms("2026-10-08T18:00:00+07:00")) is None
+    assert find_form("thêm ngàn rưỡi thôi", value_forms(9500)) is None
+
+
+def test_c_rejects_spoken_value_leaks():
+    for new in ("Nạp dùm em Linh 50 ngàn cho số của Linh nha.", "Nạp dùm em Linh năm chục nghìn cho số của Linh nha."):
+        r = check_rewrite(C_TASK, {"new_text": new, "removed_span": "50 ngàn" if "50 ngàn" not in new else "xx"})
+        assert r, new
+    task = {"kind": "C", "text": "soạn thư nháp gửi family a còng example chấm test nhé", "value": ["family@example.test"]}
+    r = check_rewrite(task, {"new_text": "soạn thư nháp gửi hộp thư family nhé", "removed_span": "family a còng example chấm test"})
+    assert r and "family" in r
+
+
+def test_c_prefilter():
+    from lifemate.counterfactual import c_filter_reason
+    tools = {"alarm.create": {"parameters": {"properties": {"time": {"type": "string"}}}},
+             "tv.control": {"parameters": {"properties": {"action": {"type": "string", "enum": ["off", "mute"]}}}}}
+    s = {"audio_text": "Đặt báo thức năm giờ rưỡi sáng mai giúp anh với nha", "history": []}
+    assert c_filter_reason(s, {"tool": "alarm.create", "param": "time", "value": "2026-12-18T05:30:00+07:00"}, tools) is None
+    computed = {"audio_text": "Đặt báo thức trước giờ họp hai tiếng giúp anh nha", "history": []}
+    assert "not spoken" in c_filter_reason(computed, {"tool": "alarm.create", "param": "time", "value": "2026-12-18T05:30:00+07:00"}, tools)
+    answer = {"audio_text": "Năm giờ rưỡi em nhé.", "history": [{"role": "user", "audio_text": "..."}]}
+    assert "answer" in c_filter_reason(answer, {"tool": "alarm.create", "param": "time", "value": "05:30"}, tools)
+    enum = {"audio_text": "Tắt tiếng tivi giùm mình xíu nha, sắp họp rồi", "history": []}
+    assert c_filter_reason(enum, {"tool": "tv.control", "param": "action", "value": "mute"}, tools)
+
+
+def test_split_by_origin_is_stable_and_disjoint():
+    from lifemate.counterfactual import split_by_origin
+    xs = [{"_origin": f"train_{i:04d}", "id": f"train_{i:04d}#d1"} for i in range(200)]
+    tr, ev = split_by_origin(xs, 0.2)
+    tr2, ev2 = split_by_origin(list(reversed(xs)), 0.2)
+    assert {x["id"] for x in ev} == {x["id"] for x in ev2} and not ({x["_origin"] for x in tr} & {x["_origin"] for x in ev})
+    assert 20 <= len(ev) <= 60
+
+
 # ------------------------------------------------------------------ build on real fit samples
 
 def _real_tasks():

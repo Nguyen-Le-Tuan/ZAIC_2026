@@ -32,6 +32,7 @@ from .askpolicy import ASK, entities, ent_name, is_ask_sample, is_xref, norm, re
     attested_plain_params
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl, zaic_tools
 from .sft import used_apps
+from .vinum import find_form, value_forms
 
 SRC = "synthetic-D"
 MIN_SIMILARITY = 0.6
@@ -77,7 +78,46 @@ def _history_atoms(s) -> set[str]:
 
 # ---------------------------------------------------------------- candidates
 
-def candidates_c(s, tools, attested) -> list[dict]:
+GENERIC = {"cái", "chiếc", "con", "gói", "nhắc", "bài", "việc", "đơn", "lịch", "xe", "máy", "tin", "nhóm", "mục", "người",
+           "chị", "anh", "em", "cô", "chú", "bác", "của", "cho", "với", "và", "the", "plus", "premium", "gói"}
+
+
+def is_answer_turn(s) -> bool:
+    """A short request right after earlier turns is usually the answer to the assistant's question; its slot
+    value belongs to the dialogue, so removing it does not make a natural "missing slot" request."""
+    return bool(s.get("history")) and len(words(s["audio_text"])) <= 6
+
+
+def spoken_in(text: str, v, spec: dict) -> bool:
+    """Is slot value v actually said in the request (not computed, not an enum code)?"""
+    if "enum" in spec or isinstance(v, bool):
+        return False
+    vals = v if isinstance(v, list) else [v]
+    for x in vals:
+        forms = value_forms(x)
+        if forms:
+            if not find_form(text, forms):
+                return False
+        elif isinstance(x, str):
+            toks = {w for w in words(re.sub(r"[@._]", " ", x)) if len(w) >= 3}
+            if not toks or not (toks & words(text)):
+                return False
+        else:
+            return False
+    return True
+
+
+def c_filter_reason(s, task, tools) -> str | None:
+    """Why a C candidate is not worth rewriting (None = keep)."""
+    if is_answer_turn(s):
+        return "answer to an earlier turn"
+    spec = tools[task["tool"]]["parameters"]["properties"].get(task["param"], {})
+    if not spoken_in(s["audio_text"], task["value"], spec):
+        return "value not spoken (computed, enum or from history)"
+    return None
+
+
+def candidates_c(s, tools, attested, prefilter: bool = True) -> list[dict]:
     calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
     if not calls or is_ask_sample(s):
         return []
@@ -93,8 +133,11 @@ def candidates_c(s, tools, attested) -> list[dict]:
             continue
         if (all(str(x) in seen for x in v) if isinstance(v, list) else str(v) in seen):  # copied from a tool result
             continue
-        out.append({"kind": "C", "write_index": w, "tool": c["name"], "param": p, "value": v,
-                    "param_desc": tools[c["name"]]["parameters"]["properties"].get(p, {}).get("description", "")})
+        t = {"kind": "C", "write_index": w, "tool": c["name"], "param": p, "value": v,
+             "param_desc": tools[c["name"]]["parameters"]["properties"].get(p, {}).get("description", "")}
+        if prefilter and c_filter_reason(s, t, tools):
+            continue
+        out.append(t)
     return out
 
 
@@ -108,7 +151,7 @@ def _list_pick(calls, results, upto: int, value) -> tuple[list[dict], int] | Non
     return None
 
 
-def candidates_b_vague(s, tools) -> list[dict]:
+def candidates_b_vague(s, tools, prefilter: bool = True) -> list[dict]:
     calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
     if not calls or is_ask_sample(s):
         return []
@@ -128,12 +171,15 @@ def candidates_b_vague(s, tools) -> list[dict]:
         dist = sorted(_unique_words(ents, k) & text)
         if not dist:  # nothing in the request singles the entity out: cannot check that a rewrite made it vague
             continue
+        toks = re.split(r"[^\w]+", norm(s["audio_text"]))
+        if prefilter and any(toks.count(w) > 1 for w in dist):  # the word also belongs to another part of the request
+            continue
         out.append({"kind": "B-vague", "write_index": w, "tool": c["name"], "param": p, "value": v,
                     "distinguishing_words": dist, "entities": ents})
     return out
 
 
-def candidates_b_specific(s, tools, rng) -> list[dict]:
+def candidates_b_specific(s, tools, rng, prefilter: bool = True) -> list[dict]:
     if ask_type(s, tools) != "B":
         return []
     calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
@@ -146,7 +192,8 @@ def candidates_b_specific(s, tools, rng) -> list[dict]:
         ents = entities(results[i])
         if len(ents) >= 2:
             # only entities the vague request could mean (share a word with it) and that one word can single out
-            options = [k for k in range(len(ents)) if _unique_words(ents, k) and _ent_words(ents[k]) & text]
+            content = text - GENERIC if prefilter else text
+            options = [k for k in range(len(ents)) if _unique_words(ents, k) and _ent_words(ents[k]) & content]
             if not options:
                 return []
             k = rng.choice(options)
@@ -166,16 +213,32 @@ INSTRUCTIONS = {
 }
 
 
-def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed) -> list[dict]:
-    """Pick tasks spread over as many tools as possible (round robin over tools, seeded), one task per sample."""
+def precedents(samples, tools) -> set[tuple]:
+    """(ask type, tool, param) combinations that real fit asks attest."""
+    out = set()
+    for s in samples:
+        t = ask_type(s, tools)
+        if t in ("B", "C"):
+            a = s["label"]["tool_calls"][-1]["arguments"]
+            out.add((t, a["tool_name"], a["params"][0]))
+    return out
+
+
+def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed, max_per_tool=None, require_precedent=False) -> list[dict]:
+    """Pick tasks spread over as many tools as possible (round robin over tools, seeded), one task per sample,
+    at most max_per_tool per (kind, tool). Each task records whether a real ask attests its (type, tool, param)."""
     rng = random.Random(seed)
+    prec = precedents(samples, tools)
     pools: dict[str, dict[str, list]] = {"C": defaultdict(list), "B-vague": defaultdict(list), "B-specific": defaultdict(list)}
     for s in samples:
         for t in candidates_c(s, tools, attested) + candidates_b_vague(s, tools) + candidates_b_specific(s, tools, rng):
+            t["precedent"] = ("C" if t["kind"] == "C" else "B", t["tool"], t["param"]) in prec
+            if require_precedent and not t["precedent"] and t["kind"] != "B-specific":
+                continue
             pools[t["kind"]][t["tool"]].append((s, t))
     used, tasks = set(), []
     for kind, n in (("B-specific", n_bs), ("B-vague", n_bv), ("C", n_c)):
-        by_tool = {k: rng.sample(v, len(v)) for k, v in sorted(pools[kind].items())}
+        by_tool = {k: rng.sample(v, len(v))[:max_per_tool] for k, v in sorted(pools[kind].items())}
         order = sorted(by_tool)
         rng.shuffle(order)
         picked = 0
@@ -235,6 +298,14 @@ def check_rewrite(task: dict, rw: dict) -> str | None:
             for f in _value_forms(task["value"]):
                 if re.search(rf"(?<![\d.,]){re.escape(norm(f))}(?![\d])", norm(new)):
                     return f"value still present ({f})"
+            for x in (task["value"] if isinstance(task["value"], list) else [task["value"]]):
+                hit = find_form(new, value_forms(x))
+                if hit:
+                    return f"value still present ({hit})"
+                if isinstance(x, str) and not value_forms(x):  # e-mail, address, name: no token of it may remain
+                    left = {w for w in words(re.sub(r"[@._]", " ", x)) if len(w) >= 3} & words(new) & words(old)
+                    if left:
+                        return f"value still present ({', '.join(sorted(left))})"
         else:
             left = set(task["distinguishing_words"]) & words(new)
             if left:
@@ -316,6 +387,15 @@ def build(tasks, rewrites, S, fit_ids, exclude_ids, drop_apps, root) -> tuple[li
     return kept, report
 
 
+def split_by_origin(samples, eval_frac: float) -> tuple[list, list]:
+    """Stable split on the origin id (sha256), so a D-eval contrast set never shares an origin with D-train."""
+    def bucket(o):
+        return int(runinfo.sha256_bytes(o.encode())[:8], 16) / 0xFFFFFFFF
+    ev = [x for x in samples if bucket(x["_origin"]) < eval_frac]
+    tr = [x for x in samples if bucket(x["_origin"]) >= eval_frac]
+    return tr, ev
+
+
 def review_md(samples, S) -> str:
     lines = ["# Mẫu D để đọc tay", "",
              "Mỗi mục: câu gốc → câu viết lại, nhãn gốc → nhãn mới. Đánh dấu [x] nếu hợp lý, ghi lý do nếu không.", ""]
@@ -344,6 +424,8 @@ def main():
     c.add_argument("--n-b-vague", type=int, default=10)
     c.add_argument("--n-b-specific", type=int, default=10)
     c.add_argument("--seed", type=int, default=0)
+    c.add_argument("--max-per-tool", type=int, help="cap per (kind, tool) so a few tools do not dominate")
+    c.add_argument("--require-precedent", action="store_true", help="only (type, tool, param) a real fit ask attests")
     c.add_argument("--out", required=True)
     b = sub.add_parser("build")
     b.add_argument("--tasks", required=True)
@@ -352,10 +434,15 @@ def main():
     b.add_argument("--exclude", nargs="*", help="id files that must never be a source (dev splits)")
     b.add_argument("--drop-apps", help="json list of held-out apps that labels must not use")
     b.add_argument("--out", required=True)
+    sp = sub.add_parser("split", help="D-train / D-eval by origin (the eval part is a contrast set, never trained on)")
+    sp.add_argument("--samples", required=True)
+    sp.add_argument("--eval-frac", type=float, default=0.2)
+    sp.add_argument("--out-train", required=True)
+    sp.add_argument("--out-eval", required=True)
     r = sub.add_parser("review")
     r.add_argument("--samples", required=True)
     r.add_argument("--out", required=True)
-    for p in (c, b, r):
+    for p in (c, b, sp, r):
         p.add_argument("--root", default=str(DEFAULT_ROOT))
     a = ap.parse_args()
 
@@ -364,7 +451,7 @@ def main():
     if a.cmd == "candidates":
         fit = [S[i] for i in sorted(set(runinfo.read_ids(a.fit)) - _ids(a.exclude))]
         attested = attested_plain_params(fit, tools)
-        tasks = make_tasks(fit, tools, attested, a.n_c, a.n_b_vague, a.n_b_specific, a.seed)
+        tasks = make_tasks(fit, tools, attested, a.n_c, a.n_b_vague, a.n_b_specific, a.seed, a.max_per_tool, a.require_precedent)
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         write_jsonl(a.out, tasks)
         print(json.dumps({"out": a.out, "tasks": len(tasks), "by_kind": Counter(t["kind"] for t in tasks),
@@ -382,6 +469,11 @@ def main():
             "inputs_sha256": {k: runinfo.sha256_file(getattr(a, k)) for k in ("tasks", "rewrites", "fit")},
             "out_sha256": runinfo.sha256_file(a.out), "git": runinfo.git_state()})
         print(json.dumps(summary, ensure_ascii=False))
+    elif a.cmd == "split":
+        tr, ev = split_by_origin(load_jsonl(a.samples), a.eval_frac)
+        write_jsonl(a.out_train, tr)
+        write_jsonl(a.out_eval, ev)
+        print(json.dumps({"train": len(tr), "eval": len(ev), "eval_by_kind": Counter(x["_kind"] for x in ev)}))
     else:
         samples = load_jsonl(a.samples)
         Path(a.out).write_text(review_md(samples, S), encoding="utf-8")

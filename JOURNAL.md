@@ -40,9 +40,8 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Final đạt **35,53** trên `dev_lao` (zero-shot 10,88). Không có tiến bộ rõ sau bước 100.
   - Trong cùng các mẫu, lời gọi thực hiện vào app mới không kém app đã thấy (54% so với 51%).
   - Điểm yếu tập trung ở **hỏi lại về tool mới**: 0 điểm trên 23 mẫu. Chi tiết ở `docs/EVAL_2026-10-29.md` mục 7.
-- **Chờ Anh quyết:**
-  - Sửa lỗi bộ chấm do review của Codex chỉ ra (mẫu thiếu prediction mà gold rỗng vẫn được 1 điểm).
-  - Bước tiếp theo: thiết kế D, tập trung vào hỏi lại với schema mới, hoặc chạy A.
+- **Lỗi bộ chấm đã sửa** (30/10, PR #2): mẫu thiếu prediction giờ tính 0; điểm các lượt cũ không đổi.
+- **Chờ Anh quyết:** bước tiếp theo là thiết kế D (tập trung vào hỏi lại với schema mới) hay chạy A; review PR #1 rồi PR #2.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -500,6 +499,21 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Thành phần mẫu (lô id, history) giải thích khoảng 2–11 trong 18,4 điểm chênh với `dev_random`. Đây là ước lượng thô, không phải nhân quả.
     - **Suy luận:** đòn bẩy rõ nhất cho app mới là chính sách hỏi lại với schema chưa thấy. Thí nghiệm A có giá trị thấp hơn dự kiến với protocol này.
 
+### 2026-10-30 — Sửa lỗi bộ chấm
+
+15. **Sửa lỗi bộ chấm khi thiếu prediction** (Anh chọn "Sửa ngay"; commit `d6208a1` trong [PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2)).
+    - Trước: `evaluate()` coi mẫu thiếu prediction như đã nộp danh sách call rỗng, nên mẫu ngoài phạm vi bị thiếu vẫn được 1 điểm.
+    - Nay:
+      - Mẫu thiếu prediction tính 0 và được đánh dấu `missing`.
+      - Id trùng thì báo lỗi.
+      - Id ngoài split, cả trong prediction lẫn trong `--ids`, thì báo lỗi để mẫu số không âm thầm thay đổi.
+      - Kết quả có thêm số mẫu `missing` và `extra`.
+    - **Kiểm chứng:**
+      - 11 test đạt (7 test logic, 4 test qua dòng lệnh trên dữ liệu train thật).
+      - Chấm lại 10 lượt chạy đã lưu ra đúng điểm cũ, cả tổng lẫn từng dòng theo mẫu.
+      - Phát lại đáp án vẫn được 100; `check_sft.py` đạt.
+    - **Ghi chú:** `gh pr edit` lỗi do API Projects classic của GitHub đã bị gỡ; mô tả PR cập nhật bằng `gh api -X PATCH repos/.../pulls/<n> -F body=@file`.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -512,7 +526,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Chấm step_100, step_200 và final trên đủ 233 mẫu; chọn final làm mốc (29/10).
 - [ ] Review và merge PR #2 (người review quyết).
 - [x] **Thí nghiệm B:** train `fit_lao` → chấm `dev_lao`. Final đạt 35,53; hỏi lại về tool mới được 0 điểm (29/10, EVAL mục 7).
-- [ ] Sửa lỗi bộ chấm khi thiếu prediction (gold rỗng vẫn được 1 điểm), kèm test, trong PR #2 trước khi merge.
+- [x] Sửa lỗi bộ chấm khi thiếu prediction, kèm 11 test (30/10, PR #2, commit `d6208a1`).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.

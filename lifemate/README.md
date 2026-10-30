@@ -18,6 +18,9 @@ Pipeline: ASR (~0.8B) → chuẩn hoá số → Qwen3-4B agent (vòng lặp gọ
 | `lifemate/runinfo.py` | Provenance: sha256 file/thư mục/danh sách id, commit git, phiên bản thư viện, chặn ghi đè kết quả cũ. |
 | `lifemate/eval_loss.py` | Loss teacher-forced của một checkpoint trên mọi dòng của một file SFT (chỉ để chẩn đoán; chọn checkpoint bằng điểm rollout). |
 | `lifemate/compare.py` | So sánh theo cặp nhiều lượt đánh giá trên cùng tập mẫu: điểm, call-F1, hash, từng loại, latency, Δ kèm bootstrap 95%, lát cắt theo độ dài history và dải id. |
+| `lifemate/askpolicy.py` | Chính sách hỏi lại của nhãn dưới dạng hàm: kiểu A (trùng tên khi tra), B (chọn mơ hồ ID), C (thiếu slot thường); luật "≥ 2 kết quả trùng tên mà câu không phân biệt". Chỉ dùng để phân tích và sinh dữ liệu, agent không import. |
+| `lifemate/counterfactual.py` | Bộ sinh cặp đủ/thiếu cho thí nghiệm D: `candidates` (chọn nguồn từ fit) → viết lại câu (người hoặc LLM) → `build` (kiểm tra câu, phát lại nhãn qua ToolEnv, loại mẫu dev) → `review` (file đọc tay). Đầu ra ở `gen/`, không commit. |
+| `scripts/ask_policy_stats.py` | Tái lập số liệu của `docs/EXPERIMENT_D.md`: chính sách hỏi lại trên fit, hành vi model theo kiểu, mô phỏng luật trùng tên, số nguồn sinh dữ liệu. |
 | `scripts/eval_ckpt.sh` | Đánh giá một checkpoint (hoặc model gốc) trên một tập dev, đúng protocol oracle-text, không ghi đè lượt cũ. |
 | `scripts/train_local.sh` | Chạy trên máy local: baseline zero-shot → train → đánh giá rollout **mọi** checkpoint đã lưu → bảng so sánh. Chọn cặp `FIT`/`DEV` (mặc định fit_random/dev_random); file SFT chỉ dùng lại khi manifest khớp. |
 | `scripts/count_tokens.py` | Độ dài prompt bằng tokenizer Qwen3 (hiện: TB ~3K, max ~6.1K token). |
@@ -30,6 +33,13 @@ uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requi
 .venv/bin/python scripts/make_splits.py
 # test bộ chấm (thiếu prediction, id trùng, id ngoài split):
 .venv/bin/python -m lifemate.tests.test_scorer
+# thí nghiệm D: sinh cặp hỏi lại / tự làm từ fit (chưa train)
+.venv/bin/python -m lifemate.counterfactual candidates --fit splits/fit_lao.txt --exclude splits/dev_lao.txt splits/dev_random.txt --out gen/tasks_fit_lao.jsonl
+#   viết gen/rewrites_fit_lao.jsonl ({"task_id","new_text","removed_span"|"added_span"} hoặc {"task_id","skip"})
+.venv/bin/python -m lifemate.counterfactual build --tasks gen/tasks_fit_lao.jsonl --rewrites gen/rewrites_fit_lao.jsonl \
+    --fit splits/fit_lao.txt --exclude splits/dev_lao.txt splits/dev_random.txt --drop-apps splits/heldout_apps.json --out gen/d_fit_lao.jsonl
+.venv/bin/python -m lifemate.sft --fit splits/fit_lao.txt --drop-apps splits/heldout_apps.json --extra-samples gen/d_fit_lao.jsonl --out sft/fit_lao_d.jsonl
+.venv/bin/python -m lifemate.tests.test_counterfactual
 # kiểm tra toàn pipeline không cần model (phải ra 100):
 .venv/bin/python -m lifemate.infer --split train --text oracle --backend oracle --out runs/oracle_train.jsonl
 .venv/bin/python -m lifemate.scorer runs/oracle_train.jsonl --split train

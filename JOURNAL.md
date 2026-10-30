@@ -41,7 +41,11 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Trong cùng các mẫu, lời gọi thực hiện vào app mới không kém app đã thấy (54% so với 51%).
   - Điểm yếu tập trung ở **hỏi lại về tool mới**: 0 điểm trên 23 mẫu. Chi tiết ở `docs/EVAL_2026-10-29.md` mục 7.
 - **Lỗi bộ chấm đã sửa** (30/10, PR #2): mẫu thiếu prediction giờ tính 0; điểm các lượt cũ không đổi.
-- **Chờ Anh quyết:** bước tiếp theo là thiết kế D (tập trung vào hỏi lại với schema mới) hay chạy A; review PR #1 rồi PR #2.
+- **Thí nghiệm D đã thiết kế** (30/10, [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md), công cụ ở [PR #3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3)):
+  - Model bỏ hỏi ở kiểu B (chọn mơ hồ ID) và C (thiếu slot); kiểu A (trùng tên) đã học được.
+  - Luật tất định đã thử và loại khỏi hướng chính.
+  - Bộ sinh cặp đủ/thiếu đã chạy thử: 23 mẫu qua mọi kiểm tra. **Chưa train.**
+- **Chờ Anh:** đọc tay 23 mẫu D; quyết có sinh đủ bộ và chạy hai lượt D không; review PR #1 → #2 → #3.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -513,6 +517,30 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Chấm lại 10 lượt chạy đã lưu ra đúng điểm cũ, cả tổng lẫn từng dòng theo mẫu.
       - Phát lại đáp án vẫn được 100; `check_sft.py` đạt.
     - **Ghi chú:** `gh pr edit` lỗi do API Projects classic của GitHub đã bị gỡ; mô tả PR cập nhật bằng `gh api -X PATCH repos/.../pulls/<n> -F body=@file`.
+16. **Thiết kế thí nghiệm D** (Anh chọn "Thiết kế D"; sau đó quyết: Claude viết lại câu ngay trong phiên, làm luôn bộ sinh dữ liệu, chưa train). Chi tiết ở [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md); code ở [PR #3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3).
+    - **Chính sách hỏi lại trên fit_random:**
+      - 184 lần hỏi lại, mỗi lần đúng 1 tham số, luôn là call cuối.
+      - 73 lần đã thực hiện ý khác trước.
+      - Kiểu A/B/C = 57/55/72.
+    - **Model hiện tại:**
+      - Kiểu A làm tốt (dev_random 8/8 có hỏi).
+      - Bỏ hỏi B 7/11 và C 9/14 trên dev_random; B 17/21 và C 16/19 trên dev_lao.
+      - Với C, model bịa giá trị cho đúng slot lẽ ra phải hỏi (21/25 lần).
+    - **Luật tất định:**
+      - "ID lấy từ lần tra ≥ 2 mục trùng tên thì hỏi lại": 0 lần báo nhầm trên fit.
+      - Nhưng phát lại trên rollout chỉ kích hoạt 0–1 mẫu (+0 đến +0,25 điểm), nên loại khỏi hướng chính.
+      - Kiểm tra nguồn gốc giá trị slot thường không làm tất định được.
+    - **Bộ sinh dữ liệu** (`lifemate/counterfactual.py`):
+      - Ba loại cặp: C, B-vague, B-specific.
+      - Nhãn phát lại qua ToolEnv; câu phải qua 7 kiểm tra; loại nguồn từ dev.
+      - `sft.py --extra-samples` nối mẫu D vào SFT. Không truyền thì bốn file SFT cũ dựng lại giống từng byte.
+      - 12 test mới đạt.
+    - **Chạy thử trên fit_lao:**
+      - 49 task → Claude viết lại 27, bỏ qua 22 có lý do (6 giá trị phải tính, 5 lấy từ history…) → **23 mẫu qua mọi kiểm tra**.
+      - 4 mẫu có nguồn trong dev_random bị loại, gồm `train_1409`; bước chọn nguồn nay loại sớm.
+    - **Ước lượng bộ đầy đủ:** khoảng 230 mẫu, tương đương khoảng 700 dòng SFT.
+    - **Đề xuất train:** 2 lượt giữ nguyên số bước (D-lao, D-random), tiêu chí ở EXPERIMENT_D mục 8. Chờ Anh duyệt.
+    - **VieNeu** (TTS tiếng Việt Anh gợi ý): ghi cho leader ở Q18; ngoài phạm vi D vì D chỉ là văn bản. Cần kiểm licence và khả năng chạy offline.
 
 ---
 
@@ -527,6 +555,9 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] Review và merge PR #2 (người review quyết).
 - [x] **Thí nghiệm B:** train `fit_lao` → chấm `dev_lao`. Final đạt 35,53; hỏi lại về tool mới được 0 điểm (29/10, EVAL mục 7).
 - [x] Sửa lỗi bộ chấm khi thiếu prediction, kèm 11 test (30/10, PR #2, commit `d6208a1`).
+- [x] Thiết kế D: thống kê chính sách hỏi lại, thử luật tất định, viết bộ sinh dữ liệu, chạy thử 23 mẫu (30/10, PR #3, `docs/EXPERIMENT_D.md`).
+- [ ] Anh đọc tay 23 mẫu D (`lifemate/gen/review_fit_lao.md`).
+- [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.

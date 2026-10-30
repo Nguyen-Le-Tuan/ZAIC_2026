@@ -146,7 +146,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [ ] **[Anh]** *(30/10)* Quyết có sinh đủ khoảng 230 mẫu D và chạy hai lượt D-lao, D-random hay không (EXPERIMENT_D mục 8).
   - *Cập nhật sau review 30/10:* kế hoạch đã đổi thành 4 giai đoạn có cổng chặn và có đối chứng "nhân bản mẫu hỏi lại thật" ([`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md) mục 5). Việc cần quyết bây giờ là **duyệt giai đoạn 1**.
 - [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 30 nhãn D của giai đoạn 1 (R8 trong review): nhãn có đúng cách BTC sẽ gán không, nhất là các nhãn không có tiền lệ.
-- [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl` (mốc so sánh, hash ghi trong `docs/baselines/d_review_2026-10-30.json`). Không xoá, không train trên 23 nguồn của CS-pilot-23.
+  - *Đã sẵn sàng:* `lifemate/gen/review_v1_30.md`, gồm 30 mẫu ngẫu nhiên của D v1 (14 C, 16 B-vague). Đây là cổng còn mở của giai đoạn 1; cần ≥ 27/30 mẫu hợp lý.
+- [ ] **[Anh]** *(30/10)* Chọn bước tiếp theo của D: giai đoạn 1b rồi giai đoạn 2 có nhánh liều lượng (khuyến nghị), hay giai đoạn 2 ngay ([`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md) mục 5).
+- [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl` và `lifemate/gen/*_v1*` (mốc so sánh, hash ghi trong `docs/baselines/`). Không xoá, không train trên nguồn của CS-pilot-23 hay D-eval-24.
 - [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
 
 ---

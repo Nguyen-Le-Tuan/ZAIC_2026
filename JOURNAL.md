@@ -50,7 +50,14 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Kiểm tra câu viết lại: bắt được 6/22 câu rò rỉ, sau khi sửa lên 15/22.
   - Nhãn chưa kiểm chứng được chính sách: chỉ 4 cặp đối chứng, khoảng 1/3 nhãn là ngoại suy.
   - Kế hoạch mới có đối chứng "nhân bản mẫu hỏi lại thật".
-- **Chờ Anh:** đọc tay 23 mẫu D; duyệt giai đoạn 1 (sinh D v1 sạch); review PR #1 → #2 → #3.
+- **Giai đoạn 1 của D xong** (30/10, [`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md)):
+  - D v1 có 77 mẫu: D-train 53, D-eval 24.
+  - Model hiện tại hỏi lại 0/24 trên D-eval.
+  - Cổng chống rò rỉ đạt; cổng tỉ lệ bỏ qua không đạt (36%); cổng người đọc tay đang chờ.
+- **Chờ Anh:**
+  - Đọc tay `lifemate/gen/review_v1_30.md`.
+  - Chọn: giai đoạn 1b (bộ lọc v2, D-train khoảng 80–90 mẫu) rồi giai đoạn 2 có nhánh liều lượng; hay giai đoạn 2 ngay.
+  - Review PR #1 → #2 → #3.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -573,6 +580,26 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Giai đoạn 3: mở rộng.
       - Giai đoạn 4: đưa vào công thức train cuối.
     - **Đính chính:** trong chat, số cặp tự nhiên là 4 cặp, 3 cặp khớp (không phải 5 và 4).
+18. **Giai đoạn 1 của D: D v1** (Anh duyệt "Duyệt giai đoạn 1"; chưa train). Chi tiết ở [`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md); số liệu ở [`docs/baselines/d_phase1_2026-10-30.json`](docs/baselines/d_phase1_2026-10-30.json).
+    - **Thêm lượt đọc theo nghĩa (R7):** người đọc chỉ thấy câu mới và danh sách mục (PR #3, commit `701dcb4`; 17/17 test đạt).
+    - **Pipeline:**
+      - 130 task (giới hạn 8 mẫu mỗi tool; loại nguồn từ dev và 49 nguồn của đợt thử).
+      - Claude viết lại 83, bỏ qua 47 có lý do.
+      - 0 lỗi kiểm tra chữ; **6 câu bị lượt đọc theo nghĩa loại** (có 1 câu đổi nhầm đối tượng).
+      - **77 mẫu giữ lại**, phát lại qua ToolEnv đều thành công.
+      - D-train 53 / D-eval 24 (tách theo mẫu gốc, không trùng dev hay mẫu thử).
+    - **Chất lượng nguồn:**
+      - 3 tool đứng đầu chiếm 27% (mốc 56–66%).
+      - 29 tool đích.
+      - 68% nhãn có tiền lệ.
+    - **Đo trên GPU, D-eval-24:**
+      - Cả hai checkpoint hỏi lại **0/24** câu thiếu thông tin; làm đúng 15–17/24 câu gốc; 0/24 cặp đúng cả hai vế.
+      - Cộng mốc đợt thử: 1/40.
+    - **Cổng:** chống rò rỉ đạt; tỉ lệ bỏ qua ≤ 15% **không đạt** (36%); người đọc tay đang chờ.
+    - **Giới hạn mới:** với luật chặt, nguồn từ fit chỉ đủ khoảng 140–150 mẫu D. D-train 53 mẫu (khoảng 4% số dòng) có thể quá ít để giai đoạn 2 thấy được hiệu ứng.
+    - **Đề xuất:**
+      - Giai đoạn 1b: bộ lọc v2 cho khoảng 30/47 lý do bỏ qua tự động hoá được; nâng giới hạn lên 16 mẫu mỗi tool; D-train khoảng 80–90 mẫu.
+      - Giai đoạn 2 thêm nhánh liều lượng: B-up, B-D1, B-D3.
 
 ---
 

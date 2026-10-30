@@ -1,0 +1,661 @@
+{
+ "created": "2026-10-30T08:59:44-0400",
+ "phase": "D phase 1b",
+ "doc": "docs/D_PHASE1B_2026-10-30.md",
+ "code": {
+  "pr": "https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3",
+  "commit": "b317660",
+  "branch": "exp-d"
+ },
+ "compare_to": [
+  "docs/baselines/d_review_2026-10-30.json",
+  "docs/baselines/d_phase1_2026-10-30.json"
+ ],
+ "files_sha256": {
+  "gen/tasks_1b.jsonl": "4d18c8facde95627e745cb5e3b5313f98c587d949195c10156a7b9d039a76224",
+  "gen/rewrites_1b.jsonl": "486fad9d2c517d3647c2fa1fbcc01e2fed2391a81431da81e597d78d14b29bd1",
+  "gen/judge_tasks_1b.jsonl": "f2176aa1ab257e29914132676e2368dd6263050607c5743794b1fcf9df18b373",
+  "gen/judgments_1b.jsonl": "1d8b57457209f677b6ec7fa832660a75f3ca8a124d15a78a9fbdc26a7568bec8",
+  "gen/judge_order_1b.json": "8b6e90c0ab65b867732787e75ae09c0dbfacd2d8be0746feec9f6b338473d57b",
+  "gen/d_1b.jsonl": "82c1c1d0f25a5117e318c8f8bbfd6f6cf934eabf01a65ea8b500ed576a5e6fd5",
+  "gen/d_train_1b.jsonl": "f15616de545c7d4983f5a6574e760a8d1c8784182bd8f09cc1926e43595a95d5",
+  "gen/v1_origins.txt": "3181f05becd9c555fe71578cd917ec569a05078c32747a3b2bef44bdfd12003f",
+  "gen/d_v1_eval.jsonl": "866477de2ab67954d0ca232f7ba77c1259bbe6ba896b755c02aad26492cf36f5",
+  "gen/d_v1_train.jsonl": "473627c5d0baf92f97c588a23fad9c8ee5f56b864ef59a32011194fec9100cd4",
+  "gen/review_1b.md": "69eee14948a3b2011e6399e41b812a63003a78544664bc79ca5a81421d521502"
+ },
+ "settings": {
+  "fit": "splits/fit_lao.txt",
+  "exclude": [
+   "splits/dev_lao.txt",
+   "splits/dev_random.txt",
+   "gen/pilot_origins.txt",
+   "gen/v1_origins.txt"
+  ],
+  "max_per_tool": 16,
+  "seed": 2,
+  "filter_v2": true,
+  "dedup": 0.75,
+  "dedup_against": [
+   "gen/tasks_v1.jsonl",
+   "gen/tasks_fit_lao.jsonl"
+  ]
+ },
+ "candidates_dropped": {
+  "dedup: near-duplicate request": 11,
+  "v2: target tool called more than once": 27,
+  "v2: choice between listed entities depends on a condition": 4,
+  "v2: entity named in the dialogue history": 2,
+  "v2: alternative value in an if/else": 1,
+  "v2: distinguishing word used by an earlier call": 1,
+  "v2: only weak distinguishing words": 1,
+  "v2: self-correction in the request": 1,
+  "v2: time referred to again ('giờ đó')": 1
+ },
+ "filter_v2_in_sample_on_v1_130": {
+  "confusion": {
+   "bad/dropped": 37,
+   "bad/kept": 16,
+   "good/dropped": 6,
+   "good/kept": 71
+  },
+  "per_rule": {
+   "v2: alternative value in an if/else": {
+    "writer_skip": 5,
+    "good": 1
+   },
+   "v2: choice between listed entities depends on a condition": {
+    "good": 1,
+    "writer_skip": 1
+   },
+   "v2: distinguishing word used by an earlier call": {
+    "good": 1,
+    "writer_skip": 2
+   },
+   "v2: entity named in the dialogue history": {
+    "writer_skip": 4,
+    "good": 1
+   },
+   "v2: only weak distinguishing words": {
+    "writer_skip": 1
+   },
+   "v2: same-name entities and the name is said (would be type A)": {
+    "writer_skip": 1
+   },
+   "v2: self-correction in the request": {
+    "writer_skip": 3
+   },
+   "v2: target refers back to the dialogue": {
+    "writer_skip": 2,
+    "good": 1
+   },
+   "v2: target tool called more than once": {
+    "writer_skip": 9,
+    "good": 1,
+    "rejected": 1
+   },
+   "v2: target value also said in another call": {
+    "writer_skip": 1
+   },
+   "v2: target value also used by another call": {
+    "writer_skip": 3
+   },
+   "v2: time referred to again ('giờ đó')": {
+    "writer_skip": 1
+   },
+   "v2: value in the dialogue history": {
+    "writer_skip": 1
+   },
+   "v2: value said twice": {
+    "writer_skip": 2
+   }
+  }
+ },
+ "out_of_sample_1b": {
+  "tasks": 33,
+  "by_kind": {
+   "C": 16,
+   "B-vague": 17
+  },
+  "writer_skips": 9,
+  "skip_rate": 0.273,
+  "skips_by_kind": {
+   "B-vague": 9
+  },
+  "skips": [
+   {
+    "task_id": "train_1221#B-vague",
+    "kind": "B-vague",
+    "reason": "người được nhắn (Thảo) cũng là chủ ngữ của câu ('con Thảo mới gửi về'); bỏ tên thì câu mất nghĩa, cách nói mơ hồ tự nhiên ('con bé') vẫn chỉ ra Thảo",
+    "automatable": "no"
+   },
+   {
+    "task_id": "train_1553#B-vague",
+    "kind": "B-vague",
+    "reason": "bỏ 'Moreno' còn 'Isabel' thì thành chọn giữa hai Isabel (Moreno/Moreira): gần kiểu A, model đã làm tốt",
+    "automatable": "yes (shared name word left: type A)"
+   },
+   {
+    "task_id": "train_1602#B-vague",
+    "kind": "B-vague",
+    "reason": "chính sách: thiếu tài khoản nguồn thì dữ liệu fit chọn tài khoản mặc định (7 lần thực hiện, 0 lần hỏi), nhãn hỏi lại sẽ sai",
+    "automatable": "yes (counter-precedent: default account)"
+   },
+   {
+    "task_id": "train_0279#B-vague",
+    "kind": "B-vague",
+    "reason": "chính sách tài khoản mặc định (như train_1602); thêm nữa là trùng khuôn vàng SJC",
+    "automatable": "yes (counter-precedent + template)"
+   },
+   {
+    "task_id": "train_0841#B-vague",
+    "kind": "B-vague",
+    "reason": "ngữ cảnh (bưu tá qua toà nhà lấy thư) vẫn chỉ ra 'Lễ tân tòa nhà' dù bỏ tên",
+    "automatable": "no"
+   },
+   {
+    "task_id": "train_0049#B-vague",
+    "kind": "B-vague",
+    "reason": "bỏ người nhận thì 'chuyển tiền mạng tháng này' đọc như trả hoá đơn mạng (bill_payment), không còn rõ là chuyển khoản cho một người",
+    "automatable": "no"
+   },
+   {
+    "task_id": "train_0342#B-vague",
+    "kind": "B-vague",
+    "reason": "trùng khuôn câu (vàng SJC, D v1 đã có 4 mẫu)",
+    "automatable": "yes (template cap)"
+   },
+   {
+    "task_id": "train_1226#B-vague",
+    "kind": "B-vague",
+    "reason": "Thảo vừa là người nhắn tin (nguồn của trạm xe) vừa là người nhận tiền; bỏ tên thì các bước trước mất căn cứ",
+    "automatable": "partly"
+   },
+   {
+    "task_id": "train_0208#B-vague",
+    "kind": "B-vague",
+    "reason": "trùng khuôn câu (chuyển đúng bằng tiền hoá đơn, đã có 2 mẫu trong đợt này)",
+    "automatable": "yes (template cap)"
+   }
+  ],
+  "judge_R7_rejects": 0,
+  "judge_items": 24,
+  "build_kept": 24,
+  "replay_errors": 0,
+  "label_leaks": 0
+ },
+ "label_leak_found_in_v1": {
+  "id": "train_1140#d1",
+  "split": "D-eval-24",
+  "words": [
+   "giá",
+   "xăng"
+  ],
+  "prefix_call": "news.search(query='giá xăng')",
+  "v1_rebuild_with_check": "76 kept (only train_1140#d1 removed)"
+ },
+ "policy_check_from_account": {
+  "fit_transfers_without_account_words": 7,
+  "asks_for_from_account_id": 0,
+  "conclusion": "default account; do not generate asks"
+ },
+ "policy_check_time_missing": {
+  "reminders.create_time_asks": 7,
+  "calendar.create_event_start_asks": 1,
+  "conclusion": "date known + clock time missing -> ask (attested)"
+ },
+ "kept_1b": {
+  "samples": 24,
+  "by_kind": {
+   "B-vague": 8,
+   "C": 16
+  },
+  "tools": 4,
+  "top3_tools": [
+   [
+    "reminders.create",
+    13
+   ],
+   [
+    "banking.transfer",
+    5
+   ],
+   [
+    "chat_ott.send_message",
+    3
+   ]
+  ],
+  "top3_share": 0.88,
+  "with_precedent": 24
+ },
+ "d_train_1b": {
+  "samples": 77,
+  "by_kind": {
+   "B-vague": 32,
+   "C": 45
+  },
+  "tools": 25,
+  "top3_tools": [
+   [
+    "reminders.create",
+    18
+   ],
+   [
+    "banking.transfer",
+    11
+   ],
+   [
+    "calendar.create_event",
+    7
+   ]
+  ],
+  "top3_share": 0.47,
+  "with_precedent": 62
+ },
+ "d_train_v1": {
+  "samples": 53,
+  "tools": 25,
+  "top3_share": 0.32,
+  "with_precedent": 38
+ },
+ "sft_rows": {
+  "fit_lao_gold": 4051,
+  "synthetic_D_train_1b": 242,
+  "share": 0.06,
+  "v1_estimate": 160
+ },
+ "D-M14_counter_precedent_d_train_1b": [
+  {
+   "key": [
+    "B",
+    "smart_home.light_set",
+    "device_id"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 76,
+   "flag": true
+  },
+  {
+   "key": [
+    "B",
+    "appliances.start_cycle",
+    "appliance_id"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 3,
+   "flag": true
+  },
+  {
+   "key": [
+    "C",
+    "banking.transfer",
+    "amount"
+   ],
+   "kept": 3,
+   "real_asks": 0,
+   "counter": 3,
+   "flag": true
+  },
+  {
+   "key": [
+    "B",
+    "calendar.cancel_event",
+    "event_id"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 1,
+   "flag": true
+  },
+  {
+   "key": [
+    "B",
+    "music.play",
+    "track_id"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "chat_ott.call",
+    "chat_id"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "calendar.update_event",
+    "event_id"
+   ],
+   "kept": 2,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "ewallet.topup_mobile",
+    "amount"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "banking.open_savings",
+    "amount"
+   ],
+   "kept": 1,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "home_automation.create_rule",
+    "time"
+   ],
+   "kept": 3,
+   "real_asks": 0,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "bike_rental.reserve",
+    "bike_id"
+   ],
+   "kept": 2,
+   "real_asks": 2,
+   "counter": 9,
+   "flag": true
+  },
+  {
+   "key": [
+    "C",
+    "ewallet.transfer",
+    "amount"
+   ],
+   "kept": 3,
+   "real_asks": 17,
+   "counter": 4,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "household_chores.assign",
+    "chore_id"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 3,
+   "flag": true
+  },
+  {
+   "key": [
+    "B",
+    "learning.log_progress",
+    "course_id"
+   ],
+   "kept": 4,
+   "real_asks": 1,
+   "counter": 3,
+   "flag": true
+  },
+  {
+   "key": [
+    "B",
+    "appliances.stop",
+    "appliance_id"
+   ],
+   "kept": 1,
+   "real_asks": 3,
+   "counter": 2,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "learning.schedule_lesson",
+    "course_id"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "news.save",
+    "article_id"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "door_lock.grant_guest_code",
+    "lock_id"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "chat_ott.send_message",
+    "chat_id"
+   ],
+   "kept": 6,
+   "real_asks": 4,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "B",
+    "banking.transfer",
+    "beneficiary_id"
+   ],
+   "kept": 8,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "package_tracking.schedule_pickup",
+    "address"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "alarm.create",
+    "time"
+   ],
+   "kept": 6,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "reminders.create",
+    "time"
+   ],
+   "kept": 18,
+   "real_asks": 5,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "email.create_draft",
+    "to"
+   ],
+   "kept": 1,
+   "real_asks": 4,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "package_tracking.reschedule_delivery",
+    "time"
+   ],
+   "kept": 1,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  },
+  {
+   "key": [
+    "C",
+    "calendar.create_event",
+    "start"
+   ],
+   "kept": 7,
+   "real_asks": 1,
+   "counter": 0,
+   "flag": false
+  }
+ ],
+ "dev_lao_ask_miss_coverage": {
+  "ask_B_C": {
+   "held_out_tools": 23,
+   "seen_tools": 17
+  },
+  "missed": {
+   "held_out_none": 21,
+   "seen_covered_by_v1": 4,
+   "seen_added_by_1b": 0,
+   "seen_none": 8
+  }
+ },
+ "contrast_1b_samples": {
+  "fit_lao": {
+   "by_kind_side": {
+    "B-vague/origin": {
+     "n": 8,
+     "behaviour_ok": 6,
+     "mean_score": 87.5
+    },
+    "B-vague/synthetic": {
+     "n": 8,
+     "behaviour_ok": 0,
+     "mean_score": 5.0
+    },
+    "C/origin": {
+     "n": 16,
+     "behaviour_ok": 11,
+     "mean_score": 80.0
+    },
+    "C/synthetic": {
+     "n": 16,
+     "behaviour_ok": 0,
+     "mean_score": 0.0
+    }
+   },
+   "flip_correct_pairs": {
+    "B-vague": 0,
+    "all": 0,
+    "C": 0
+   },
+   "pairs": 24,
+   "samples_sha256": "82c1c1d0f25a5117e318c8f8bbfd6f6cf934eabf01a65ea8b500ed576a5e6fd5",
+   "adapter_sha256": "090adc58580d26212862b02944e7bfdcff0730a8147509143544d6399f39fd1a"
+  },
+  "fit_random": {
+   "by_kind_side": {
+    "B-vague/origin": {
+     "n": 8,
+     "behaviour_ok": 5,
+     "mean_score": 87.5
+    },
+    "B-vague/synthetic": {
+     "n": 8,
+     "behaviour_ok": 1,
+     "mean_score": 17.5
+    },
+    "C/origin": {
+     "n": 16,
+     "behaviour_ok": 10,
+     "mean_score": 75.0
+    },
+    "C/synthetic": {
+     "n": 16,
+     "behaviour_ok": 0,
+     "mean_score": 0.0
+    }
+   },
+   "flip_correct_pairs": {
+    "B-vague": 1,
+    "all": 1,
+    "C": 0
+   },
+   "pairs": 24,
+   "samples_sha256": "82c1c1d0f25a5117e318c8f8bbfd6f6cf934eabf01a65ea8b500ed576a5e6fd5",
+   "adapter_sha256": "68b7b8ec587aa571af92249877376746ccf847cab2a3792cb1329d8e55b41614"
+  }
+ },
+ "contrast_note": "fit_lao run wrote runs/contrast__d1b.* (systemd expanded ${t}); renamed to runs/contrast_q17b_fit_lao_d1b.*; args.out inside still shows the old name",
+ "d_eval_23_without_leak": {
+  "fit_lao": {
+   "synthetic_ok": 0,
+   "origin_ok": 14,
+   "n": 23,
+   "flip_correct": 0
+  },
+  "fit_random": {
+   "synthetic_ok": 0,
+   "origin_ok": 16,
+   "n": 23,
+   "flip_correct": 0
+  }
+ },
+ "pool_left_after_1b_v2_clean": {
+  "total": 27,
+  "C reminders.create": 16,
+  "B-vague banking.transfer": 7,
+  "B-vague chat_ott.send_message": 2,
+  "C banking.transfer": 2
+ },
+ "gates": {
+  "no_leak": "pass (after fixing v1 leak check; D-eval-24 keeps the leaking item, reported both ways)",
+  "writer_skip_le_15pct": "fail (27%; C 0%, B-vague 53%)",
+  "hand_review_ge_90pct": "pending (review_v1_30.md, review_1b.md)",
+  "d_train_80_90": "fail (77)"
+ }
+}

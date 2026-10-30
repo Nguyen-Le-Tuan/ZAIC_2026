@@ -600,6 +600,30 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Đề xuất:**
       - Giai đoạn 1b: bộ lọc v2 cho khoảng 30/47 lý do bỏ qua tự động hoá được; nâng giới hạn lên 16 mẫu mỗi tool; D-train khoảng 80–90 mẫu.
       - Giai đoạn 2 thêm nhánh liều lượng: B-up, B-D1, B-D3.
+19. **Giai đoạn 1b của D: bộ lọc nguồn v2, D-train 77 mẫu** (Anh chọn "Làm giai đoạn 1b"; chưa train). Chi tiết ở [`docs/D_PHASE1B_2026-10-30.md`](docs/D_PHASE1B_2026-10-30.md); số liệu ở [`docs/baselines/d_phase1b_2026-10-30.json`](docs/baselines/d_phase1b_2026-10-30.json).
+    - **Code** (PR #3, commit `b317660`; 22/22 test đạt):
+      - `filter_v2_reason` gồm 15 luật cho các lý do bỏ qua tự động hoá được.
+      - Lọc câu trùng khuôn (ngưỡng 0,75).
+      - `build` chặn rò rỉ nhãn (câu mới đã bỏ từ mà nhãn vẫn dùng).
+      - `d_quality.py` thêm D-M6v2, D-M10/11 trên mẫu giữ lại, và D-M14 (phản tiền lệ, thô).
+      - Không truyền cờ mới thì task v1 tái lập giống từng byte.
+    - **Bộ lọc v2, đo trên 130 quyết định v1 (in-sample):** bắt 37/53 nguồn xấu, loại nhầm 6/77. Bản đầu dựa trên chữ "thì/nếu" loại nhầm 17 câu tốt nên đã thu hẹp.
+    - **Đợt 1b:**
+      - 33 task trên 4 tool.
+      - Người viết bỏ **9/33 (27%)**: C 0/16, B-vague 9/17. **Cổng ≤ 15% vẫn không đạt**; con số in-sample (khoảng 12%) là quá lạc quan.
+      - R7 loại 0/24; 24 mẫu giữ lại, phát lại qua ToolEnv đều thành công, tất cả có tiền lệ hỏi thật.
+    - **Lỗi phát hiện:**
+      - **Rò rỉ nhãn trong v1** ở `train_1140`: câu mới đã bỏ "xăng" nhưng nhãn vẫn có `news.search(query="giá xăng")`. Mẫu này nằm trong D-eval-24; giữ nguyên tập để so với mốc, và báo thêm kết quả trên D-eval-23.
+      - **Chính sách tài khoản nguồn:** khi lời nói không nêu tài khoản, fit luôn chọn mặc định (7 lần thực hiện, 0 lần hỏi). 2 task "hỏi tài khoản nào" bị bỏ trước khi vào dữ liệu.
+    - **D-train 1b = 77 mẫu**, 242 dòng SFT (6,0% số dòng gold). **Dưới mục tiêu 80–90.**
+      - Tỉ trọng 3 tool đầu tăng 32% → 47%; số tool vẫn là 25.
+      - Phần 1b phủ thêm 0 lần bỏ hỏi trên dev_lao (v1 phủ 4/12 lần ở tool đã thấy).
+    - **Model hiện tại trên 24 mẫu 1b:** hỏi đúng 0/24 (fit_lao) và 1/24 (fit_random). Hai lượt chạy bằng `systemd-run`, mỗi lượt khoảng 2,5 phút. systemd đã thay `${t}` bằng chuỗi rỗng nên file của lượt fit_lao bị ghi sai tên; mình đã đổi tên lại.
+    - **Nguồn gần cạn:** theo luật hiện tại chỉ còn 27 nguồn sạch, 16 là `reminders.create`.
+    - **Đề xuất:**
+      - Giai đoạn 2 ngay với D-train 77 mẫu (B-up / B-D1 / B-D3, 254 bước); phép so quan trọng nhất là B-D với B-up.
+      - Phương án thay thế: giai đoạn 3 (nới luật) trước.
+      - Việc đọc tay `review_v1_30.md` và `review_1b.md` vẫn mở.
 
 ---
 
@@ -616,6 +640,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Sửa lỗi bộ chấm khi thiếu prediction, kèm 11 test (30/10, PR #2, commit `d6208a1`).
 - [x] Thiết kế D: thống kê chính sách hỏi lại, thử luật tất định, viết bộ sinh dữ liệu, chạy thử 23 mẫu (30/10, PR #3, `docs/EXPERIMENT_D.md`).
 - [ ] Anh đọc tay 23 mẫu D (`lifemate/gen/review_fit_lao.md`).
+- [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
+- [ ] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước.
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".

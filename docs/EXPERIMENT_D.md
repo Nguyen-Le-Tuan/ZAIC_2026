@@ -3,6 +3,7 @@
 *30/10/2026. Claude viết theo yêu cầu "Thiết kế D" của Anh: thống kê trên fit trước, đề xuất cách sinh dữ liệu đủ/thiếu slot và kiểm tra tất định cho tham số bắt buộc. Anh quyết thêm: viết lại câu ngay trong phiên và làm luôn bộ sinh dữ liệu, **chưa train**.*
 
 - **Code:** [PR #3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3) (`exp-d`, xếp chồng lên PR #2).
+- **Review và mốc đo (30/10):** [`docs/REVIEW_D_2026-10-30.md`](REVIEW_D_2026-10-30.md). Bản review **thay mục 8 bên dưới** bằng kế hoạch có đối chứng (nhân bản mẫu hỏi lại thật) và các cổng chặn theo giai đoạn.
 - **Tái lập số liệu:** `lifemate/scripts/ask_policy_stats.py`, lệnh ở cuối tài liệu.
 - **Nhãn của từng kết luận:**
   - **[Quan sát]**: đếm hoặc đo trực tiếp.

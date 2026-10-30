@@ -142,6 +142,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   " | less
   ```
   - *29/10:* Anh đã audit lỗi với Codex hỗ trợ ([`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md)), Claude đã đối chiếu ([`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md)). Chưa ghi nhận việc hai người tự phân loại toàn bộ bằng mắt, nên việc này vẫn để mở.
+- [ ] **[Anh]** *(30/10)* Đọc tay 23 mẫu thí nghiệm D trong `lifemate/gen/review_fit_lao.md` (chỉ có trên máy Anh). Đánh dấu `[x]` mẫu hợp lý, ghi lý do mẫu sai. Xem [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md) mục 6.
+- [ ] **[Anh]** *(30/10)* Quyết có sinh đủ khoảng 230 mẫu D và chạy hai lượt D-lao, D-random hay không (EXPERIMENT_D mục 8).
 - [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
 
 ---
@@ -182,6 +184,9 @@ Ngày 29/10 đã điền câu trả lời làm việc, lấy từ handoff của 
     - Nguyên tắc: chỉ hỏi khi thông tin bắt buộc không tra được hoặc đối tượng còn mơ hồ. Với x-one-of, có số điện thoại thì không cần `contact_id`. Tôn trọng lời tự sửa cuối cùng của người dùng.
     - **Claude đo (29/10):** 14 mẫu execute bị hỏi thừa và 16 mẫu cần hỏi lại không hỏi, tổng 30 mẫu, mất 12,7 điểm. Đây là nhóm hành vi mất điểm lớn nhất; 22/30 mẫu nằm ngoài nhóm 51.
     - Hướng làm: cặp mẫu gần giống nhau (đủ/thiếu slot, một/nhiều đối tượng) sinh từ fit. Đo riêng hỏi thừa, bỏ hỏi và sai `params`.
+    - **Thêm 30/10 (đã xác minh, [EXPERIMENT_D](docs/EXPERIMENT_D.md) mục 2–3):**
+      - Nhãn hỏi lại có 3 kiểu: A trùng tên khi tra cứu, B chọn mơ hồ ID, C thiếu slot.
+      - Model đã làm tốt kiểu A; bỏ hỏi chủ yếu ở B và C, nhất là với tool mới.
 - [ ] **[Cả hai]** **Q5. Phân loại 111 mẫu ngoài phạm vi theo nguyên nhân. Có mẫu "làm được một phần" không, và đáp án xử lý ra sao?**
   - *Vì sao:* gọi dù chỉ một call ở mẫu ngoài phạm vi là mất trắng; còn yêu cầu nhiều ý mà chỉ một ý làm được thì cách xử lý chưa rõ.
   - *Gợi ý:* lọc các mẫu có nhiều ý định mà thiếu một app; xem đáp án làm phần còn lại hay trả `[]`.
@@ -248,6 +253,7 @@ Ngày 29/10 đã điền câu trả lời làm việc, lấy từ handoff của 
       - `done=false` chỉ xuất hiện ở 7/233 rollout, tối đa khoảng 3,0 điểm.
       - Lỗi JSON/schema có ở 5 trace, 1 trace tự sửa được.
       - Nhóm số/giờ 15 mẫu, tối đa 6,4 điểm; nhóm điều kiện 11 mẫu, tối đa 4,7 điểm.
+    - **Thêm 30/10:** luật tất định "ID lấy từ lần tra ≥ 2 mục trùng tên thì hỏi lại" không báo nhầm lần nào trên fit, nhưng phát lại trên rollout chỉ kích hoạt 0–1 mẫu, nên không đưa vào agent ([EXPERIMENT_D](docs/EXPERIMENT_D.md) mục 4).
 - [ ] **[Anh]** **Q14. Có nên ép model chỉ được sinh ID đã xuất hiện trong kết quả tool hoặc history, và chỉ sinh enum hợp lệ** (constrained decoding)? Rủi ro là gì?
   - *Ví dụ rủi ro:* chặn nhầm ID hợp lệ được tạo trong lượt; làm chậm suy luận.
   - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
@@ -273,11 +279,15 @@ Ngày 29/10 đã điền câu trả lời làm việc, lấy từ handoff của 
     - Ưu tiên dữ liệu phản thực tế sinh từ fit: đổi số dư quanh ngưỡng, giờ, entity/ID, thứ tự danh sách, lời tự sửa, đủ/thiếu slot. Sinh lại nhãn rồi kiểm bằng thực thi.
     - Cần thêm: kiểm tra theo chính sách (đọc, hỏi, tham số tuỳ chọn, văn phong fuzzy); ablation chỉ dữ liệu thật so với thật + tổng hợp; kiểm trên tập giữ riêng chưa dùng để sinh nhãn.
     - Không đọc file environment của BTC để làm fixture.
+    - **Thêm 30/10:** bộ sinh cặp đủ/thiếu từ fit đã có ([PR #3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3)).
+      - Mọi nhãn phát lại qua ToolEnv; câu qua 7 kiểm tra; loại nguồn từ dev.
+      - Chạy thử ra 23 mẫu; chưa có người đọc tay, chưa train.
 - [ ] **[Anh]** **Q18. Đa dạng hoá ngôn ngữ nói thế nào và theo tỉ lệ bao nhiêu?** Gồm phương ngữ, tự sửa giữa câu ("5 giờ, à không, 5 rưỡi"), phủ định, nhiều ý định trong một câu, từ tiếng Anh xen vào. Cần TTS cho ASR hay chỉ cần text cho LLM?
   - **Trả lời của đội** (bản làm việc 29/10, chi tiết ở [handoff](docs/CLAUDE_HANDOFF_2026-10-29.md) mục 4; Claude đối chiếu): **Trạng thái: giả thuyết.**
     - Paraphrase từ fit: phủ định, tự sửa, tham chiếu history, nhiều ý trong một câu, phương ngữ, từ tiếng Anh xen vào.
     - Thử vài mức trộn định trước và báo learning curve. Chỉ dùng TTS nếu thí nghiệm ASR cho thấy cần.
     - Đội chưa nghe audio để xác nhận audio khớp kịch bản.
+    - **Thêm 30/10 (việc của Leader):** Anh gợi ý VieNeu (TTS tiếng Việt, https://www.vieneu.io/) để tạo audio tăng cường cho ASR. Trang chưa ghi licence, kích thước model hay khả năng chạy offline; cần kiểm theo thể lệ (ngày phát hành, licence, chỉ dùng lúc phát triển) trước khi dùng.
 
 ### F. Kỹ thuật và quản trị rủi ro
 

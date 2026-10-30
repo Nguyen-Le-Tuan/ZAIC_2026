@@ -144,6 +144,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *29/10:* Anh đã audit lỗi với Codex hỗ trợ ([`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md)), Claude đã đối chiếu ([`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md)). Chưa ghi nhận việc hai người tự phân loại toàn bộ bằng mắt, nên việc này vẫn để mở.
 - [ ] **[Anh]** *(30/10)* Đọc tay 23 mẫu thí nghiệm D trong `lifemate/gen/review_fit_lao.md` (chỉ có trên máy Anh). Đánh dấu `[x]` mẫu hợp lý, ghi lý do mẫu sai. Xem [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md) mục 6.
 - [ ] **[Anh]** *(30/10)* Quyết có sinh đủ khoảng 230 mẫu D và chạy hai lượt D-lao, D-random hay không (EXPERIMENT_D mục 8).
+  - *Cập nhật sau review 30/10:* kế hoạch đã đổi thành 4 giai đoạn có cổng chặn và có đối chứng "nhân bản mẫu hỏi lại thật" ([`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md) mục 5). Việc cần quyết bây giờ là **duyệt giai đoạn 1**.
+- [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 30 nhãn D của giai đoạn 1 (R8 trong review): nhãn có đúng cách BTC sẽ gán không, nhất là các nhãn không có tiền lệ.
+- [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl` (mốc so sánh, hash ghi trong `docs/baselines/d_review_2026-10-30.json`). Không xoá, không train trên 23 nguồn của CS-pilot-23.
 - [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
 
 ---

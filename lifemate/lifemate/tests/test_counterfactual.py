@@ -106,6 +106,26 @@ def test_c_prefilter():
     assert c_filter_reason(enum, {"tool": "tv.control", "param": "action", "value": "mute"}, tools)
 
 
+def test_judge_reason_rules():
+    from lifemate.counterfactual import judge_reason, judge_tasks
+    c = {"kind": "C"}
+    assert judge_reason(c, {"slot_given": False}) is None
+    assert "still given" in judge_reason(c, {"slot_given": True})
+    assert "no judgment" in judge_reason(c, None)
+    bv = {"kind": "B-vague", "value": "bike_7"}
+    assert judge_reason(bv, {"matches": ["bike_7", "bike_8"]}) is None
+    assert "singles out" in judge_reason(bv, {"matches": ["bike_7"]})
+    assert "no longer fits" in judge_reason(bv, {"matches": ["bike_8", "bike_9"]})
+    bs = {"kind": "B-specific", "value": "rem_1"}
+    assert judge_reason(bs, {"matches": ["rem_1"]}) is None
+    assert judge_reason(bs, {"matches": ["rem_1", "rem_2"]})
+    # the judge never sees the original request or the target
+    t = {"task_id": "x#B-vague", "kind": "B-vague", "text": "ORIGINAL", "value": "bike_7",
+         "entities": [{"id": "bike_7", "name": "a"}, {"id": "bike_8", "name": "b"}]}
+    jt = judge_tasks([t], [{"task_id": "x#B-vague", "new_text": "NEW"}])[0]
+    assert "ORIGINAL" not in json.dumps(jt, ensure_ascii=False) and "value" not in jt
+
+
 def test_split_by_origin_is_stable_and_disjoint():
     from lifemate.counterfactual import split_by_origin
     xs = [{"_origin": f"train_{i:04d}", "id": f"train_{i:04d}#d1"} for i in range(200)]

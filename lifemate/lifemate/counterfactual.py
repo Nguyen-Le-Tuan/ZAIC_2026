@@ -347,9 +347,48 @@ def replay(zt, origin_id: str, calls: list[dict], root) -> tuple[list, str | Non
     return results, None
 
 
-def build(tasks, rewrites, S, fit_ids, exclude_ids, drop_apps, root) -> tuple[list[dict], list[dict]]:
+def _ent_brief(e: dict) -> str:
+    keys = [k for k in e if k not in ("id",) and isinstance(e[k], (str, int, float)) and not isinstance(e[k], bool)]
+    return "; ".join(f"{k}={e[k]}" for k in keys[:6])
+
+
+def judge_tasks(tasks, rewrites) -> list[dict]:
+    """Second, meaning-level read of each rewrite (R7 of the 30/10 review). The judge sees only the NEW request and,
+    for B, the listed entities; never the original request or which entity/value was targeted."""
+    rw_by = {r["task_id"]: r for r in rewrites if r.get("new_text")}
+    out = []
+    for t in tasks:
+        rw = rw_by.get(t["task_id"])
+        if rw is None:
+            continue
+        if t["kind"] == "C":
+            out.append({"task_id": t["task_id"], "kind": "C", "new_text": rw["new_text"],
+                        "question": f"Yêu cầu có còn cho biết giá trị của tham số '{t['param']}' ({t.get('param_desc') or ''}) "
+                                    f"cho {t['tool']} không? Trả slot_given true/false."})
+        else:
+            out.append({"task_id": t["task_id"], "kind": t["kind"], "new_text": rw["new_text"],
+                        "question": "Những mục nào trong danh sách khớp với yêu cầu? Trả matches = danh sách id.",
+                        "options": [{"id": e.get("id"), "about": _ent_brief(e)} for e in t["entities"]]})
+    return out
+
+
+def judge_reason(task: dict, j: dict | None) -> str | None:
+    if j is None:
+        return "judge: no judgment"
+    if task["kind"] == "C":
+        return "judge: slot still given" if j.get("slot_given") else None
+    matches = [str(x) for x in j.get("matches", [])]
+    if task["kind"] == "B-vague":
+        if str(task["value"]) not in matches:
+            return "judge: target entity no longer fits"
+        return None if len(matches) >= 2 else "judge: still singles out one entity"
+    return None if matches == [str(task["value"])] else "judge: does not single out the chosen entity"
+
+
+def build(tasks, rewrites, S, fit_ids, exclude_ids, drop_apps, root, judgments=None) -> tuple[list[dict], list[dict]]:
     zt = zaic_tools("train", root)
     rw_by = {r["task_id"]: r for r in rewrites}
+    jd = {j["task_id"]: j for j in judgments} if judgments is not None else None
     kept, report = [], []
     counter = Counter()
     for t in tasks:
@@ -363,6 +402,8 @@ def build(tasks, rewrites, S, fit_ids, exclude_ids, drop_apps, root) -> tuple[li
             reason = "origin not in fit or in an excluded (dev) split"
         else:
             reason = check_rewrite(t, rw)
+            if reason is None and jd is not None:
+                reason = judge_reason(t, jd.get(t["task_id"]))
         label, results = None, None
         if reason is None:
             s = S[t["origin_id"]]
@@ -433,7 +474,12 @@ def main():
     b.add_argument("--fit", required=True)
     b.add_argument("--exclude", nargs="*", help="id files that must never be a source (dev splits)")
     b.add_argument("--drop-apps", help="json list of held-out apps that labels must not use")
+    b.add_argument("--judgments", help="R7 meaning-level judgments ({task_id, slot_given} or {task_id, matches})")
     b.add_argument("--out", required=True)
+    jt = sub.add_parser("judge-tasks", help="tasks for the meaning-level second read (new text only)")
+    jt.add_argument("--tasks", required=True)
+    jt.add_argument("--rewrites", required=True)
+    jt.add_argument("--out", required=True)
     sp = sub.add_parser("split", help="D-train / D-eval by origin (the eval part is a contrast set, never trained on)")
     sp.add_argument("--samples", required=True)
     sp.add_argument("--eval-frac", type=float, default=0.2)
@@ -442,7 +488,7 @@ def main():
     r = sub.add_parser("review")
     r.add_argument("--samples", required=True)
     r.add_argument("--out", required=True)
-    for p in (c, b, sp, r):
+    for p in (c, b, sp, r, jt):
         p.add_argument("--root", default=str(DEFAULT_ROOT))
     a = ap.parse_args()
 
@@ -460,15 +506,20 @@ def main():
     elif a.cmd == "build":
         tasks, rewrites = load_jsonl(a.tasks), load_jsonl(a.rewrites)
         drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
-        kept, report = build(tasks, rewrites, S, set(runinfo.read_ids(a.fit)), _ids(a.exclude), drop, a.root)
+        judg = load_jsonl(a.judgments) if a.judgments else None
+        kept, report = build(tasks, rewrites, S, set(runinfo.read_ids(a.fit)), _ids(a.exclude), drop, a.root, judg)
         write_jsonl(a.out, kept)
         summary = {"tasks": len(tasks), "kept": len(kept), "kept_by_kind": Counter(r["kind"] for r in report if r["kept"]),
                    "rejected": Counter((r["reason"] or "").split(":")[0].split(" (")[0] for r in report if not r["kept"])}
         runinfo.write_json(Path(a.out).with_suffix(".report.json"), {
             "created": runinfo.now(), "args": vars(a), "summary": summary, "rows": report,
-            "inputs_sha256": {k: runinfo.sha256_file(getattr(a, k)) for k in ("tasks", "rewrites", "fit")},
+            "inputs_sha256": {k: runinfo.sha256_file(getattr(a, k)) for k in ("tasks", "rewrites", "fit", "judgments") if getattr(a, k)},
             "out_sha256": runinfo.sha256_file(a.out), "git": runinfo.git_state()})
         print(json.dumps(summary, ensure_ascii=False))
+    elif a.cmd == "judge-tasks":
+        jts = judge_tasks(load_jsonl(a.tasks), load_jsonl(a.rewrites))
+        write_jsonl(a.out, jts)
+        print(json.dumps({"out": a.out, "judge_tasks": len(jts)}))
     elif a.cmd == "split":
         tr, ev = split_by_origin(load_jsonl(a.samples), a.eval_frac)
         write_jsonl(a.out_train, tr)

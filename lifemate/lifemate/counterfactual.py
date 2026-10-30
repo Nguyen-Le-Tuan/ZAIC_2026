@@ -15,6 +15,10 @@ Commands (outputs go to gen/, which is git-ignored: it holds text derived from t
       --out gen/d_fit_lao.jsonl
   python -m lifemate.counterfactual review --samples gen/d_fit_lao.jsonl --tasks gen/tasks_fit_lao.jsonl --out gen/review_fit_lao.md
 Then: python -m lifemate.sft --fit splits/fit_lao.txt ... --extra-samples gen/d_fit_lao.jsonl
+
+Phase 1b (docs/D_PHASE1B_2026-10-30.md): `candidates --filter-v2 --dedup 0.75 --dedup-against <earlier task files>`
+drops sources a writer would skip (filter_v2_reason) and near-duplicate requests; `build` also rejects a rewrite
+whose kept label prefix still uses words the rewrite removed (label_leak). Without these flags v1 output is unchanged.
 """
 from __future__ import annotations
 
@@ -202,6 +206,124 @@ def candidates_b_specific(s, tools, rng, prefilter: bool = True) -> list[dict]:
     return []
 
 
+# ---------------------------------------------------------------- source filter v2 (phase 1b)
+# Rules for the skip reasons of D v1 that a rule can catch (docs/D_PHASE1_2026-10-30.md section 2). Each rule
+# returns its own reason so its hits can be counted against the writer's decisions.
+
+IF_THEN = re.compile(r"(?<!\w)(nếu|thì)(?!\w)")
+ELSE = re.compile(r"(?<!\w)(không thì|hổng thì|hông thì|còn không|nếu không)(?!\w)")
+NUMBER = re.compile(r"\d|(?<!\w)(một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười|trăm|nghìn|ngàn|triệu|rưỡi)(?!\w)")
+SELF_CORRECTION = re.compile(r"(?<!\w)(à không|à nhầm|à thôi|mà thôi|à khoan|khoan|không phải|ý lộn|nhầm rồi)(?!\w)")
+HISTORY_DEIXIS = re.compile(r"(?<!\w)(hồi nãy|lúc nãy|ban nãy|vừa nãy|qua đấy|qua đó|ra đấy|chỗ đó|chỗ đấy|lần trước|"
+                            r"như cũ|y như|như anh dặn|như chị dặn|như em dặn|như đã dặn|số đó|số đấy)(?!\w)")
+TIME_ANAPHORA = re.compile(r"(?<!\w)(giờ đó|giờ đấy|giờ ấy|lúc đó|lúc đấy)(?!\w)")
+# words that single nothing out when spoken: pronouns, time of day, function words
+WEAK = {"anh", "chị", "em", "cô", "chú", "bác", "con", "ông", "bà", "có", "không", "tối", "sáng", "chiều", "trưa", "nay",
+        "mai", "cái", "một", "được", "ra", "đi", "là", "cho", "với", "mới"}
+
+
+def _clauses(text: str) -> list[str]:
+    return [c for c in re.split(r"[,.;:!?…]+", norm(text)) if c.strip()]
+
+
+def _str_tokens(x) -> set[str]:
+    return {w for w in words(re.sub(r"[@._]", " ", str(x))) if len(w) >= 3} - WEAK
+
+
+def _target_clauses(text: str, task: dict) -> list[str]:
+    """Clauses of the request that carry the targeted value (C) or distinguishing words (B-vague)."""
+    cl = _clauses(text)
+    if task["kind"] == "C":
+        vals = task["value"] if isinstance(task["value"], list) else [task["value"]]
+        hit = [c for c in cl if any((find_form(c, value_forms(x)) if value_forms(x) else _str_tokens(x) & words(c))
+                                    for x in vals)]
+    else:
+        hit = [c for c in cl if set(task.get("distinguishing_words", [])) & words(c)]
+    return hit or cl
+
+
+def _args_words(calls: list[dict]) -> set[str]:
+    """Words of every string argument of the calls."""
+    return set().union(*[words(x) for c in calls for x in _atoms(c["arguments"]) if isinstance(x, str)] or [set()])
+
+
+def _count_form(text: str, forms) -> int:
+    """Non-overlapping mentions of a value (longest form first: "một trăm hai mươi nghìn" counts once)."""
+    t, taken = norm(text), []
+    for f in sorted((f for f in forms if f), key=len, reverse=True):
+        for m in re.finditer(rf"(?<![\w.,]){re.escape(f)}(?![\w])", t):
+            if not any(m.start() < e and s < m.end() for s, e in taken):
+                taken.append((m.start(), m.end()))
+    return len(taken)
+
+
+def filter_v2_reason(s: dict, task: dict, tools: dict) -> str | None:
+    """Why a candidate (C or B-vague) is not worth rewriting under the v2 source rules (None = keep)."""
+    calls = s["label"]["tool_calls"]
+    w, v, kind = task["write_index"], task["value"], task["kind"]
+    text = s["audio_text"]
+    cl = _clauses(text)
+    tc = _target_clauses(text, task)
+    hist = words(" ".join([h["audio_text"] for h in s.get("history", []) if h["role"] == "user"][-2:]))
+    if s.get("history") and any(HISTORY_DEIXIS.search(c) for c in tc):
+        return "v2: target refers back to the dialogue"
+    if sum(c["name"] == task["tool"] for c in calls) > 1:
+        return "v2: target tool called more than once"
+    others = [c for i, c in enumerate(calls) if i != w]
+    if any(str(v) in _atoms(c["arguments"]) for c in others):
+        return "v2: target value also used by another call"
+    if kind == "C":
+        forms = value_forms(v) if not isinstance(v, list) else set()
+        if forms:
+            if _count_form(text, forms) > 1:
+                return "v2: value said twice"
+            # if/else on the same slot: "mưa thì bảy giờ, không thì chín giờ"
+            for i, c in enumerate(cl):
+                if c in tc:
+                    near = [cl[j] for j in (i - 1, i + 1) if 0 <= j < len(cl)]
+                    if any((ELSE.search(c) or ELSE.search(n)) and NUMBER.search(n) for n in near):
+                        return "v2: alternative value in an if/else"
+            if any(find_form(x, forms) for c in others for x in _atoms(c["arguments"]) if isinstance(x, str)):
+                return "v2: target value also said in another call"
+            if TIME_ANAPHORA.search(norm(text)) and re.search(r"\d{2}:\d{2}", str(v)):
+                return "v2: time referred to again ('giờ đó')"
+        elif isinstance(v, str) and _str_tokens(v) & hist:
+            return "v2: value in the dialogue history"
+        return None
+    if is_answer_turn(s):
+        return "v2: answer to an earlier turn"
+    if SELF_CORRECTION.search(norm(text)):
+        return "v2: self-correction in the request"
+    ents, k = task["entities"], [str(e.get("id")) for e in task["entities"]].index(str(v))
+    strong = set(task["distinguishing_words"]) - WEAK
+    if not strong:
+        return "v2: only weak distinguishing words"
+    if strong & _args_words(calls[:w]):  # the label prefix (kept as is) would still name the entity
+        return "v2: distinguishing word used by an earlier call"
+    if (_unique_words(ents, k) - WEAK) & hist:
+        return "v2: entity named in the dialogue history"
+    other = set().union(*[_unique_words(ents, j) for j in range(len(ents)) if j != k] or [set()]) - WEAK - GENERIC
+    if any(IF_THEN.search(c) for c in tc) and other & words(text):
+        return "v2: choice between listed entities depends on a condition"
+    name = norm(ent_name(ents[k]) or "")
+    same = [e for j, e in enumerate(ents) if j != k and norm(ent_name(e) or "") == name]
+    if name and same and (words(name) - WEAK) & words(text):
+        return "v2: same-name entities and the name is said (would be type A)"
+    return None
+
+
+def label_leak(task: dict, new_text: str, label: list[dict]) -> str | None:
+    """Words the rewrite removed that the kept label prefix still uses (e.g. a search query)."""
+    gone = (words(task["text"]) - words(new_text)) - WEAK
+    hit = gone & _args_words(label[:-1])
+    return f"label uses words the rewrite removed ({', '.join(sorted(hit))})" if hit else None
+
+
+def _too_similar(text: str, seen: list[str], th: float) -> bool:
+    t = norm(text)
+    return any(difflib.SequenceMatcher(None, t, x).ratio() >= th for x in seen)
+
+
 INSTRUCTIONS = {
     "C": "Viết lại câu yêu cầu, bỏ ĐÚNG thông tin cho tham số {param} (= {value}) của {tool}; giữ nguyên phần còn lại "
          "nhiều nhất có thể, câu vẫn tự nhiên và vẫn yêu cầu hành động đó. removed_span = đoạn đã bỏ, chép nguyên văn từ "
@@ -224,10 +346,15 @@ def precedents(samples, tools) -> set[tuple]:
     return out
 
 
-def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed, max_per_tool=None, require_precedent=False) -> list[dict]:
+def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed, max_per_tool=None, require_precedent=False,
+               filter_v2=False, dedup=None, dedup_seed=None, stats=None) -> list[dict]:
     """Pick tasks spread over as many tools as possible (round robin over tools, seeded), one task per sample,
-    at most max_per_tool per (kind, tool). Each task records whether a real ask attests its (type, tool, param)."""
+    at most max_per_tool per (kind, tool). Each task records whether a real ask attests its (type, tool, param).
+    filter_v2: drop candidates that filter_v2_reason rejects. dedup: skip a pick whose request is at least this
+    similar to one already picked (or given in dedup_seed {(kind, tool): [texts]}) for the same (kind, tool).
+    stats (a Counter) receives the drop counts."""
     rng = random.Random(seed)
+    stats = stats if stats is not None else Counter()
     prec = precedents(samples, tools)
     pools: dict[str, dict[str, list]] = {"C": defaultdict(list), "B-vague": defaultdict(list), "B-specific": defaultdict(list)}
     for s in samples:
@@ -235,7 +362,13 @@ def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed, max_per_tool=Non
             t["precedent"] = ("C" if t["kind"] == "C" else "B", t["tool"], t["param"]) in prec
             if require_precedent and not t["precedent"] and t["kind"] != "B-specific":
                 continue
+            if filter_v2 and t["kind"] != "B-specific":
+                r = filter_v2_reason(s, t, tools)
+                if r:
+                    stats[r] += 1
+                    continue
             pools[t["kind"]][t["tool"]].append((s, t))
+    seen = defaultdict(list, {k: [norm(x) for x in v] for k, v in (dedup_seed or {}).items()})
     used, tasks = set(), []
     for kind, n in (("B-specific", n_bs), ("B-vague", n_bv), ("C", n_c)):
         by_tool = {k: rng.sample(v, len(v))[:max_per_tool] for k, v in sorted(pools[kind].items())}
@@ -249,6 +382,10 @@ def make_tasks(samples, tools, attested, n_c, n_bv, n_bs, seed, max_per_tool=Non
                 if not by_tool[tool] or picked >= n:
                     continue
                 s, t = by_tool[tool].pop(0)
+                if dedup and _too_similar(s["audio_text"], seen[(kind, tool)], dedup):
+                    stats["dedup: near-duplicate request"] += 1
+                    continue
+                seen[(kind, tool)].append(norm(s["audio_text"]))
                 used.add(s["id"])
                 picked += 1
                 hist = [h["audio_text"] for h in s.get("history", []) if h["role"] == "user"][-2:]
@@ -410,6 +547,8 @@ def build(tasks, rewrites, S, fit_ids, exclude_ids, drop_apps, root, judgments=N
             label = make_label(t, s)
             if used_apps(label) & drop_apps:
                 reason = "uses a held-out app"
+            elif label_leak(t, rw["new_text"], label):
+                reason = label_leak(t, rw["new_text"], label)
             else:
                 results, reason = replay(zt, t["origin_id"], label, root)
         if reason is None:
@@ -467,6 +606,9 @@ def main():
     c.add_argument("--seed", type=int, default=0)
     c.add_argument("--max-per-tool", type=int, help="cap per (kind, tool) so a few tools do not dominate")
     c.add_argument("--require-precedent", action="store_true", help="only (type, tool, param) a real fit ask attests")
+    c.add_argument("--filter-v2", action="store_true", help="source filter v2 (phase 1b): drop sources a writer would skip")
+    c.add_argument("--dedup", type=float, help="skip a request this similar (difflib ratio) to one already picked")
+    c.add_argument("--dedup-against", nargs="*", help="earlier task files whose requests count as already picked")
     c.add_argument("--out", required=True)
     b = sub.add_parser("build")
     b.add_argument("--tasks", required=True)
@@ -497,12 +639,18 @@ def main():
     if a.cmd == "candidates":
         fit = [S[i] for i in sorted(set(runinfo.read_ids(a.fit)) - _ids(a.exclude))]
         attested = attested_plain_params(fit, tools)
-        tasks = make_tasks(fit, tools, attested, a.n_c, a.n_b_vague, a.n_b_specific, a.seed, a.max_per_tool, a.require_precedent)
+        seed_texts = defaultdict(list)
+        for f in a.dedup_against or []:
+            for t in load_jsonl(f):
+                seed_texts[(t["kind"], t["tool"])].append(t["text"])
+        stats = Counter()
+        tasks = make_tasks(fit, tools, attested, a.n_c, a.n_b_vague, a.n_b_specific, a.seed, a.max_per_tool,
+                           a.require_precedent, a.filter_v2, a.dedup, seed_texts, stats)
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         write_jsonl(a.out, tasks)
         print(json.dumps({"out": a.out, "tasks": len(tasks), "by_kind": Counter(t["kind"] for t in tasks),
-                          "tools": len({t["tool"] for t in tasks}), "attested_plain_params": sorted(attested)},
-                         ensure_ascii=False))
+                          "tools": len({t["tool"] for t in tasks}), "dropped": dict(sorted(stats.items())),
+                          "attested_plain_params": sorted(attested)}, ensure_ascii=False))
     elif a.cmd == "build":
         tasks, rewrites = load_jsonl(a.tasks), load_jsonl(a.rewrites)
         drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()

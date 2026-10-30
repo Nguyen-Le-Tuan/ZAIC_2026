@@ -12,6 +12,9 @@
   D-M6/7 source prefilter vs the writer's skip decisions (in-sample on the pilot)
   D-M9..11 source pool size, top-3 tool share (raw and capped), distinct tools
   D-M12 coverage of the model's B/C ask misses on dev by generator sources (aggregate only)
+  D-M6v2 source filter v2 vs the writer's / judge's decisions (--report: the build report, for judge rejects)
+  D-M10/11 on kept samples (--samples): tools, top-3 share, real-ask precedent share
+  D-M14 (rough) per kept (type, tool, param): real asks vs fit executes whose slot the request does not give
 """
 import argparse
 import collections
@@ -120,6 +123,82 @@ def prefilter_vs_writer(tasks, rewrites, S, tools) -> dict:
     return dict(sorted(conf.items()))
 
 
+def filter_v2_vs_writer(tasks, rewrites, report, S, tools) -> dict:
+    """Confusion of filter_v2_reason (drop/keep) against the outcome: good = kept by build; bad = writer skip or
+    judge / text-check reject. Hits per rule. In-sample when the rules were written after reading these decisions."""
+    rw = {r["task_id"]: r for r in rewrites}
+    out_by = {r["task_id"]: r for r in report} if report else {}
+    conf, per = collections.Counter(), collections.defaultdict(collections.Counter)
+    for t in tasks:
+        if t["kind"] == "B-specific":
+            continue
+        s = S[t["origin_id"]]
+        if t["kind"] == "C" and cf.c_filter_reason(s, t, tools):
+            conf["dropped_by_v1_prefilter"] += 1
+            continue
+        r = cf.filter_v2_reason(s, t, tools)
+        row = out_by.get(t["task_id"])
+        o = "good" if (row["kept"] if row else "skip" not in rw.get(t["task_id"], {})) else \
+            "writer_skip" if "skip" in rw.get(t["task_id"], {}) else "rejected"
+        conf[f"{'good' if o == 'good' else 'bad'}/{'dropped' if r else 'kept'}"] += 1
+        if r:
+            per[r][o] += 1
+    return {"confusion": dict(sorted(conf.items())), "per_rule": {k: dict(v) for k, v in sorted(per.items())}}
+
+
+def kept_stats(samples, tasks, P, tools) -> dict:
+    T = {t["task_id"]: t for t in tasks}
+    prec = cf.precedents(P, tools)
+    keys = collections.Counter()
+    for d in samples:
+        t = T[f"{d['_origin']}#{d['_kind']}"]
+        keys[("C" if t["kind"] == "C" else "B", t["tool"], t["param"])] += 1
+    tl = collections.Counter()
+    for (_, tool, _), n in keys.items():
+        tl[tool] += n
+    n = sum(keys.values())
+    return {"samples": n, "by_kind": dict(collections.Counter(d["_kind"] for d in samples)), "tools": len(tl),
+            "top3_tools": tl.most_common(3), "top3_share": round(sum(x for _, x in tl.most_common(3)) / n, 2) if n else None,
+            "with_precedent": sum(v for k, v in keys.items() if k in prec), "keys": keys}
+
+
+def counter_precedent(P, tools, keys) -> list[dict]:
+    """Rough: per (type, tool, param), fit executes where the request (or user history) does not give the slot and
+    the value is not copied from a tool result (C), or the picked list entity has no unique word in the request (B).
+    Counts include computed values and "all/each" requests, so read them as a flag for manual checking only."""
+    asks, cnt = collections.Counter(), collections.Counter()
+    for s in P:
+        t = ask_type(s, tools)
+        if t in ("B", "C"):
+            a = s["label"]["tool_calls"][-1]["arguments"]
+            asks[(t, a["tool_name"], a["params"][0])] += 1
+        if is_ask_sample(s):
+            continue
+        calls, res = s["label"]["tool_calls"], s["label"]["tool_results"]
+        hist = " ".join(h["audio_text"] for h in s.get("history", []) if h["role"] == "user")
+        seen = cf._atoms(res) | cf._history_atoms(s)
+        for i, c in enumerate(calls):
+            spec = tools.get(c["name"], {})
+            if spec.get("kind") != "write":
+                continue
+            for p in cf.required(spec):
+                v = c["arguments"].get(p)
+                if (("C", c["name"], p) not in keys and ("B", c["name"], p) not in keys) or v is None or isinstance(v, bool):
+                    continue
+                if cf.is_xref(spec, p):
+                    pick = cf._list_pick(calls, res, i, v)
+                    if pick and not (cf._unique_words(*pick) & cf.words(s["audio_text"] + " " + hist)):
+                        cnt[("B", c["name"], p)] += 1
+                elif "enum" not in spec["parameters"]["properties"].get(p, {}):
+                    ps = spec["parameters"]["properties"].get(p, {})
+                    said = cf.spoken_in(s["audio_text"], v, ps) or cf.spoken_in(hist, v, ps)
+                    copied = all(str(x) in seen for x in v) if isinstance(v, list) else str(v) in seen
+                    if not said and not copied:
+                        cnt[("C", c["name"], p)] += 1
+    return [{"key": list(k), "kept": n, "real_asks": asks[k], "counter": cnt[k], "flag": cnt[k] > asks[k]}
+            for k, n in sorted(keys.items(), key=lambda x: (asks[x[0]] > 0, -cnt[x[0]]))]
+
+
 def pool_stats(P, tools, att, prefilter, cap=8) -> dict:
     tl = collections.defaultdict(collections.Counter)
     for _, t in all_candidates(P, tools, att, prefilter):
@@ -160,6 +239,8 @@ def main():
     ap.add_argument("--rewrites")
     ap.add_argument("--mutations")
     ap.add_argument("--runs", nargs="*", default=[])
+    ap.add_argument("--report", help="build report json (rows with kept/reason), for D-M6v2")
+    ap.add_argument("--samples", nargs="*", default=[], help="kept D samples, for D-M10/11 and D-M14")
     ap.add_argument("--json")
     a = ap.parse_args()
     S = {s["id"]: s for s in load_split("train")}
@@ -178,6 +259,15 @@ def main():
         "D-M9_M11_pool": {"no_prefilter": pool_stats(P, tools, att, False), "prefilter": pool_stats(P, tools, att, True)},
         "D-M12_coverage_of_dev_misses": {p.split(":")[0]: coverage(*p.split(":"), S, tools, P, att) for p in a.runs},
     }
+    if tasks and rewrites:
+        rep = json.loads(Path(a.report).read_text())["rows"] if a.report else None
+        res["D-M6v2_filter_v2_vs_outcome"] = filter_v2_vs_writer(tasks, rewrites, rep, S, tools)
+    if a.samples:
+        kept = [x for f in a.samples for x in load_jsonl(f)]
+        ks = kept_stats(kept, tasks, P, tools)
+        res["inputs_sha256"].update({f: sha256_file(f) for f in a.samples})
+        res["D-M14_counter_precedent"] = counter_precedent(P, tools, ks.pop("keys"))
+        res["D-M10_M11_kept"] = ks
     print(json.dumps(res, ensure_ascii=False, indent=1))
     if a.json:
         write_json(a.json, res)

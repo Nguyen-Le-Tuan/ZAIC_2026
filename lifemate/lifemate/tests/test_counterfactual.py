@@ -106,6 +106,61 @@ def test_c_prefilter():
     assert c_filter_reason(enum, {"tool": "tv.control", "param": "action", "value": "mute"}, tools)
 
 
+def _v2(text, task, calls, history=()):
+    from lifemate.counterfactual import filter_v2_reason
+    s = {"audio_text": text, "history": [{"role": "user", "audio_text": h} for h in history],
+         "label": {"tool_calls": calls}}
+    return filter_v2_reason(s, task, {})
+
+
+def test_filter_v2_c_rules():
+    t19 = "2026-11-25T19:00:00+07:00"
+    lesson = [{"name": "learning.schedule_lesson", "arguments": {"course_id": "c1", "time": t19}}]
+    task = {"kind": "C", "write_index": 0, "tool": "learning.schedule_lesson", "param": "time", "value": t19}
+    assert _v2("Xếp buổi học lúc bảy giờ tối mai nghe em.", task, lesson) is None
+    assert "if/else" in _v2("Mai Huế mưa thì xếp bảy giờ tối, không thì chín giờ.", task, lesson)
+    goal = [{"name": "fitness.set_goal", "arguments": {"steps": 6000}}]
+    gt = {"kind": "C", "write_index": 0, "tool": "fitness.set_goal", "param": "steps", "value": 6000}
+    assert "twice" in _v2("Hôm qua đi chưa tới sáu ngàn bước thì hạ mục tiêu còn sáu ngàn nghen.", gt, goal)
+    # one spoken amount matched by overlapping forms ("một trăm hai mươi nghìn" / "một trăm hai mươi") counts once
+    pay = [{"name": "ewallet.transfer", "arguments": {"to": "Hòa", "amount": 120000}}]
+    pt = {"kind": "C", "write_index": 0, "tool": "ewallet.transfer", "param": "amount", "value": 120000}
+    assert _v2("Chuyển cho Hòa một trăm hai mươi nghìn qua ví giúp anh cái.", pt, pay) is None
+    t14 = "2026-10-02T14:00:00+07:00"
+    two = [{"name": "chat_ott.send_message", "arguments": {"chat_id": "chat_01", "content": "Ca mới bắt đầu lúc 14 giờ"}},
+           {"name": "calendar.create_event", "arguments": {"title": "Bàn giao ca", "start": t14}}]
+    ct = {"kind": "C", "write_index": 1, "tool": "calendar.create_event", "param": "start", "value": t14}
+    assert "another call" in _v2("Nhắn chị Lan là ca mới bắt đầu lúc hai giờ chiều mai, rồi tạo lịch vào giờ đó.", ct, two)
+    ride = [{"name": "ride_hailing.book", "arguments": {"pickup": "nhà", "dropoff": "Nhà thủ công Bờ Sông"}}]
+    rt = {"kind": "C", "write_index": 0, "tool": "ride_hailing.book", "param": "dropoff", "value": "Nhà thủ công Bờ Sông"}
+    assert "dialogue" in _v2("Ừ thì gọi cho anh cái ô tô từ nhà qua đấy luôn.", rt, ride, ["Tìm mấy tiệm đồ thủ công gần bờ sông"])
+
+
+def test_filter_v2_b_vague_rules():
+    ents = [{"id": "ben_01", "name": "Nguyễn Thị Lan"}, {"id": "ben_02", "name": "Lê Minh"}]
+    lst = {"name": "banking.list_beneficiaries", "arguments": {}}
+    tr = lambda b: {"name": "banking.transfer", "arguments": {"beneficiary_id": b, "amount": 100000}}  # noqa: E731
+    task = {"kind": "B-vague", "write_index": 1, "tool": "banking.transfer", "param": "beneficiary_id", "value": "ben_01",
+            "entities": ents, "distinguishing_words": ["lan", "nguyễn", "thị"]}
+    assert _v2("Chuyển cho Nguyễn Thị Lan một trăm nghìn nha.", task, [lst, tr("ben_01")]) is None
+    assert "more than once" in _v2("Chuyển Nguyễn Thị Lan một trăm, Lê Minh một trăm nha.", task, [lst, tr("ben_01"), tr("ben_02")])
+    assert "weak" in _v2("Chuyển cho anh một trăm nghìn nha.", {**task, "distinguishing_words": ["anh"]}, [lst, tr("ben_01")])
+    search = {"name": "banking.list_beneficiaries", "arguments": {"query": "Lan"}}
+    assert "earlier call" in _v2("Chuyển cho Nguyễn Thị Lan một trăm nghìn nha.", task, [search, tr("ben_01")])
+    assert "history" in _v2("Chuyển cho Nguyễn Thị Lan một trăm nghìn nha.", task, [lst, tr("ben_01")], ["Lan nhắn gì đó em?"])
+    assert "self-correction" in _v2("Chuyển cho Minh, à không, cho Nguyễn Thị Lan một trăm nghìn nha.", task, [lst, tr("ben_01")])
+    assert "condition" in _v2("Chuyển cho Nguyễn Thị Lan nếu ví đủ, không thì Lê Minh nha.", task, [lst, tr("ben_01")])
+
+
+def test_label_leak():
+    from lifemate.counterfactual import label_leak
+    task = {"text": "Ờ, bài giá xăng sắp giảm ba trăm đồng ấy, em lưu lại."}
+    label = [{"name": "news.search", "arguments": {"query": "giá xăng"}},
+             {"name": "sys.ask_missing_info", "arguments": {"tool_name": "news.save", "params": ["article_id"]}}]
+    assert "xăng" in label_leak(task, "Ờ, bài báo ấy em lưu lại.", label)
+    assert label_leak(task, "Ờ, bài giá xăng ấy em lưu lại.", label) is None
+
+
 def test_judge_reason_rules():
     from lifemate.counterfactual import judge_reason, judge_tasks
     c = {"kind": "C"}
@@ -166,6 +221,43 @@ def test_build_replays_c_and_b_specific():
     assert by["B-specific"]["label"]["tool_calls"][-1]["name"] == "reminders.delete"
     assert all(k["_src"] == "synthetic-D" and k["audio"] is None for k in kept)
     assert len(by["C"]["label"]["tool_results"]) == len(by["C"]["label"]["tool_calls"])
+
+
+def test_make_tasks_filter_v2_and_dedup():
+    _need_data()
+    import difflib
+    from collections import Counter
+    from lifemate import counterfactual as cf
+    from lifemate.askpolicy import attested_plain_params, norm
+    from lifemate.data import catalog_tools, load_catalog, load_split
+    from lifemate.runinfo import read_ids
+    S = {s["id"]: s for s in load_split("train")}
+    tools = catalog_tools(load_catalog("train"))
+    fit = [S[i] for i in sorted(read_ids(PKG_DIR / "splits" / "fit_lao.txt"))][:600]
+    att = attested_plain_params(fit, tools)
+    stats = Counter()
+    tasks = cf.make_tasks(fit, tools, att, 100, 100, 0, 3, max_per_tool=16, filter_v2=True, dedup=0.75, stats=stats)
+    assert tasks and stats
+    for t in tasks:
+        assert cf.filter_v2_reason(S[t["origin_id"]], t, tools) is None
+    for a in tasks:
+        for b in tasks:
+            if a is not b and (a["kind"], a["tool"]) == (b["kind"], b["tool"]):
+                assert difflib.SequenceMatcher(None, norm(a["text"]), norm(b["text"])).ratio() < 0.75
+    # without the new options the selection is unchanged (v1 reproducibility)
+    plain = cf.make_tasks(fit, tools, att, 100, 100, 0, 3, max_per_tool=16)
+    assert plain == cf.make_tasks(fit, tools, att, 100, 100, 0, 3, max_per_tool=16, filter_v2=False, dedup=None)
+
+
+def test_build_rejects_label_leak():
+    cf, S, tasks, rws = _real_tasks()
+    task = dict(tasks[0], text=tasks[0]["text"] + " xăng")
+    calls = S["train_1364"]["label"]["tool_calls"]
+    s = dict(S["train_1364"], label=dict(S["train_1364"]["label"],
+                                         tool_calls=[{"name": "news.search", "arguments": {"query": "xăng"}}] + calls))
+    task["write_index"] += 1
+    kept, report = cf.build([task], rws[:1], {**S, "train_1364": s}, {"train_1364"}, set(), set(), DEFAULT_ROOT)
+    assert not kept and "removed" in report[0]["reason"]
 
 
 def test_build_refuses_dev_origin():

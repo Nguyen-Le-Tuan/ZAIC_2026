@@ -147,8 +147,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *Cập nhật sau review 30/10:* kế hoạch đã đổi thành 4 giai đoạn có cổng chặn và có đối chứng "nhân bản mẫu hỏi lại thật" ([`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md) mục 5). Việc cần quyết bây giờ là **duyệt giai đoạn 1**.
 - [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 30 nhãn D của giai đoạn 1 (R8 trong review): nhãn có đúng cách BTC sẽ gán không, nhất là các nhãn không có tiền lệ.
   - *Đã sẵn sàng:* `lifemate/gen/review_v1_30.md`, gồm 30 mẫu ngẫu nhiên của D v1 (14 C, 16 B-vague). Đây là cổng còn mở của giai đoạn 1; cần ≥ 27/30 mẫu hợp lý.
-- [ ] **[Anh]** *(30/10)* Chọn bước tiếp theo của D: giai đoạn 1b rồi giai đoạn 2 có nhánh liều lượng (khuyến nghị), hay giai đoạn 2 ngay ([`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md) mục 5).
-- [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl` và `lifemate/gen/*_v1*` (mốc so sánh, hash ghi trong `docs/baselines/`). Không xoá, không train trên nguồn của CS-pilot-23 hay D-eval-24.
+- [x] **[Anh]** *(30/10)* Chọn bước tiếp theo của D: giai đoạn 1b rồi giai đoạn 2 có nhánh liều lượng (khuyến nghị), hay giai đoạn 2 ngay ([`docs/D_PHASE1_2026-10-30.md`](docs/D_PHASE1_2026-10-30.md) mục 5).
+  - *Anh đã chọn trong chat (30/10):* "Làm giai đoạn 1b". Kết quả ở [`docs/D_PHASE1B_2026-10-30.md`](docs/D_PHASE1B_2026-10-30.md): D-train 77 mẫu; tỉ lệ người viết phải bỏ 27% (C 0%, B-vague 53%), cổng ≤ 15% vẫn không đạt.
+- [ ] **[Anh]** *(30/10)* Chọn bước tiếp theo sau giai đoạn 1b: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật để có thêm tool) trước ([`docs/D_PHASE1B_2026-10-30.md`](docs/D_PHASE1B_2026-10-30.md) mục 6). Giai đoạn 2 tốn khoảng 3 × 3,3 giờ GPU trên máy Anh.
+- [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 24 mẫu mới của giai đoạn 1b trong `lifemate/gen/review_1b.md` (chỉ có trên máy Anh). Chú ý: 7/8 câu B-vague được viết bằng cách bỏ hẳn người nhận, và 3 mẫu `banking.transfer.amount` không có tiền lệ hỏi thật.
+- [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl`, `lifemate/gen/*_v1*` và `lifemate/gen/*_1b*` (mốc so sánh, hash ghi trong `docs/baselines/`). Không xoá, không train trên nguồn của CS-pilot-23 hay D-eval-24.
+  - *Ghi chú 30/10:* D-eval-24 có 1 mẫu rò rỉ nhãn (`train_1140#d1`). Tập vẫn giữ nguyên để so được với mốc; báo cáo kèm kết quả trên D-eval-23 (bỏ mẫu này).
 - [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*
 
 ---

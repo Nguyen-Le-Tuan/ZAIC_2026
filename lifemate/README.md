@@ -10,7 +10,7 @@ Pipeline: ASR (~0.8B) → chuẩn hoá số → Qwen3-4B agent (vòng lặp gọ
 | `lifemate/prompt.py` | Prompt ChatML Qwen3: luật, profile, bảng ngày (−7…+14), schema tool dạng gọn, history kèm tool_results. |
 | `lifemate/agent.py` | Vòng lặp agent + lớp kiểm soát: `validate()` trước khi gọi (call sai không vào bài nộp), bỏ trùng call đọc, dừng sau `ask_missing_info`, giới hạn bước và thời gian. Backend: `openai` (vLLM server), `vllm` (trong tiến trình, cho Docker), `oracle` (phát lại đáp án để test). |
 | `lifemate/infer.py` | Chạy cả split → `submission.jsonl` (+ trace). `--text oracle` dùng `audio_text`, `--text asr` dùng file ASR. |
-| `lifemate/scorer.py` | Bộ chấm local theo công thức của BTC (hash + F1 call, token-F1 > 0.6 cho tham số fuzzy). |
+| `lifemate/scorer.py` | Bộ chấm local theo công thức của BTC (hash + F1 call, token-F1 > 0.6 cho tham số fuzzy). Mẫu có trong `--ids` mà thiếu prediction tính 0 (kể cả mẫu ngoài phạm vi); id trùng hoặc id ngoài split thì báo lỗi. Test: `python -m lifemate.tests.test_scorer`. |
 | `scripts/make_splits.py` | `splits/dev_random.txt` (233 mẫu) và `splits/dev_lao.txt` (262 mẫu dùng 6 app giữ riêng, mô phỏng app chưa thấy). |
 | `lifemate/sft.py` | Sinh dữ liệu SFT (ChatML + mask loss) bằng đúng code prompt của lúc suy luận. Gộp call độc lập vào một bước, tăng cường: đổi tên app/tool, gỡ app → `[]`, thêm app gây nhiễu (cả app của public_test), transcript kiểu ASR. Lượt history tắt mặc định vì quy ước khác đáp án. |
 | `scripts/check_sft.py` | Kiểm tra prompt SFT khớp từng ký tự với prompt của agent thật, gộp bước không mất call (100 điểm), ranh giới token ổn định. |
@@ -28,6 +28,8 @@ Pipeline: ASR (~0.8B) → chuẩn hoá số → Qwen3-4B agent (vòng lặp gọ
 ```bash
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python scripts/make_splits.py
+# test bộ chấm (thiếu prediction, id trùng, id ngoài split):
+.venv/bin/python -m lifemate.tests.test_scorer
 # kiểm tra toàn pipeline không cần model (phải ra 100):
 .venv/bin/python -m lifemate.infer --split train --text oracle --backend oracle --out runs/oracle_train.jsonl
 .venv/bin/python -m lifemate.scorer runs/oracle_train.jsonl --split train

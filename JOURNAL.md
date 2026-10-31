@@ -963,6 +963,30 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Phần này thuộc leader, nên Claude chờ Anh và leader đồng ý.
     - **Claude làm trong lúc chờ (chỉ CPU, vì GPU laptop đang bận):** PR #7 (sửa `agent.py:150` cho giới hạn 30 giây, kèm chốt chặn ID làm lưới an toàn); đọc kết quả lượt chữ ASR khi xong; chuẩn bị số cho buổi 18:00.
 
+41. **Script fine-tune ASR cho Colab; PR #7; phát hiện PR #2, #3 merge vào nhánh nền** (31/10, 14:40–15:11; Anh chọn "Viết script ASR").
+    - **[PR #7](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/7)** (nhánh `asr-finetune`, xếp chồng lên #6), chưa merge:
+      - **`lifemate/asr_train.py`:** fine-tune Whisper-turbo hoặc PhoWhisper-large bằng LoRA trên wav train, nhãn là `audio_text`. Chạy fp16, vừa T4 16 GB.
+        - Dữ liệu: train 1.033 mẫu (3.092 wav), giữ riêng 54 mẫu (210 wav) để chọn epoch. Loại hẳn 458 mẫu của dev_random và dev_lao, có kiểm ở mức từng wav.
+        - Ra adapter, model đã gộp (`lifemate.asr --model` nạp được), log và file meta.
+      - `cloud_setup.sh` thêm `ASR_ONLY=1`, và bỏ qua file rác bị thiếu (lỗi Kaggle ở entry 39).
+      - `make_cloud_bundle.sh` thêm `WITH_AUDIO=train`, và không bao giờ đóng file rác.
+    - **Gói có audio:** `~/zac_asr_bundle_20261031.tar.gz` (845 MB, sha256 `703275377669…`, code `e618cdf`): 7.405 file ngoài git, 5.036 wav train, không có audio public.
+    - **Hướng dẫn và ô lệnh Colab:** [`docs/ASR_FINETUNE_2026-10-31.md`](docs/ASR_FINETUNE_2026-10-31.md). Colab không cần xác minh số điện thoại, nên đề xuất chạy song song: Anh `turbo`, leader `pho`.
+    - **Đã kiểm, chỉ trên CPU** (GPU laptop đang train agent):
+      - 6 test đạt.
+      - Chạy với Whisper-tiny: đủ đường chạy; `--merge-only` cho trọng số giống hệt.
+      - Ô lệnh chạy trọn từ gói thật với GPU giả lập.
+      - **Chưa chạy trên GPU nào.**
+    - **Sự cố nhỏ:** lần đầu chạy `cloud_setup.sh` với `ASR_ONLY=1`, script ưu tiên `uv` thật trong `~/.local/bin` thay vì bản giả. Lệnh này chỉ kiểm môi trường Python dùng chung với job train ("Checked 37 packages", không cài hay gỡ gì). Lần thử sau dùng `uv` giả đặt đúng chỗ.
+    - **RAM:** hai bản giải nén gói có audio trong `/tmp` (nằm trong RAM) làm RAM trống còn 3 GB. Claude xoá ngay bản đã kiểm xong; RAM trống lên khoảng 5 GB, job train không bị ảnh hưởng.
+    - **Merge PR (14:47–14:48):**
+      - Anh merge #1 vào `main`.
+      - Leader merge #2 vào `agent-pipeline` và #3 vào `eval-protocol`, tức là vào nhánh nền của chúng. GitHub không tự đổi nhánh đích của PR xếp chồng.
+      - Kết quả: `main` mới có code của #1. Code của #2 và #3 nằm ở `eval-protocol` (23 file, +2.861 dòng so với `main`).
+      - Claude đề xuất mở PR `eval-protocol → main`. Việc merge là của Anh và leader.
+    - **Thư mục repo chính** đã fast-forward lên `main` mới (`3d31d64`); `lifemate/` giờ có code. Trước đó đã kiểm: các thư mục chưa theo dõi chỉ chứa `__pycache__`, và `main` không theo dõi file nào trong `runs/`, `ckpt/`, `sft/`, `gen/`, `asr/`.
+    - **`.gitignore` của `main`:** thêm `asr/`, `cloud_results/` và `*.tar.gz`, để transcript làm từ dữ liệu thi và các gói không thể lỡ tay commit lên repo public.
+
 ---
 
 ## 8. Việc tiếp theo

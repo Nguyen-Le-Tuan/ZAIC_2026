@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 03:20. Giai đoạn 2 của D đã xong (entry 30); lượt đo baseline đầu-cuối đang chạy trong unit `lifemate-night`. Bản trước xem lịch sử git.*
+*Cập nhật: 2026-10-31 05:00. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`. Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -33,22 +33,23 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
   - Chi tiết: [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
   - Code ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) → [#2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) → [#3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3), chưa merge.
-- **Baseline đầu-cuối theo đề (audio → ASR → agent → Docker offline): đang làm, ưu tiên số 1** (Anh chọn 30/10).
-  - **Code đã có** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge):
-    - Bước ASR dùng model có sẵn, chưa fine-tune: Whisper-large-v3-turbo và PhoWhisper-large.
-    - Các chỉ số ASR theo slot.
-    - Lệnh offline `scripts/predict.sh` từ thư mục dữ liệu ra `submission.jsonl` đã kiểm.
-  - **Lượt đo** chạy trong unit `lifemate-night` ngay sau giai đoạn 2; dự kiến có số liệu khoảng 5 giờ sáng 31/10 (entry 23).
-    - Điểm agent khi đọc chữ ASR, so theo cặp với chữ chuẩn.
-    - File nộp public đã kiểm.
-    - Thời gian mỗi mẫu trên máy này.
-  - **Chưa nộp public lần nào**, nên chưa kiểm được các giả định của bộ chấm local. Anh tự nộp khi có file.
-  - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
-  - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
+- **Baseline đầu-cuối theo đề (audio → ASR → agent): đã có** (31/10, entry 31, [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md)).
+
+  | Agent đọc | dev_random | dev_lao |
+  |---|---:|---:|
+  | Chữ chuẩn `audio_text` | 53,92 | 35,53 |
+  | **Whisper-turbo (chưa fine-tune; được chọn)** | **31,69** | **17,14** |
+  | PhoWhisper-large (chưa fine-tune) | 27,90 | 15,58 |
+
+  - **Lỗi ASR là chỗ mất điểm lớn nhất hiện nay** (khoảng 20 điểm). ASR sai 26–31% số từ; người nói hiếm khi đọc lệch kịch bản.
+  - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng). **Chưa nộp**; Anh tự nộp.
+  - Thời gian trên laptop: trung bình 2,9 giây mỗi mẫu, chậm nhất 9,7 giây. Chưa có Docker offline, chưa đo trên A30.
+  - Code: [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge.
+- **Kế hoạch hôm nay (31/10):** [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md). Ưu tiên: fine-tune ASR (leader), train agent trên chữ ASR và 4B (Anh chạy cloud), Docker (leader).
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
   - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud, chờ Anh bật).
-- **Đang chạy:** lượt đo đầu-cuối (ASR → agent → file nộp public), từ 03:09 trong unit `lifemate-night`; dự kiến xong khoảng 5–6 giờ sáng 31/10. Log: `lifemate/runs/e2e_baseline.log`.
+- **Đang chạy:** không có job train. Đêm 31/10 đã chạy ASR trên toàn bộ wav train (`lifemate/asr/train_all_*.jsonl`) để làm dữ liệu cho lượt cloud train agent trên chữ ASR.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4 → #5 → #6.
@@ -844,6 +845,24 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Loss trên dev gần như bằng nhau (0,134–0,138) dù điểm cách nhau 6. Tiếp tục chọn bằng điểm rollout.
     - **Không đề xuất** ghép B-up với D1: không có trong kế hoạch đặt trước, và dev_lao đã bị xem nhiều lần.
     - Lượt đo đầu-cuối bắt đầu 03:09 trong cùng unit; ASR turbo trên dev_random mất 84 giây cho 784 wav (0,11 giây mỗi wav, batch 16).
+31. **Baseline đầu-cuối xong: lỗi ASR làm mất khoảng 20 điểm** (31/10, 03:09–05:00; Claude tự làm trong lúc Anh ngủ). Báo cáo: [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md).
+    - **Điểm:** chữ chuẩn → Whisper-turbo: dev_random 53,92 → 31,69, dev_lao 35,53 → 17,14. PhoWhisper: 27,90 và 15,58. Khoảng tin cậy của cả bốn chênh lệch đều loại 0.
+    - **PhoWhisper hết bộ nhớ GPU ở batch 16** (03:13). Claude tự chạy lại ở batch 4 trong unit `lifemate-pho` để vẫn so đủ hai model như kế hoạch.
+    - **Chọn turbo theo luật đặt trước** (cộng gộp 495 mẫu: 23,99 so với 21,38). File nộp public `runs/e2e_public_turbo.jsonl` đã kiểm 0 lỗi; chạy lại ASR 50 wav giống hệt.
+    - **Claude tự suy luận thêm:**
+      - *Người nói có đọc lệch kịch bản không* (câu hỏi ở HUMAN_TODO 0.2)? Ở dev_random, khi hai model ASR nghe gần giống nhau (209 câu), chỉ 7 câu khác hẳn `audio_text`. → Hiếm; WER phản ánh lỗi nghe thật.
+      - *Vì sao PhoWhisper sai ít từ hơn mà điểm thấp hơn?* PhoWhisper giữ query kém hơn (44–58% so với 60–63%), và không viết hoa, không dấu phẩy, không chữ số. Ngay cả câu sai dưới 10% số từ vẫn mất nhiều điểm. → Chọn ASR theo điểm agent và độ đúng slot, không theo WER.
+      - *Mất ở đâu?* Chỉ khoảng 9% mẫu có lượt cuối sai dưới 10% số từ. Phần lớn điểm mất ở nhóm sai 25–50%. Số mẫu model không gọi tool nào tăng gấp 2–4 lần (script mới `scripts/asr_loss.py`, PR #5).
+    - **Đổi ưu tiên:** ASR lên số 1, vì lớn hơn mọi phần sửa agent đã đo (6–8, 4–5, 2–4 điểm).
+    - **Chuẩn bị cho cloud** (PR #6, commit `84c0a0b` cùng các commit sau):
+      - `train_local.sh` / `eval_ckpt.sh` nhận `ASR_FIT`, `ASR_DEV`, `ASR_FILE`. `cloud_arms.sh` nhận `REF_ASR`. Gói đóng thêm `asr/train_*`.
+      - Hai lượt 4B mặc định giờ chấm cả trên chữ turbo.
+      - Lượt mới, đang để ghi chú chờ Anh: `q17b_random_asrtrain` (học trên chữ turbo), `q17b_random_asrtrain_pho`, `q4b_random_asrtrain`.
+      - Transcript turbo và PhoWhisper của toàn bộ 5.036 wav train tạo trên laptop lúc 04:33–05:04. Chỉ train; public_test không bị chạy ASR ngoài `predict.sh`. Batch khác nhau gần như không đổi transcript (dev: 0/1.901 wav khác với turbo, 1/1.901 với PhoWhisper).
+      - Dữ liệu SFT fit_random dựng từ chữ turbo: đúng 4.150 dòng, phần được train và cách tăng cường giống hệt bản chữ chuẩn.
+      - **Gói mới** `~/zac_cloud_bundle_20261031_asr.tar.gz` (256 MB, sha256 `3a3fb94822a9…`, code `f34defa`); gói cũ không dùng nữa.
+      - **Chạy thật trên laptop** một lượt qua `cloud_arms.sh` từ gói vừa giải nén (chấm 1.7B trên chữ turbo): 31,69, giống hệt 233/233 dự đoán của lượt đầu-cuối. Bộ công cụ chạy đúng đầu-cuối; chưa chạy thật lượt train nào.
+    - **Kế hoạch ngày 31/10** cho Anh, leader và Claude: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md).
 
 ---
 
@@ -865,7 +884,10 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Giai đoạn 2 của D: xong 31/10 03:09. **D bị loại**, B-up thắng; xem `docs/D_PHASE2_2026-10-31.md` (entry 30).
 - [ ] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định.
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
-- [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
+- [x] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): xong 31/10 (entry 31). ASR làm mất khoảng 20 điểm.
+- [ ] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp).
+- [ ] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot.
+- [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; chờ Anh bật).
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
   - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.
   - [x] **Tách lệnh ghi sai theo nguyên nhân** (entry 28): mất nhiều nhất là thiếu lệnh ghi và ghi sai tool, rồi tới chọn nhầm ID và ngày giờ.

@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 23:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 23:20, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -771,7 +771,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       | 5:00–5:30 | Đo đầu-cuối xong | Viết `docs/E2E_BASELINE_2026-10-31.md`: điểm mất do ASR, model ASR được chọn, file public đã kiểm, thời gian mỗi mẫu. Anh quyết có nộp không. |
 
     - **Trong lúc chờ:** GPU bận tới sáng, nên chỉ làm được việc chạy trên CPU. Ví dụ: đo trên trace có sẵn xem chốt chặn ID (entry 24) cứu được bao nhiêu mẫu, trước khi viết code.
-27. **Đo chốt chặn ID trên CPU** (30/10, 23:15–23:45; Anh chọn "Làm luôn"). Chi tiết ở [`docs/ID_GUARD_2026-10-30.md`](docs/ID_GUARD_2026-10-30.md); số liệu ở [`docs/baselines/id_guard_2026-10-30.json`](docs/baselines/id_guard_2026-10-30.json); script ở [PR #5](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/5), chỉ phân tích, không đổi agent.
+27. **Đo chốt chặn ID trên CPU** (30/10, 23:10–23:20; Anh chọn "Làm luôn"). Chi tiết ở [`docs/ID_GUARD_2026-10-30.md`](docs/ID_GUARD_2026-10-30.md); số liệu ở [`docs/baselines/id_guard_2026-10-30.json`](docs/baselines/id_guard_2026-10-30.json); script ở [PR #5](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/5), chỉ phân tích, không đổi agent.
     - **Quy tắc:** chặn lệnh ghi khi một tham số có `x-ref` trong schema mang ID chưa từng xuất hiện trong prompt, history hay kết quả tool trước đó.
       - Quy tắc dựa trên catalog, nên áp dụng được cho app chưa thấy.
       - Chạy lại các call của 4 lượt có sẵn trên ToolEnv: khớp file nộp 100%.

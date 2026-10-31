@@ -1018,6 +1018,28 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Cập nhật mục "Cách dùng file": `main` đã có code PR #1; các mục cũ từ "0." trở xuống giữ lại để tra cứu.
     - Trạng thái lúc này: laptop ở bước 165/260 của lượt (1). Anh chưa chạy Colab. Kaggle đang chạy. Máy anh trai chưa rõ.
 
+46. **Kaggle xong mà không train (T4 quá chậm); điểm public đầu tiên 25,93; nguyên tắc tổng quát hoá** (31/10, 16:06).
+    - **Kết quả Kaggle** (`cloud_results_9b233565a56a_20261031_1842.tar.gz`, 462 KB, giải nén ở `cloud_results/kaggle/x/`):
+      - Kaggle cấp 2 × T4, driver 580. Torch 2.15.0+cu132 cài được.
+      - Chạy thử train 1.7B: **157 token/giây**, đỉnh 10,6 GB. Laptop đạt khoảng 1.400, nên T4 chậm gần 9 lần, tức **khoảng 22,5 giờ mỗi epoch**. Ô lệnh thấy không kịp trong phiên nên tự bỏ qua 2 lượt train (`pho`, `asr`); chỉ chạy lượt chấm lại.
+      - **Chấm lại adapter của laptop trên T4:** 54,35 so với 53,92, chênh +0,43 (khoảng tin cậy −1,29 đến +2,15). 228/233 mẫu giống hệt, 3 tốt hơn, 2 kém hơn. → Khác phần cứng chỉ làm số lệch rất nhỏ.
+      - Chấm trên T4 mất 17,5 giây mỗi mẫu (p95 31,6, chậm nhất 38 giây), so với 2,5 giây trên laptop.
+      - Lượt chạy xong khoảng 15:50, tốn khoảng 1,6 giờ GPU của leader.
+    - **Claude ước tính sai:** đã đoán 6–9 giờ mỗi epoch trên T4; đo thật là 22,5 giờ. bf16 không có phần cứng trên T4 chậm hơn Claude nghĩ. Ô lệnh đo trước khi train nên không mất phiên 12 giờ. Đã sửa `FREE_GPU`, `KAGGLE_LEADER`, `CLOUD_TRAIN`.
+    - **Hệ quả:**
+      - Train agent cần **GPU có bf16** (Ampere trở lên: A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 không dùng được.
+      - Lệnh cho anh trai thêm bước kiểm GPU: compute capability dưới 8.0 thì dừng ngay, vẫn để lại log. Đã thử bằng GPU giả. Lệnh nằm trong `CLOUD_TRAIN`, mục "Khi nhờ người khác chạy giúp".
+      - Fine-tune ASR trên Colab T4 không bị ảnh hưởng, vì Whisper chạy fp16.
+      - A30 của BTC là Ampere (có bf16). Giới hạn 30 giây vẫn phải đo trên A30 thật.
+    - **Lượt agent học trên chữ PhoWhisper** giờ chưa ai chạy (Kaggle không kịp; gói v3 để tắt). Chỉ còn laptop chạy được, sau 19:40, mất khoảng 3 giờ. Anh quyết.
+    - **Điểm public đầu tiên: 25,9300.** Leader nộp file `e2e_public_turbo.jsonl` (Whisper-turbo chưa fine-tune và Qwen3-1.7B LoRA); Anh báo lúc 16:04.
+      - Theo dev, điểm dự đoán là 17–32: dev_random 31,69 (app đã thấy), dev_lao 17,14 (app chưa thấy), gộp 495 mẫu 23,99.
+      - 25,93 nằm giữa hai tập dev và gần số gộp. → Bộ chấm và hai tập dev local dự đoán public khá sát, nên tiếp tục ra quyết định trên dev được.
+    - **Anh nêu nguyên tắc:** điểm này chấp nhận được như mốc baseline; không đánh đổi bằng việc học thuộc public, mà tìm cách tổng quát hoá đúng nhất. Claude đồng ý; cách làm cụ thể ghi vào HUMAN_TODO mục F:
+      - Chọn model và công thức trên dev_random và dev_lao, so theo cặp có khoảng tin cậy, với luật đặt trước.
+      - Coi trọng dev_lao (app chưa thấy), vì tập private có thể có app mới.
+      - Public chỉ để kiểm, nộp ít, không bao giờ chỉnh theo public. Không train trên public, không pseudo-label.
+
 ---
 
 ## 8. Việc tiếp theo

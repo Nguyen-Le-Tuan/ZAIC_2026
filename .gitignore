@@ -228,3 +228,4 @@ runs/
 sft/
 ckpt/
 .venv-gpu/
+gen/

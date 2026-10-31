@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 23:35, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-31 00:15, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -52,7 +52,8 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Xem mục 7, entry 19–20.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
-  - Review PR #1 → #2 → #3 → #4 → #5.
+  - Review PR #1 → #2 → #3 → #4 → #5 → #6.
+  - Thuê cloud và chạy gói train theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md).
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
@@ -804,6 +805,35 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Model 4B (Anh quyết thuê cloud).
       - Phần rẻ: quy ước sáng/tối và "tuần sau", nhưng phải train lại mới đo được, nên làm sau giai đoạn 2.
       - Khi so D3 với B-up cần nhìn cả cái giá "hỏi lại thay vì làm".
+29. **Anh đi ngủ; Claude tự làm tiếp qua đêm; được thuê cloud** (30/10, 23:58).
+    - **Anh yêu cầu:**
+      - Claude tự thu và đánh giá kết quả train.
+      - Tự lên kế hoạch ngày mai để Anh, leader và Claude làm song song.
+      - Đội thuê được cloud, nên Claude chuẩn bị gói code, dữ liệu và tài liệu để Anh đẩy lên cloud train cho nhanh.
+    - **Bộ công cụ cloud** ([PR #6](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/6), nhánh `cloud-train`; hướng dẫn ở [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md)):
+      - `make_cloud_bundle.sh`: gói riêng tư gồm code ở một commit, dữ liệu (audio tuỳ chọn), `gen/`, adapter và các lượt gốc. Kèm manifest sha256 của các file ngoài git và của các file SFT local.
+      - `cloud_setup.sh`:
+        - Kiểm gói; tạo venv đúng phiên bản thư viện local, với torch 2.15.0 bản CUDA hợp với driver.
+        - Ghim revision model gốc, dựng lại SFT rồi so với bản local.
+        - Smoke test 3 bước train cộng 2 rollout.
+      - `cloud_arms.sh`: chạy các lượt bằng đúng pipeline local, mỗi GPU một hàng đợi, tự so theo cặp với lượt gốc, rồi đóng gói kết quả.
+      - **Lượt mặc định:** chấm lại 2 adapter 1.7B (kiểm parity); 4B với đúng công thức 1.7B trên fit_random và fit_lao.
+      - **Đã kiểm trên máy local:**
+        - Gói thật 255 MB, ở `~/zac_cloud_bundle_20261031.tar.gz`. Kiểm gói 0 file lệch.
+        - Test đạt; **4 file SFT dựng lại giống hệt từng byte**.
+        - Chạy thử khô việc chia lượt cho 2 GPU: đúng.
+      - **Chưa kiểm:** cài torch và smoke test 4B trên máy thuê thật; parity giữa hai máy.
+    - **Kết quả tạm của giai đoạn 2** (00:07; B-D1 chưa xong):
+
+      | dev_lao (262) | Tổng | Hỏi lại | Execute | Ngoài phạm vi |
+      |---|---:|---:|---:|---:|
+      | B0 | 35,53 | 7,5 | 39,7 | 71,4 |
+      | D3 | 31,23 | 20,2 | 32,5 | 57,1 |
+      | B-up (đối chứng) | **36,94** | **30,0** | 36,7 | **85,7** |
+
+      - **D3 so với B-up:** −5,70 điểm, khoảng tin cậy 95% từ −10,32 tới −1,15. D3 thua đối chứng rẻ, nên **không đạt tiêu chí đặt trước** (phải hơn B-up ít nhất 5 điểm hỏi lại).
+      - **B-up so với B0:** +1,41, khoảng tin cậy từ −2,86 tới +5,82; chưa chắc chắn.
+      - Theo kế hoạch đặt trước ([REVIEW_D](docs/REVIEW_D_2026-10-30.md)), trường hợp này dẫn tới: cân lại tỉ trọng mẫu hỏi lại thật, và hạ ưu tiên D. Kết luận đủ khi có B-D1 (khoảng 3 giờ sáng).
 
 ---
 
@@ -849,6 +879,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - Viết bộ chuẩn hoá chữ thành số (ITN).
   - Xuất `asr/<split>.jsonl` theo giao kèo; làm transcript k-fold cho SFT (`--asr-file`). *(Định dạng file đã có trong `lifemate/asr.py`, PR #4.)*
 - [ ] Dữ liệu app tổng hợp: LLM mạnh sinh app, schema, simulator, câu yêu cầu và đáp án; chạy thật qua executor để kiểm chứng.
+- [ ] **Cloud:** chạy gói train ([`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md), PR #6). Trước hết cần 2 lượt parity, rồi 4B trên fit_random và fit_lao với công thức 1.7B.
 - [ ] Docker offline: dùng backend vLLM, đo thời gian trên GPU 24GB, chạy 5 lần kiểm tra tính tái lập. *(Lõi chạy offline: `scripts/predict.sh`, PR #4.)*
 
 ### Lộ trình tới hạn Docker 16/11

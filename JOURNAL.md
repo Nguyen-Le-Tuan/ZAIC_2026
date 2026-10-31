@@ -939,6 +939,20 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Ô lệnh trong tài liệu giống hệt bản đã thử bằng script giả; trường hợp 3 lượt có `pho` đứng đầu đã nằm trong lần thử đó.
     - Link GitHub trỏ vào `main`, nên nếu Anh đã gửi link cho leader thì leader sẽ thấy bản mới.
 
+39. **Kaggle lần đầu dừng ở bước kiểm gói; đã sửa ô lệnh** (31/10, 14:05–14:11).
+    - Leader Save Version lúc 14:05 (log Kaggle ghi 18:05 UTC). `cloud_setup.sh` dừng ở bước 1: `2468 files, 99 differ`, rồi `SETUP FAILED: bundle files differ from BUNDLE_MANIFEST.json`. Anh mang file `zac_logs.tar.gz` về.
+    - **Nguyên nhân:** khi tải `.tar.gz` lên dataset, Kaggle tự giải nén và bỏ file ẩn cùng thư mục `__pycache__`.
+      - 99 file thiếu là đúng 2 file `.DS_Store` và 97 file `__pycache__/*.pyc` trong thư mục dữ liệu BTC (`zaic_tools`). Gói v3 có đúng 99 file loại này.
+      - Các file này không cần để chạy. 2.369 file còn lại khớp sha256.
+    - **Sửa trong ô lệnh** ([`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md)): trước khi cài, bỏ khỏi `BUNDLE_MANIFEST.json` những file vừa thiếu vừa là `.DS_Store` hoặc nằm trong `__pycache__`. Mọi file khác vẫn kiểm như cũ. Leader không cần tải lại dataset.
+    - **Đã kiểm:**
+      - Giải nén gói v3 thật, xoá đúng các file như Kaggle, để thư mục chỉ đọc: trước khi sửa ra 99 file khác, giống hệt log Kaggle; sau khi sửa 0 file khác.
+      - Đổi 1 byte trong `train.jsonl` thì bước kiểm vẫn bắt được.
+      - Hai bộ test CPU đạt trên bản thiếu `__pycache__`.
+      - Chạy ô lệnh đã sửa trên bản mô phỏng (bước cài thay bằng bước kiểm gói) cho kết quả đúng.
+    - **Chưa kiểm:** các bước sau bước kiểm gói trên Kaggle thật (cài torch, tải model, chạy thử GPU). Lỗi tiếp theo, nếu có, sẽ nằm ở đó.
+    - Gói tạo sau này nên loại sẵn `.DS_Store` và `__pycache__`. Việc này cần sửa `make_cloud_bundle.sh` qua PR #6; gói v3 hiện tại vẫn dùng được nhờ ô lệnh.
+
 ---
 
 ## 8. Việc tiếp theo

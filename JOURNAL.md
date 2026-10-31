@@ -987,6 +987,11 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Thư mục repo chính** đã fast-forward lên `main` mới (`3d31d64`); `lifemate/` giờ có code. Trước đó đã kiểm: các thư mục chưa theo dõi chỉ chứa `__pycache__`, và `main` không theo dõi file nào trong `runs/`, `ckpt/`, `sft/`, `gen/`, `asr/`.
     - **`.gitignore` của `main`:** thêm `asr/`, `cloud_results/` và `*.tar.gz`, để transcript làm từ dữ liệu thi và các gói không thể lỡ tay commit lên repo public.
 
+42. **Mở PR #8 `eval-protocol → main`** (31/10, 15:18; Anh chọn "Mở PR đó").
+    - [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) đưa code của #2 và #3 (đã merge vào nhánh nền ở entry 41) vào `main`. Không có code mới: 23 file, toàn bộ trong `lifemate/`.
+    - Trên đúng cây `eval-protocol` (`3cd56e6`): `test_scorer` 11/11, `test_counterfactual` 22/22. GitHub báo MERGEABLE, CLEAN.
+    - **Sau khi #8 merge:** đổi nhánh đích của #4 sang `main`. Từ đó merge từng PR từ dưới lên, mỗi lần merge xong thì đổi đích PR kế tiếp sang `main` trước khi merge nó. Claude không merge.
+
 ---
 
 ## 8. Việc tiếp theo

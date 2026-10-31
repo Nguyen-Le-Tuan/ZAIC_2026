@@ -1,0 +1,33 @@
+{"task_id": "train_0030#B-vague", "new_text": "Ơi, chuyển giúp tôi một triệu hai nhé.", "removed_span": "cho chủ nhà Phạm Hùng"}
+{"task_id": "train_1221#B-vague", "skip": "người được nhắn (Thảo) cũng là chủ ngữ của câu ('con Thảo mới gửi về'); bỏ tên thì câu mất nghĩa, cách nói mơ hồ tự nhiên ('con bé') vẫn chỉ ra Thảo"}
+{"task_id": "train_0045#B-vague", "new_text": "Trợ lý ơi, chuyển giúp tôi số tiền bằng hóa đơn nước tháng này nhé.", "removed_span": "cho anh Trần Văn Tuấn"}
+{"task_id": "train_1553#B-vague", "skip": "bỏ 'Moreno' còn 'Isabel' thì thành chọn giữa hai Isabel (Moreno/Moreira): gần kiểu A, model đã làm tốt"}
+{"task_id": "train_1602#B-vague", "skip": "chính sách: thiếu tài khoản nguồn thì dữ liệu fit chọn tài khoản mặc định (7 lần thực hiện, 0 lần hỏi), nhãn hỏi lại sẽ sai"}
+{"task_id": "train_0177#B-vague", "new_text": "Nhắn Zalo giúp mình là đến rồi thì gọi tôi nha.", "removed_span": "cho Minh"}
+{"task_id": "train_0279#B-vague", "skip": "chính sách tài khoản mặc định (như train_1602); thêm nữa là trùng khuôn vàng SJC"}
+{"task_id": "train_0682#B-vague", "new_text": "Ừ, thế nhắn Zalo một câu, bảo là cửa đấy khoá rồi nhé.", "removed_span": "cho chị Ly bên trực kho"}
+{"task_id": "train_0841#B-vague", "skip": "ngữ cảnh (bưu tá qua toà nhà lấy thư) vẫn chỉ ra 'Lễ tân tòa nhà' dù bỏ tên"}
+{"task_id": "train_0230#B-vague", "new_text": "Cho mình chuyển y số tiền nước tháng này nha, trừ tài khoản thanh toán, mà thiếu thì dùng tiết kiệm.", "removed_span": "qua Nguyễn Thị Lan"}
+{"task_id": "train_0854#B-vague", "new_text": "Gửi địa chỉ tiệm đó qua Zalo giúp chị, dặn là bảy giờ tối chị sẽ qua đó nha.", "removed_span": "cho Lan"}
+{"task_id": "train_1260#B-vague", "new_text": "Làm thủ tục chuyến mai luôn, rồi chuyển ba trăm bằng tài khoản thanh toán.", "removed_span": "thằng Út"}
+{"task_id": "train_0049#B-vague", "skip": "bỏ người nhận thì 'chuyển tiền mạng tháng này' đọc như trả hoá đơn mạng (bill_payment), không còn rõ là chuyển khoản cho một người"}
+{"task_id": "train_0342#B-vague", "skip": "trùng khuôn câu (vàng SJC, D v1 đã có 4 mẫu)"}
+{"task_id": "train_1564#B-vague", "new_text": "Em xem giá nhẫn tròn hôm nay rồi chuyển tiền hai chỉ cho tiệm vàng bằng tài khoản thanh toán nha.", "removed_span": "Tiệm đó là Amber Jewelry"}
+{"task_id": "train_1226#B-vague", "skip": "Thảo vừa là người nhắn tin (nguồn của trạm xe) vừa là người nhận tiền; bỏ tên thì các bước trước mất căn cứ"}
+{"task_id": "train_0208#B-vague", "skip": "trùng khuôn câu (chuyển đúng bằng tiền hoá đơn, đã có 2 mẫu trong đợt này)"}
+{"task_id": "train_0468#C", "new_text": "Có tin gì mới về năng lượng mặt trời không, tìm cho tôi bài mới nhất, rồi nhắc tôi đọc bài đấy nhé.", "removed_span": "tám giờ tối nay"}
+{"task_id": "train_0829#C", "new_text": "Ừ, cái gói xem phim Stream Plus ấy tôi ít xem lắm, hủy đi. Rồi ghi vào lịch cái ngày nó hết hạn giúp tôi nhé.", "removed_span": "để tám giờ sáng hôm đó cho dễ thấy"}
+{"task_id": "train_1647#C", "new_text": "Ghi giùm anh bốn mươi lăm phút học tiếng Hàn tối ni, với nhắc ôn từ vựng gặp client nghe.", "removed_span": "bảy giờ sáng mai"}
+{"task_id": "train_0785#C", "new_text": "Ừ, thêm hai việc đấy vào danh sách việc của em, giữ đúng hạn trong nhóm. Rồi qua hạn sớm nhất một ngày thì đặt lịch để kiểm tra tiến độ chung nhé.", "removed_span": "chín giờ sáng"}
+{"task_id": "train_0294#C", "new_text": "Em tắt đèn phòng ngủ hộ chị... ấy quên, thôi đừng tắt, cứ để sáng vậy đi. Bật điều hoà phòng ngủ 24 độ với nhắc chị đóng tiền điện nha.", "removed_span": "7 giờ sáng mai"}
+{"task_id": "train_0862#C", "new_text": "Mai mà trời không mưa thì em lên lịch chạy bộ cho chị nha.", "removed_span": "lúc sáu giờ sáng"}
+{"task_id": "train_1638#C", "new_text": "Con kiếm giùm cô công thức canh chua cá lóc, với nhắc cô đi chợ mua cá lóc nha.", "removed_span": "sáu giờ sáng mai"}
+{"task_id": "train_0831#C", "new_text": "Trả bằng tài khoản ngân hàng nhé. Xong nhắc anh đối soát hóa đơn đó trước hạn khiếu nại một ngày.", "removed_span": "lúc chín giờ sáng"}
+{"task_id": "train_0485#C", "new_text": "Ừ, vậy em đặt nhắc chị uống viên sắt nhé.", "removed_span": "sáng hôm đó đúng bảy giờ"}
+{"task_id": "train_0433#C", "new_text": "Hà Nội giờ mà đang mưa thì nhắc chị cầm ô theo nhé.", "removed_span": "mười giờ"}
+{"task_id": "train_0411#C", "new_text": "Vàng SJC bán ra hôm nay trên 122 triệu thì nhắc tôi bán vàng, chưa tới thì chuyển Trần Văn Tuấn hai triệu từ tài khoản thanh toán, góp mua vàng.", "removed_span": "chín giờ sáng mai"}
+{"task_id": "train_1138#C", "new_text": "Gói năm mươi chín nghìn nào trừ tiền sớm hơn thì huỷ đi. Hôm trước ngày trừ tiền phòng gym, nhắc tôi gọi thằng Tuấn.", "removed_span": "Tám giờ sáng"}
+{"task_id": "train_1315#C", "new_text": "Cái bật đèn phòng khách bỏ đi hỉ, tốn điện lắm. Với nhắc em gọi cho mạ nghe.", "removed_span": "sáng mai sáu rưỡi"}
+{"task_id": "train_0537#C", "new_text": "Kiếm giùm anh bài mới nhất về điện mặt trời coi, rồi nhắc anh đọc đúng bài đó nha.", "removed_span": "tám giờ tối nay"}
+{"task_id": "train_0973#C", "new_text": "Chiếc điện cho tôi, tôi chạy giao mấy mối cho kịp. Giữ thêm chiếc thường cho Tí đạp theo, rồi nhắc tôi đem trả xe nha.", "removed_span": "tám giờ"}
+{"task_id": "train_1063#C", "new_text": "Giờ cao điểm điện mắc lắm con, máy giặt với máy rửa chén cái nào còn chạy thì tắt, rồi đặt lời nhắc cô mở lại nha.", "removed_span": "mười giờ tối"}

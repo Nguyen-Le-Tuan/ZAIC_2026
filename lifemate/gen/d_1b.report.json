@@ -1,0 +1,242 @@
+{
+ "created": "2026-10-30T08:52:15-0400",
+ "args": {
+  "cmd": "build",
+  "tasks": "gen/tasks_1b.jsonl",
+  "rewrites": "gen/rewrites_1b.jsonl",
+  "fit": "splits/fit_lao.txt",
+  "exclude": [
+   "splits/dev_lao.txt",
+   "splits/dev_random.txt",
+   "gen/pilot_origins.txt",
+   "gen/v1_origins.txt"
+  ],
+  "drop_apps": "splits/heldout_apps.json",
+  "judgments": "gen/judgments_1b.jsonl",
+  "out": "gen/d_1b.jsonl",
+  "root": "/home/truyen-anh-thach/Zalo AI Challenge/data/train+public_test"
+ },
+ "summary": {
+  "tasks": 33,
+  "kept": 24,
+  "kept_by_kind": {
+   "B-vague": 8,
+   "C": 16
+  },
+  "rejected": {
+   "skipped by writer": 9
+  }
+ },
+ "rows": [
+  {
+   "task_id": "train_0030#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1221#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: người được nhắn (Thảo) cũng là chủ ngữ của câu ('con Thảo mới gửi về'); bỏ tên thì câu mất nghĩa, cách nói mơ hồ tự nhiên ('con bé') vẫn chỉ ra Thảo"
+  },
+  {
+   "task_id": "train_0045#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1553#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: bỏ 'Moreno' còn 'Isabel' thì thành chọn giữa hai Isabel (Moreno/Moreira): gần kiểu A, model đã làm tốt"
+  },
+  {
+   "task_id": "train_1602#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: chính sách: thiếu tài khoản nguồn thì dữ liệu fit chọn tài khoản mặc định (7 lần thực hiện, 0 lần hỏi), nhãn hỏi lại sẽ sai"
+  },
+  {
+   "task_id": "train_0177#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0279#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: chính sách tài khoản mặc định (như train_1602); thêm nữa là trùng khuôn vàng SJC"
+  },
+  {
+   "task_id": "train_0682#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0841#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: ngữ cảnh (bưu tá qua toà nhà lấy thư) vẫn chỉ ra 'Lễ tân tòa nhà' dù bỏ tên"
+  },
+  {
+   "task_id": "train_0230#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0854#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1260#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0049#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: bỏ người nhận thì 'chuyển tiền mạng tháng này' đọc như trả hoá đơn mạng (bill_payment), không còn rõ là chuyển khoản cho một người"
+  },
+  {
+   "task_id": "train_0342#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: trùng khuôn câu (vàng SJC, D v1 đã có 4 mẫu)"
+  },
+  {
+   "task_id": "train_1564#B-vague",
+   "kind": "B-vague",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1226#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: Thảo vừa là người nhắn tin (nguồn của trạm xe) vừa là người nhận tiền; bỏ tên thì các bước trước mất căn cứ"
+  },
+  {
+   "task_id": "train_0208#B-vague",
+   "kind": "B-vague",
+   "kept": false,
+   "reason": "skipped by writer: trùng khuôn câu (chuyển đúng bằng tiền hoá đơn, đã có 2 mẫu trong đợt này)"
+  },
+  {
+   "task_id": "train_0468#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0829#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1647#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0785#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0294#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0862#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1638#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0831#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0485#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0433#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0411#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1138#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1315#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0537#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_0973#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  },
+  {
+   "task_id": "train_1063#C",
+   "kind": "C",
+   "kept": true,
+   "reason": null
+  }
+ ],
+ "inputs_sha256": {
+  "tasks": "4d18c8facde95627e745cb5e3b5313f98c587d949195c10156a7b9d039a76224",
+  "rewrites": "486fad9d2c517d3647c2fa1fbcc01e2fed2391a81431da81e597d78d14b29bd1",
+  "fit": "c67bfd447f2a35496c7d4bde1368d96249345d22c0d8a53644b1a4cd622d97f1",
+  "judgments": "1d8b57457209f677b6ec7fa832660a75f3ca8a124d15a78a9fbdc26a7568bec8"
+ },
+ "out_sha256": "82c1c1d0f25a5117e318c8f8bbfd6f6cf934eabf01a65ea8b500ed576a5e6fd5",
+ "git": {
+  "commit": "e7e0bb2ddd3f8b8f6657c71205880a1969ec775c",
+  "branch": "exp-d",
+  "lifemate_dirty": true
+ }
+}

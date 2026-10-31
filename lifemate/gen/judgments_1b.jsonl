@@ -1,0 +1,24 @@
+{"task_id": "train_0862#C", "slot_given": false}
+{"task_id": "train_1138#C", "slot_given": false}
+{"task_id": "train_1315#C", "slot_given": false}
+{"task_id": "train_0682#B-vague", "matches": ["chat_01", "chat_02", "chat_03", "chat_04", "chat_05"]}
+{"task_id": "train_0973#C", "slot_given": false}
+{"task_id": "train_0468#C", "slot_given": false}
+{"task_id": "train_0030#B-vague", "matches": ["ben_01", "ben_02", "ben_03"]}
+{"task_id": "train_0785#C", "slot_given": false}
+{"task_id": "train_0230#B-vague", "matches": ["ben_01", "ben_02", "ben_03"]}
+{"task_id": "train_1564#B-vague", "matches": ["ben_6021", "ben_437"]}
+{"task_id": "train_0045#B-vague", "matches": ["ben_01", "ben_02", "ben_03"]}
+{"task_id": "train_0177#B-vague", "matches": ["chat_01", "chat_02", "chat_03", "chat_04", "chat_05"]}
+{"task_id": "train_0294#C", "slot_given": false}
+{"task_id": "train_0829#C", "slot_given": false}
+{"task_id": "train_1647#C", "slot_given": false}
+{"task_id": "train_0831#C", "slot_given": false}
+{"task_id": "train_0854#B-vague", "matches": ["chat_01", "chat_02", "chat_03", "chat_04", "chat_05", "chat_06"]}
+{"task_id": "train_1260#B-vague", "matches": ["ben_818", "ben_205", "ben_451", "ben_637"]}
+{"task_id": "train_0411#C", "slot_given": false}
+{"task_id": "train_0485#C", "slot_given": false}
+{"task_id": "train_0537#C", "slot_given": false}
+{"task_id": "train_1063#C", "slot_given": false}
+{"task_id": "train_0433#C", "slot_given": false}
+{"task_id": "train_1638#C", "slot_given": false}

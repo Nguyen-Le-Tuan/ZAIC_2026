@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 23:20, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 23:35, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -783,6 +783,27 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Lệnh ghi sai nhiều nhất** là ở tham số không phải ID (giờ, số tiền, nội dung: 24 / 54 / 41 call), rồi tới ghi sai tool và ghi thay vì hỏi lại.
     - **Quyết định đề xuất:** hạ chốt chặn ID từ P0 xuống lưới an toàn. Viết khoảng 20 dòng cùng lúc với phần sửa thời gian ở `agent.py` trước Docker; không cần lượt GPU riêng.
     - **Việc CPU tiếp theo đáng làm:** tách nhóm "sai tham số khác" theo loại (ngày giờ, số tiền, chữ tự do, enum).
+28. **Lệnh ghi sai vì sao, mỗi nguyên nhân đáng bao nhiêu điểm** (30/10, 23:20–23:35; Anh chọn "Làm luôn"). Chi tiết ở [`docs/PARAM_ERRORS_2026-10-30.md`](docs/PARAM_ERRORS_2026-10-30.md); số liệu ở [`docs/baselines/param_errors_2026-10-30.json`](docs/baselines/param_errors_2026-10-30.json); script `param_errors.py` thêm vào [PR #5](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/5).
+    - **Cách đo:**
+      - Ghép mỗi lệnh ghi sai với lệnh cùng tool gần nhất trong đáp án, rồi phân loại tham số lệch theo kiểu trong schema.
+      - Đếm riêng lệnh ghi sai tool và lệnh ghi bị thiếu.
+      - Sửa giả định từng nguyên nhân theo đáp án, chạy lại trên ToolEnv rồi chấm, để có trần điểm của nguyên nhân đó.
+      - Chỉ CPU, 14 giây, chạy lại khớp file nộp 100%.
+    - **Đính chính entry 27:** nhóm "sai tham số không phải ID" không phải nguồn mất điểm lớn nhất. Lớn nhất là **không làm đủ**:
+      - Thiếu lệnh ghi: +6,2 (dev_random), +8,4 (B0) và +14,4 (D3) nếu sửa hết.
+      - Ghi sai tool hoặc ghi thừa: +2,6 / +6,8 / +5,5.
+      - Lệnh ghi bị thiếu là do model tự dừng (20 / 33 / 44 mẫu: yêu cầu nhiều vế làm thiếu một vế, câu điều kiện đi nhầm nhánh), hoặc hỏi lại thay vì làm (14 / 15 / 33 mẫu; D3 tăng mạnh).
+    - **Trong lỗi tham số:** chọn nhầm ID +4–5; ngày giờ +2–4; còn lại mỗi nhóm ≤ ~2 (số, chữ tự do, tham số thừa, enum). Sửa hết lỗi tham số cùng lúc: +14–16.
+    - **Ngày giờ:**
+      - dev_random chủ yếu sai ở phép tính giờ nhiều bước, ví dụ "đón sớm 30 phút so với giờ hẹn".
+      - dev_lao có thêm nhầm sáng/tối ("chín giờ tối" thành 09:00 hoặc 23:00) và nhầm "thứ ba tuần sau".
+    - **Số:** chỉ 6 call, đều là lỗi tính toán, không có lỗi ×1000.
+    - **Không có luật code rẻ nào cho phần lớn lỗi.** Schema cũng không khai báo giá trị mặc định, nên không bỏ được `robot_vacuum.start.mode` thừa bằng code.
+    - **Hướng đề xuất:**
+      - Dữ liệu SFT có yêu cầu nhiều vế và điều kiện, kiểm chứng bằng ToolEnv.
+      - Model 4B (Anh quyết thuê cloud).
+      - Phần rẻ: quy ước sáng/tối và "tuần sau", nhưng phải train lại mới đo được, nên làm sau giai đoạn 2.
+      - Khi so D3 với B-up cần nhìn cả cái giá "hỏi lại thay vì làm".
 
 ---
 
@@ -806,7 +827,9 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
   - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.
-  - **Tách lệnh ghi sai ở tham số không phải ID theo loại** (ngày giờ, số tiền, chữ tự do, enum), chỉ dùng CPU. Đây là nhóm lệnh ghi sai lớn nhất (entry 27).
+  - [x] **Tách lệnh ghi sai theo nguyên nhân** (entry 28): mất nhiều nhất là thiếu lệnh ghi và ghi sai tool, rồi tới chọn nhầm ID và ngày giờ.
+  - **Dữ liệu SFT nhiều vế và điều kiện** (P1 trong báo cáo Codex), kiểm chứng bằng ToolEnv; nhắm vào lỗi "tự dừng khi chưa làm đủ" (entry 28).
+  - **Ngày giờ:** thử quy ước sáng/tối và "tuần này / tuần sau" (nhãn tuần trong bảng ngày, hoặc chuẩn hoá giờ nói). Cần train lại để đo, nên làm sau giai đoạn 2.
   - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2.
   - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker.
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).

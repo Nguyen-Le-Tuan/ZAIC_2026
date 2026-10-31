@@ -30,6 +30,7 @@
 | Mục | Đề xuất | Lý do |
 |---|---|---|
 | GPU | 1 máy, **2–4 GPU từ 40 GB trở lên** (A100 80GB, H100 80GB, L40S 48GB) | Mỗi lượt dùng 1 GPU. 4 GPU thì 4 lượt mặc định chạy cùng lúc; 2 GPU thì chạy thành 2 đợt. |
+| Loại GPU | **Có bf16 phần cứng: thế hệ Ampere trở lên** (A100, A10, A30, L4, L40S, H100, RTX 30/40) | T4, V100, P100 không có bf16. Đo trên Kaggle T4 (31/10): train 1.7B chỉ 157 token/giây, tức khoảng 22 giờ mỗi epoch, chậm gần 9 lần laptop; chấm 17,5 giây mỗi mẫu. |
 | Ổ đĩa | ≥ 100 GB; ≥ 150 GB nếu leader dùng chung để fine-tune ASR | Model gốc khoảng 12 GB, venv khoảng 10 GB, checkpoint, log; gói có audio thêm 1,1 GB, cộng checkpoint ASR. |
 | Hệ điều hành | Linux, driver NVIDIA ≥ 550 | Script tự chọn bản CUDA của torch hợp với driver. |
 | A30 | Chưa cần | A30 dùng để đo thời gian và Docker sau này (việc của leader, P0-5 trong báo cáo Codex). |
@@ -100,6 +101,17 @@ mkdir -p ~/"Zalo AI Challenge"/cloud_results && scp <user>@<host>:~/ZAIC_2026/cl
 Rồi báo Claude. Claude giải nén vào `lifemate/runs/` và `lifemate/ckpt/` (tên lượt mới, không trùng lượt cũ), kiểm parity rồi viết báo cáo.
 
 **6. Tắt máy cloud** khi đã mang kết quả về.
+
+**Khi nhờ người khác chạy giúp một lần** (ví dụ anh trai của Anh; JOURNAL entry 33, 46). Người chạy đặt gói v3 vào thư mục home rồi chạy đúng một lệnh:
+
+```bash
+cd ~ && tar -xzf zac_cloud_bundle_20261031_v3.tar.gz && cd ZAIC_2026 && nohup bash -c 'if nvidia-smi --query-gpu=compute_cap --format=csv,noheader | awk -F. "\$1<8{bad=1} END{exit bad}"; then bash lifemate/scripts/cloud_setup.sh && bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-10-31.txt; else echo "DUNG: GPU khong co bf16 (can A100, A10, L4, H100 hoac RTX 30/40), khong train"; nvidia-smi -L; fi; tar -czf ~/zac_logs.tar.gz run.log lifemate/runs/cloud_*; mv cloud_results_*.tar.gz ~/; echo "XONG $(date)"' > run.log 2>&1 &
+```
+
+- Lệnh kiểm GPU trước. Nếu có GPU không có bf16 (compute capability dưới 8.0), nó dừng ngay, không train, và vẫn để lại `~/zac_logs.tar.gz`.
+- Nếu GPU đạt: cài đặt, chạy các lượt trong nền (thoát SSH vẫn chạy), rồi để lại ở `~` hai file cần gửi về: `cloud_results_*.tar.gz` và `zac_logs.tar.gz`.
+- Xem tiến độ: `tail -f ~/ZAIC_2026/run.log`. Xong khi dòng cuối có `XONG`.
+- *Thêm lúc 16:05 ngày 31/10, sau khi Kaggle T4 cho thấy GPU không có bf16 chậm gần 9 lần. Đã thử bằng GPU giả (A100, RTX 40: chạy; T4, máy lẫn GPU cũ: dừng).*
 
 ## Lượt mặc định và cách đọc kết quả
 

@@ -20,11 +20,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
 | Laptop của Anh (RTX 4070) | Claude theo dõi | Agent Qwen3-1.7B, chạy nối nhau: **(1)** `q17b_random_asrtrain` (học trên chữ Whisper-turbo), **(2)** `q17b_random_up` (công thức B-up). Bắt đầu 13:48 | (1) 16:50 · (2) 19:40 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
-| Kaggle của leader (T4 x2) | Leader | Agent 1.7B dự phòng trên T4: học trên chữ PhoWhisper (`q17b_random_asrtrain_pho_t4`) và trên chữ turbo (`q17b_random_asrtrain_t4`). Bắt đầu khoảng 14:15 | 22:00–01:15 | Tab Output: `zac_logs.tar.gz`, `cloud_results_*.tar.gz` |
-| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B). **Trạng thái chưa rõ:** Anh cập nhật ở mục B | ? | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` |
+| Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
+| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B). **Chưa gửi** (16:05). Máy phải có GPU bf16; xem B4 | 3–5 giờ sau khi chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` |
 
 - **Laptop:** cắm sạc, không gập máy, không mở game hay video (GPU còn dư rất ít). Dùng trình duyệt và Colab thoải mái, vì Colab chạy trên máy của Google.
-- **Kaggle:** log chỉ có các dòng `Debugger warning` và Output 0 B cho tới khi xong. Đó là bình thường ([`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md), bước 6–7).
+- **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
 
@@ -36,17 +36,24 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Để tab mở.** Kết quả: `My Drive/zac_out/asr_results_turbo.tar.gz`.
   - *Chưa làm (15:30).*
 - [ ] **B3.** (2 phút) Chia sẻ riêng file gói ASR (chỉ cho leader), để leader chạy phần PhoWhisper ở L3.
-- [ ] **B4.** Máy anh trai: đã gửi gói v3 và lệnh chưa? Máy có GPU NVIDIA không, hay là TPU? Ghi vào đây: …
-  - Nếu máy là TPU, hoặc anh trai không chạy được: 4B chỉ còn cách thuê GPU từ 24 GB (xem mục E).
+- [ ] **B4.** **Gửi anh trai** đúng 2 thứ:
+  - file `~/zac_cloud_bundle_20261031_v3.tar.gz` (256 MB, sha256 bắt đầu `bfe980b32f46`);
+  - lệnh một dòng **bản mới, có kiểm GPU** trong [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md), mục "Khi nhờ người khác chạy giúp một lần".
+
+  Kèm 3 lời dặn:
+  - **Máy phải có GPU NVIDIA có bf16** (A100, A10, A30, L4, H100, RTX 30/40), Linux, Internet, ổ trống từ 100 GB. Máy T4, V100, P100 hay TPU thì đừng chạy; lệnh cũng tự dừng nếu GPU không đạt.
+  - Xong thì gửi lại 2 file `~/cloud_results_*.tar.gz` và `~/zac_logs.tar.gz`.
+  - Gửi xong thì xoá `~/ZAIC_2026`, gói và 2 file đó.
+
+  Đã gửi chưa, máy là GPU gì: …
 - [ ] **B5.** (45–60 phút, trong lúc Colab chạy) Nghe 18 câu Whisper-turbo nghe sai nhiều nhất, cùng leader nếu được. Danh sách id ở mục "Mất điểm ở đâu" của [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md). Ghi lại tiếng ồn, giọng, tốc độ nói, từ lạ.
 - [ ] **B6.** Review [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) cùng leader rồi merge. Sau đó đổi nhánh đích của #4 sang `main`. Từ đó merge từ dưới lên (#4 → #5 → #6 → #7), mỗi lần đổi đích PR kế tiếp sang `main` trước khi merge.
 - [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
 **Leader:**
-- [ ] **L1.** (5 phút, **trước 18:00**) **Nộp public** file `e2e_public_turbo.jsonl` Anh gửi ở B1. Đây là mốc public đầu tiên; theo hai tập dev, điểm dự đoán khoảng 17–32. Ghi điểm và giờ nộp: … Claude không nộp.
-- [ ] **L2.** Kaggle: cứ để chạy, không cần canh.
-  - Nếu bản kết thúc bất thường (trong vài phút, hoặc sau 30–60 phút mà không có `cloud_results_*`), gửi Anh `zac_logs.tar.gz`.
-  - Nếu sau khoảng 11,5 giờ vẫn "Running", bấm dừng.
+- [x] **L1.** (5 phút, **trước 18:00**) **Nộp public** file `e2e_public_turbo.jsonl` Anh gửi ở B1. Đây là mốc public đầu tiên; theo hai tập dev, điểm dự đoán khoảng 17–32. Ghi điểm và giờ nộp: … Claude không nộp.
+  - ***Điểm: 25,9300*** (Anh báo lúc 16:05). Nằm giữa dev_random 31,69 và dev_lao 17,14, gần số gộp 23,99, nên dev local dự đoán public khá sát (JOURNAL entry 46).
+- [x] **L2.** Kaggle: xong khoảng 15:50; leader đã gửi kết quả (đã giải nén ở `cloud_results/kaggle/`). **Xoá dataset và notebook trên Kaggle** nếu chưa xoá. Không cần chạy lại lượt agent trên Kaggle (T4 quá chậm).
 - [ ] **L3.** (15 phút thao tác, máy chạy 2–2,5 giờ) **Colab: fine-tune ASR PhoWhisper** trên Colab của leader.
   - Bấm "Tạo bản sao" file gói Anh chia sẻ ở B3. Tên kiểu "Bản sao của ..." vẫn dùng được.
   - Mở Colab, chọn T4 GPU, chạy ô mount Drive, rồi dán ô lệnh và đổi `MODELS="pho"`. **Để tab mở.**
@@ -74,7 +81,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | **18:00** | **Họp**: điểm public, lượt (1), WER của ASR fine-tune (nếu đã có), tình hình máy anh trai |
 | 19:40 | Laptop xong lượt (2) (C2) |
 | 20:00–20:40 | Claude chấm agent với transcript ASR mới (C3) |
-| 22:00–01:15 | Kaggle xong |
+| ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần
 
@@ -88,7 +95,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
    |---|---|---|
    | Colab của Anh | `asr_results_turbo.tar.gz` (trong `My Drive/zac_out`) | `cloud_results/colab_anh/` |
    | Colab của leader | `asr_results_pho.tar.gz` | `cloud_results/colab_leader/` |
-   | Kaggle của leader | `zac_logs.tar.gz` và `cloud_results_*.tar.gz` (tab Output) | `cloud_results/kaggle/` |
+   | Kaggle của leader | `cloud_results_*.tar.gz` (tab Output) | `cloud_results/kaggle/`: **đã có** (16:05) |
    | Máy anh trai | `zac_logs.tar.gz` và `cloud_results_*.tar.gz` (trong `~`) | `cloud_results/anh_trai/` |
    | Laptop của Anh | Không cần làm gì | |
 
@@ -107,10 +114,21 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] Kaggle chạy `ARMS="pho asr"` (Anh, 13:58). Lỗi lần đầu (14:05: Kaggle bỏ file rác khi giải nén) đã sửa trong ô lệnh.
 - [x] Viết script fine-tune ASR (Anh, khoảng 14:40): [PR #7](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/7), hướng dẫn Colab, gói có audio.
 - [x] PR #1 merge vào `main` (Anh, 14:47). PR #2 và #3 được merge vào nhánh nền (leader, 14:47–14:48), nên Claude mở [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) để đưa chúng vào `main`.
+- [x] Leader nộp public: **25,9300** (file `e2e_public_turbo.jsonl`).
 - [ ] **Còn mở:**
+  - lượt agent học trên chữ PhoWhisper: Kaggle không kịp, chỉ còn laptop chạy được sau 19:40 (khoảng 3 giờ). Có chạy không?
   - nộp public (L1);
   - merge PR #8 (B6);
   - có thuê GPU từ 24 GB cho 2 lượt 4B không, nếu máy anh trai không train được (B4). Gói v3 và [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md) đã sẵn.
+
+### F. Nguyên tắc chọn mô hình (Anh nêu 31/10, sau điểm public 25,93)
+
+Không đổi tổng quát hoá lấy điểm public. Cụ thể:
+1. **Chọn trên dev, không trên public.** Model, công thức train và ASR được chọn bằng dev_random và dev_lao, so theo cặp có khoảng tin cậy 95%, với luật đặt trước khi chạy.
+2. **Coi trọng dev_lao (app chưa thấy).** Tập private có thể có app mới. Thay đổi nào làm dev_lao giảm rõ thì không nhận, kể cả khi dev_random tăng.
+3. **Public chỉ để kiểm,** không để chỉnh. Mỗi lần nộp phải là một mốc có lý do: bộ máy mới, ASR mới, model mới. Không thử nhiều biến thể để chọn bản có điểm public cao nhất.
+4. **Không train trên public, không pseudo-label public hay private,** không nghe để gán nhãn.
+5. **Mỗi lần nộp ghi lại:** file, model, ASR, điểm dev dự đoán, điểm public. Hôm nay: `e2e_public_turbo.jsonl`, dev dự đoán 17–32 (gộp 23,99), public 25,93.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

@@ -98,10 +98,11 @@ Rồi báo Claude. Claude giải nén vào `lifemate/runs/` và `lifemate/ckpt/`
 | `q4b_fit_random` | 4B, fit_random → dev_random | So theo cặp với 1.7B (53,92): `runs/compare_q4b_fit_random_vs_ref.json` |
 | `q4b_fit_lao` | 4B, fit_lao → dev_lao (app chưa thấy) | So theo cặp với B0 (35,53): `runs/compare_q4b_fit_lao_vs_ref.json` |
 
-**Sau giai đoạn 2 của D.** Kết quả tạm lúc 00:07: lượt đối chứng B-up 36,94, D3 31,23, B0 35,53. D3 kém B-up 5,70 điểm, khoảng tin cậy 95% từ −10,32 tới −1,15. Xem `docs/D_PHASE2_2026-10-31.md` khi có.
-- Ứng viên tiếp theo là **4B cùng dữ liệu B-up** (`q4b_lao_up`). Dòng này đang được ghi chú tắt sẵn trong file danh sách lượt.
-- **Cân lại tỉ trọng trên fit_random** (`q17b_random_up`, `q4b_random_up`; 260 bước như `q17b_fit_random`) cũng được ghi chú tắt sẵn. Dữ liệu `gen/up_real_asks_random.jsonl` (263 dòng, từ 127 mẫu hỏi lại thật) do `scripts/make_upsample.py` tạo, và đã có trong gói. Script này tái tạo đúng file B-up trên fit_lao.
-- Bỏ dấu `#` trước dòng đó sau khi Anh quyết.
+**Sau giai đoạn 2 của D** (xong 03:09, [`D_PHASE2_2026-10-31.md`](D_PHASE2_2026-10-31.md)): D bị loại. Lượt đối chứng B-up (chỉ nhân bản mẫu hỏi lại thật) tăng hỏi lại từ 7,5 lên 30,0 trên dev_lao, tổng 35,53 → 36,94 (chưa chắc).
+- **Nên bật trước: `q17b_random_up`** (1.7B, fit_random + `gen/up_real_asks_random.jsonl`, 260 bước như `q17b_fit_random`). Đây là phép thử theo kế hoạch đặt trước: dev_random không giảm quá 1 điểm so với 53,92 thì dùng công thức B-up làm mặc định.
+  - Dữ liệu (263 dòng, từ 127 mẫu hỏi lại thật) do `scripts/make_upsample.py` tạo, đã có trong gói. Script này tái tạo đúng file B-up trên fit_lao.
+- **4B cùng dữ liệu B-up** (`q4b_lao_up`, `q4b_random_up`): bật cùng lúc nếu đủ GPU, hoặc sau khi `q17b_random_up` đạt.
+- Các dòng này đang được ghi chú tắt sẵn trong file danh sách lượt. Bỏ dấu `#` trước dòng đó sau khi Anh quyết. Lượt D (`q4b_lao_d3`) không cần bật nữa.
 
 ## Quy tắc
 

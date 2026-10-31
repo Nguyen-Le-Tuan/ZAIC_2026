@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 16:12). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:01). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:01:** Laptop xong lượt (1) lúc 17:00. Agent học trên chữ turbo: đọc chữ turbo 33,22 so với 31,69 (+1,5, chưa chắc), nhưng đọc chữ chuẩn 48,55 so với 53,92 (−5,4, kém thật). → Giữ agent học trên `audio_text`, dồn sức cho fine-tune ASR (JOURNAL entry 48). Lượt (2) chạy tới khoảng 20:00. Khuyến nghị không chạy lượt agent học trên chữ PhoWhisper.
 > - **16:12:** Anh đã gửi gói và lệnh cho anh trai (B4 xong), đang chờ phản hồi. **Colab vẫn làm ngay** (B2 cho Anh, L3 cho leader). Việc fine-tune ASR không gửi cho anh trai: anh trai chỉ chạy một lần, lần đó dành cho các lượt agent (nhất là 4B), và máy chưa rõ GPU gì. Đã chốt chuyện dữ liệu: BTC cho phép.
 > - **16:05:** Kaggle xong mà không train, vì T4 chậm gần 9 lần (JOURNAL entry 46). Public lần đầu **25,93**. Thêm nguyên tắc chọn model (mục F). Lệnh cho anh trai thêm bước kiểm GPU có bf16.
 > - **15:30:** Tạo bảng này.
@@ -24,7 +25,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | Agent Qwen3-1.7B, chạy nối nhau: **(1)** `q17b_random_asrtrain` (học trên chữ Whisper-turbo), **(2)** `q17b_random_up` (công thức B-up). Bắt đầu 13:48 | (1) 16:50 · (2) 19:40 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | Agent Qwen3-1.7B, chạy nối nhau: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): **xong 17:00**, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): đang chạy từ 17:00 | (2) khoảng 20:00 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
@@ -71,9 +72,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR) khi tới lượt.
 
 **Claude** (Anh không cần nhắc):
-- [ ] **C1.** Khoảng 16:50: đọc kết quả lượt (1) trên laptop. So theo cặp với 53,92 (chữ chuẩn) và 31,69 (chữ turbo), báo trong chat, ghi JOURNAL.
-- [ ] **C2.** Khoảng 19:40: đọc lượt (2) B-up. Luật đặt trước: dev_random không giảm quá 1 điểm thì giữ công thức B-up.
-- [ ] **C3.** Khi `asr_results_*` về và GPU laptop rảnh (sau 19:40): chấm agent bằng transcript ASR mới trên laptop, so thẳng với 31,69 và 17,14. Khoảng 10 phút cho mỗi model trên mỗi tập dev.
+- [x] **C1.** Khoảng 16:50: đọc kết quả lượt (1) trên laptop. So theo cặp với 53,92 (chữ chuẩn) và 31,69 (chữ turbo), báo trong chat, ghi JOURNAL.
+  - ***Xong 17:01:*** đọc chữ turbo 33,22 so với 31,69 (+1,52 [−3,58; +6,62]); đọc chữ chuẩn 48,55 so với 53,92 (**−5,37 [−10,75; −0,05]**). → Không dùng công thức này; giữ agent học trên `audio_text`, ưu tiên fine-tune ASR (JOURNAL entry 48).
+- [ ] **C2.** Khoảng 20:00: đọc lượt (2) B-up. Luật đặt trước: dev_random không giảm quá 1 điểm thì giữ công thức B-up.
+- [ ] **C3.** Khi `asr_results_*` về và GPU laptop rảnh (sau khoảng 20:00): chấm agent bằng transcript ASR mới trên laptop, so thẳng với 31,69 và 17,14. Khoảng 10 phút cho mỗi model trên mỗi tập dev.
 - [ ] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. *Chưa bắt đầu.*
 - [ ] **C5.** Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
 
@@ -83,11 +85,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 |---|---|
 | Ngay sau 16:12 | Anh bắt đầu Colab turbo (B2); leader bắt đầu Colab PhoWhisper (L3) |
 | Trước 18:00 | Leader nộp public (L1) |
-| 16:50 | Laptop xong lượt (1); Claude báo (C1) |
+| ~~16:50~~ 17:00 | Laptop xong lượt (1); Claude đã báo (C1) |
 | 18:00–18:30 | Colab turbo xong; PhoWhisper khoảng 18:30–19:00 |
 | **18:00** | **Họp**: điểm public, lượt (1), WER của ASR fine-tune (nếu đã có), tình hình máy anh trai |
-| 19:40 | Laptop xong lượt (2) (C2) |
-| 20:00–20:40 | Claude chấm agent với transcript ASR mới (C3) |
+| 20:00 | Laptop xong lượt (2) (C2) |
+| 20:00–20:45 | Claude chấm agent với transcript ASR mới (C3) |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần
@@ -125,7 +127,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] Anh gửi gói v3 và lệnh có kiểm GPU cho anh trai (16:12). Fine-tune ASR vẫn chạy trên Colab, không gửi anh trai.
 - [x] Dữ liệu: Anh đã hỏi BTC, được phép nhờ anh trai chạy. Không cần nhắc lại.
 - [ ] **Còn mở:**
-  - lượt agent học trên chữ PhoWhisper: Kaggle không kịp, chỉ còn laptop chạy được sau 19:40 (khoảng 3 giờ). Có chạy không?
+  - lượt agent học trên chữ PhoWhisper: Kaggle không kịp, chỉ còn laptop chạy được sau 20:00 (khoảng 3 giờ). **Claude khuyến nghị không chạy** (lượt cùng hướng vừa không đáng dùng, JOURNAL entry 48); Anh quyết.
   - nộp public (L1);
   - merge PR #8 (B6);
   - có thuê GPU từ 24 GB cho 2 lượt 4B không, nếu máy anh trai không train được (B4). Gói v3 và [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md) đã sẵn.

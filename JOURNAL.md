@@ -858,7 +858,10 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - `train_local.sh` / `eval_ckpt.sh` nhận `ASR_FIT`, `ASR_DEV`, `ASR_FILE`. `cloud_arms.sh` nhận `REF_ASR`. Gói đóng thêm `asr/train_*`.
       - Hai lượt 4B mặc định giờ chấm cả trên chữ turbo.
       - Lượt mới, đang để ghi chú chờ Anh: `q17b_random_asrtrain` (học trên chữ turbo), `q17b_random_asrtrain_pho`, `q4b_random_asrtrain`.
-      - Transcript turbo và PhoWhisper của toàn bộ 5.036 wav train tạo trên laptop lúc 04:33–05:05. Chỉ train; public_test không bị chạy ASR ngoài `predict.sh`.
+      - Transcript turbo và PhoWhisper của toàn bộ 5.036 wav train tạo trên laptop lúc 04:33–05:04. Chỉ train; public_test không bị chạy ASR ngoài `predict.sh`. Batch khác nhau gần như không đổi transcript (dev: 0/1.901 wav khác với turbo, 1/1.901 với PhoWhisper).
+      - Dữ liệu SFT fit_random dựng từ chữ turbo: đúng 4.150 dòng, phần được train và cách tăng cường giống hệt bản chữ chuẩn.
+      - **Gói mới** `~/zac_cloud_bundle_20261031_asr.tar.gz` (256 MB, sha256 `3a3fb94822a9…`, code `f34defa`); gói cũ không dùng nữa.
+      - **Chạy thật trên laptop** một lượt qua `cloud_arms.sh` từ gói vừa giải nén (chấm 1.7B trên chữ turbo): 31,69, giống hệt 233/233 dự đoán của lượt đầu-cuối. Bộ công cụ chạy đúng đầu-cuối; chưa chạy thật lượt train nào.
     - **Kế hoạch ngày 31/10** cho Anh, leader và Claude: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md).
 
 ---

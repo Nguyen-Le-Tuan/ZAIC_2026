@@ -90,7 +90,7 @@
 ## Giới hạn
 
 - **Chỉ đo trên wav của train** (dev_random và dev_lao). WER trên public không đo được vì không có nhãn, và không được gán nhãn.
-- **Batch khác nhau giữa hai model ASR** (turbo 16, PhoWhisper 4, do hết bộ nhớ GPU 8 GB). Với Whisper, đầu vào luôn được đệm tới 30 giây, nên batch chỉ có thể đổi vài ký tự do sai số fp16.
+- **Batch khác nhau giữa hai model ASR** (turbo 16, PhoWhisper 4, do hết bộ nhớ GPU 8 GB). Batch gần như không ảnh hưởng: chạy turbo lại trên toàn bộ wav train (batch ghép khác hẳn) cho 1.901 wav dev giống hệt từng ký tự.
 - **Checkpoint agent chưa từng thấy chữ ASR**, chỉ thấy `audio_text`, kèm 30% câu viết thường bỏ dấu câu lúc train.
 - **dev_random và dev_lao có một số mẫu chung**, nên không cộng số mẫu của hai tập như hai tập độc lập.
 

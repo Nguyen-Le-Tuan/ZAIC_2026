@@ -49,7 +49,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
   - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud `q17b_random_up`, Anh đã bật 31/10).
-- **Đang chạy:** không có job. Lượt chạy thử đường train của bộ cloud trên laptop đã xong 10:21 (entry 32).
+- **Đang chạy (laptop, từ 13:48):** `q17b_random_asrtrain` (xong khoảng 16:45) rồi `q17b_random_up` (khoảng 19:40), entry 37. Leader chạy dự phòng trên Kaggle theo [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md).
 - **Anh trai của Anh (làm ở Google) sẽ chạy gói v3** bằng lệnh một dòng; Anh báo đã hỏi và được cho phép (entry 33–34). Chờ 2 file kết quả gửi về.
 - **Dự phòng** nếu máy anh trai là TPU (entry 35, [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md)): 1.7B trên laptop (chờ Anh đồng ý) hoặc Kaggle T4; 4B chỉ trên GPU trả phí.
 - **Chờ Anh:**
@@ -914,6 +914,22 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Thêm DDP thì mỗi lượt có thể nhanh gần gấp đôi, nhưng phải sửa code qua PR và kiểm parity lại. Không đáng làm lúc này, vì laptop (2,5 giờ mỗi lượt) vẫn nhanh hơn T4.
       - Fine-tune Whisper bằng HF Trainer thì dùng được cả 2 T4 (chạy bằng `torchrun --nproc_per_node 2`, fp16). Việc này thuộc script ASR của leader.
     - Anh sẽ quyết sau câu trả lời này: có chạy 2 lượt 1.7B dự phòng trên laptop không.
+
+37. **Anh duyệt chạy 2 lượt 1.7B dự phòng trên laptop; nhờ leader chạy Kaggle** (31/10, 13:46–14:00).
+    - Anh muốn tận dụng hết GPU, CPU, RAM và NPU của máy, miễn không làm crash máy. Tài khoản Kaggle của Anh chưa xác minh số điện thoại, nên nhờ leader chạy Kaggle.
+    - **Laptop, bắt đầu 13:48** (unit `lifemate-laptop`, giới hạn RAM 7G/9G, chặn ngủ máy; code `7ab83a4`, giống hệt code trong gói v3):
+      - Chạy nối nhau `q17b_random_asrtrain`, rồi `q17b_random_up`. Đây đúng hai dòng trong file lượt cloud (`runs/arms_laptop_2026-10-31.txt`).
+      - **Không chạy song song trên GPU được:** một lượt train đã dùng tới 5,78 GB VRAM (đo ở các lượt trước), hai lượt cần khoảng 11,6 GB, vượt 8 GB.
+      - GPU đang chạy 100% (86 W, 5,5 GB VRAM). Máy cắm sạc, chế độ điện `performance`.
+      - CPU dựng sẵn dữ liệu SFT cho lượt thứ hai trong lúc GPU train lượt đầu (4.979 dòng). RAM và CPU không phải điểm nghẽn.
+      - **NPU** (Intel Meteor Lake) không dùng được: PyTorch train trên CUDA, còn NPU chỉ chạy suy luận qua OpenVINO.
+      - Dữ liệu SFT chữ turbo dựng trên laptop có sha256 `0b9d3303de97`, trùng bản dựng từ gói cloud lúc chạy thử (entry 32).
+      - **Dự kiến:** lượt chữ ASR xong khoảng 16:45, lượt B-up khoảng 19:40.
+      - **Sửa lời Claude ở entry 36:** câu "xong trước buổi hẹn 18:00 nếu bắt đầu 13:42" là sai, vì 6 giờ tính từ 13:42 là 19:42. Kịp 18:00 chỉ có lượt chữ ASR.
+    - **Kaggle (leader):** tin nhắn và ô lệnh ở [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md).
+      - Ô lệnh có kiểm tra trước khi cài: GPU phải là T4, có Internet, có gói, ổ trống từ 30 GB. Báo lỗi bằng tiếng Việt.
+      - Chọn lượt bằng dòng `ARMS`; mặc định `asr up`. Claude gợi ý `pho asr` để Kaggle không trùng việc với laptop.
+      - Khi cài lỗi vẫn lưu file log. Thử bằng script giả ở 11 trường hợp; chưa chạy trên Kaggle thật.
 
 ---
 

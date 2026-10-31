@@ -13,5 +13,13 @@ train TAG=q4b_fit_lao    MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao    DEV=de
 
 # 3. Only after the phase-2 verdict (docs/D_PHASE2_2026-10-31.md) and Anh's decision; uncomment the winner.
 #    254 steps = the step count of B0, as in phase 2. REF is the 4B fit_lao arm above (run that first).
+#    Phase 2 so far: B-up beats D3 (-5.70 [-10.32, -1.15]); q4b_lao_up is the likely candidate.
 # train TAG=q4b_lao_d3 MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao EXTRA_SAMPLES=gen/d_train_1b_x3.jsonl TRAIN_ARGS=--max-steps,254 REF=runs/sft_q4b_fit_lao
 # train TAG=q4b_lao_up MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao EXTRA_SAMPLES=gen/up_real_asks_232.jsonl TRAIN_ARGS=--max-steps,254 REF=runs/sft_q4b_fit_lao
+
+# 4. Rebalance towards asking on seen apps too: the B-up recipe on fit_random (copies of the 127 real B/C asks,
+#    263 rows from gen/up_real_asks_random.jsonl, built by scripts/make_upsample.py --ratio 2.0714; in the bundle).
+#    260 steps = the step count of q17b_fit_random. Phase 2 on dev_lao: B-up 36.94 vs B0 35.53, ask 30.0 vs 7.5,
+#    but over-asks 15 -> 30; these arms show whether the trade is worth it on seen apps.
+# train TAG=q17b_random_up FIT=fit_random DEV=dev_random EXTRA_SAMPLES=gen/up_real_asks_random.jsonl TRAIN_ARGS=--max-steps,260 REF=runs/sft_q17b_fit_random
+# train TAG=q4b_random_up MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random EXTRA_SAMPLES=gen/up_real_asks_random.jsonl TRAIN_ARGS=--max-steps,260 REF=runs/sft_q4b_fit_random

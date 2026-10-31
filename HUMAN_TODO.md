@@ -156,11 +156,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Hạn chế mở ứng dụng nặng (ngày 29/10 systemd-oomd đã từng kill app vì thiếu RAM).
   - **Không đổi nhánh git trong thư mục repo, và không commit từ thư mục đó.** Ngày 30/10 lúc 20:03, việc đổi sang `main` rồi đổi lại đã xoá `lifemate/gen/` trên máy. Claude đã khôi phục (JOURNAL entry 21). Muốn sửa tài liệu trên `main` thì dùng một git worktree riêng.
 - [x] **[Anh]** *(30/10)* Chọn ưu tiên sau D. *Anh đã chọn trong chat:* "Ưu tiên đầu-cuối", và "Claude làm ASR baseline với 2 model" (Whisper-large-v3-turbo, PhoWhisper-large, không fine-tune). Code ở [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4); lượt đo chạy sau giai đoạn 2 (JOURNAL entry 21).
-- [ ] **[Anh]** *(30/10)* **Repo đang public.**
+- [x] **[Anh]** *(30/10)* **Repo đang public.**
   - Commit `1bbd05a` đã đưa `lifemate/gen/` lên `main`. Thư mục này chứa lời nói, nhãn và kết quả tool chép từ train, trong khi README dữ liệu cấm phát tán.
   - Claude đã gỡ khỏi `main` (`4e908be`, Anh chọn "Gỡ khỏi main"), nhưng **bản cũ vẫn xem được trong lịch sử git**.
   - Quyết: chuyển repo sang private (GitHub → Settings → General → Danger Zone → Change visibility), hoặc viết lại lịch sử. Viết lại lịch sử thì leader phải đồng bộ lại.
   - Muốn chia sẻ file `gen/` cho leader thì gửi riêng, không qua repo.
+  - *Anh đã chọn trong chat (30/10):* **giữ public**, không viết lại lịch sử.
 - [ ] **[Anh]** *(sáng 31/10)* Khi có `docs/E2E_BASELINE_2026-10-31.md`, quyết có nộp `lifemate/runs/e2e_public_<asr>.jsonl` lên public không. File đã qua `check_submission.py`. Anh tự nộp trên trang thi; Claude không nộp. Mục đích: lấy mốc điểm public đầu tiên và kiểm các giả định của bộ chấm local (Q1, Q7, Q8).
 - [ ] **[Leader]** *(30/10)* Claude đã dựng bước ASR baseline (`lifemate/asr.py`, PR #4) với 2 model chưa fine-tune.
   - Xem số liệu sáng 31/10: WER; số, tiền, giờ còn giữ được; từ phủ định; query tìm kiếm. Dùng chúng để quyết hướng fine-tune ASR và chuẩn hoá số (Q9, Q12).

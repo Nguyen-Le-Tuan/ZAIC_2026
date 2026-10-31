@@ -26,7 +26,8 @@ Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 �
 - [ ] **[Anh]** (1–2 giờ) Review rồi merge PR #1, sau đó #2. Các PR sau xếp chồng lên hai PR này. Claude không merge.
 - [ ] **[Leader]** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1; xem bảng xếp hạng public.
 - [ ] **[Leader]** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh` (dựng được trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU).
-- [ ] **[Leader]** Fine-tune ASR (ưu tiên số 1): RTX 3050 4 GB không đủ, Kaggle đang bận lượt agent. Chạy trên Colab T4 của Anh (Colab không cần xác minh số điện thoại), cần script và gói có audio (`WITH_AUDIO=1`). Claude viết script nếu leader đồng ý.
+- [ ] **[Anh + Leader]** Fine-tune ASR (ưu tiên số 1) trên Colab theo [`docs/ASR_FINETUNE_2026-10-31.md`](docs/ASR_FINETUNE_2026-10-31.md) (script ở PR #7). Gói có audio: `~/zac_asr_bundle_20261031.tar.gz` (845 MB) trên máy Anh. Đề xuất chạy song song trên hai tài khoản Colab: Anh `MODELS="turbo"`, leader `MODELS="pho"`. Kết quả `asr_results_*.tar.gz` đặt vào `~/Zalo AI Challenge/cloud_results/`.
+- [ ] **[Anh / Leader]** PR #2 và #3 đã merge vào nhánh nền, chưa vào `main` (JOURNAL entry 41). Quyết: mở PR `eval-protocol → main`, rồi đổi nhánh đích của #4 sang `main`.
 
 **Anh quyết (sáng):**
 - [ ] **[Anh]** Nộp public `lifemate/runs/e2e_public_turbo.jsonl` không? (Khuyến nghị: nộp, để có mốc đầu tiên; dev dự đoán khoảng 17–32.) Anh tự nộp; ghi điểm vào đây: …

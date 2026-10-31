@@ -4,55 +4,113 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Cách dùng file
 
-- Mỗi việc ghi người phụ trách: **[Anh]**, **[Leader]** hoặc **[Cả hai]**.
-- Xong việc nào thì đánh dấu `[x]` và ghi kết quả ngắn ngay dưới việc đó. Commit thẳng lên `main` (tài liệu không cần PR).
-- Lượt train qua đêm đã xong lúc 02:40 ngày 2026-10-29 (dev_random 9,9 → 53,9), nên GPU trên laptop của Anh đã trống. Các lệnh ở mục 2–6 chỉ dùng CPU.
-- Các lệnh chạy trong thư mục `lifemate/`, trên nhánh `agent-pipeline` (code chưa vào `main`, đang nằm ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1)).
-- *29/10:* công cụ đánh giá mới (`scripts/eval_ckpt.sh`, `lifemate.compare`, `train_local.sh` chọn `FIT`/`DEV`) nằm ở nhánh `eval-protocol`, [PR #2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2), xếp chồng lên PR #1. Thư mục làm việc trên máy Anh đang ở nhánh này.
-- Mọi lệnh trong file đã được Claude chạy thử trên máy của Anh ngày 2026-10-28.
+- Mỗi việc ghi người phụ trách: **[Anh]**, **[Leader]**, **[Cả hai]** hoặc **[Claude]**.
+- Xong việc nào thì đánh `[x]` và ghi kết quả ngắn ngay dưới việc đó. Commit thẳng lên `main` (tài liệu không cần PR). Leader: `git pull` trên `main` để có bản mới nhất.
+- **Bản mới nhất là mục "Ngày 31/10, chiều và tối" ngay dưới đây.** Các mục từ "0." trở xuống là việc cũ (28–30/10); việc nào còn ý nghĩa đã được chép lên mục mới.
+- Code: `main` đã có code của PR #1 (merge 31/10, 14:47). Code của #2 và #3 vào `main` khi [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) được merge. Các lệnh chạy trong thư mục `lifemate/`.
 
 ---
 
-## Ngày 31/10: làm song song (kế hoạch chi tiết: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md))
+## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude viết rạng sáng 31/10. Đọc trước: mục 1 của file kế hoạch, rồi phần kết luận của [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md) và [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md).*
+*Claude cập nhật lúc 15:30 ngày 31/10, theo yêu cầu của Anh. Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
-Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên ASR lên ưu tiên số 1. D bị loại.
+### A. Đang chạy: chỉ chờ, không cần làm gì
 
-**Trong lúc chờ laptop và Kaggle (chiều 31/10, Claude đề xuất lúc 14:35).** Laptop: lượt chữ ASR xong khoảng 16:50, lượt B-up khoảng 19:40. Kaggle: 8–11 giờ sau khi leader chạy lại.
-- [ ] **[Anh]** (5 phút) Quyết và nộp public `lifemate/runs/e2e_public_turbo.jsonl` (mục ngay dưới). Ghi điểm vào đây; có điểm trước 18:00 thì buổi họp có mốc public đầu tiên.
-- [ ] **[Anh]** (10 phút) Xác minh số điện thoại cho tài khoản Kaggle của Anh, để Anh có thêm khoảng 30 giờ GPU/tuần. Lưu bằng chứng BTC cho phép vào mục 4.
-- [ ] **[Cả hai]** (45–60 phút) Nghe 18 câu Whisper-turbo nghe sai nhiều nhất (id trong `docs/E2E_BASELINE_2026-10-31.md`). Ghi tiếng ồn, giọng, tốc độ nói, từ lạ; leader lập danh sách "cụm từ nguy hiểm" (0.2, 0.3).
-- [ ] **[Anh]** (1–2 giờ) Review rồi merge PR #1, sau đó #2. Các PR sau xếp chồng lên hai PR này. Claude không merge.
-- [ ] **[Leader]** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1; xem bảng xếp hạng public.
-- [ ] **[Leader]** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh` (dựng được trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU).
-- [ ] **[Anh + Leader]** Fine-tune ASR (ưu tiên số 1) trên Colab theo [`docs/ASR_FINETUNE_2026-10-31.md`](docs/ASR_FINETUNE_2026-10-31.md) (script ở PR #7). Gói có audio: `~/zac_asr_bundle_20261031.tar.gz` (845 MB) trên máy Anh. Đề xuất chạy song song trên hai tài khoản Colab: Anh `MODELS="turbo"`, leader `MODELS="pho"`. Kết quả `asr_results_*.tar.gz` đặt vào `~/Zalo AI Challenge/cloud_results/`.
-- [ ] **[Anh / Leader]** Review rồi merge [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) (`eval-protocol → main`: đưa code #2 và #3 vào `main`; Claude mở 31/10, JOURNAL entry 42). Sau đó đổi nhánh đích của #4 sang `main`, và từ đó merge từ dưới lên, mỗi lần đổi đích PR kế tiếp sang `main` trước.
+| Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
+|---|---|---|---|---|
+| Laptop của Anh (RTX 4070) | Claude theo dõi | Agent Qwen3-1.7B, chạy nối nhau: **(1)** `q17b_random_asrtrain` (học trên chữ Whisper-turbo), **(2)** `q17b_random_up` (công thức B-up). Bắt đầu 13:48 | (1) 16:50 · (2) 19:40 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Kaggle của leader (T4 x2) | Leader | Agent 1.7B dự phòng trên T4: học trên chữ PhoWhisper (`q17b_random_asrtrain_pho_t4`) và trên chữ turbo (`q17b_random_asrtrain_t4`). Bắt đầu khoảng 14:15 | 22:00–01:15 | Tab Output: `zac_logs.tar.gz`, `cloud_results_*.tar.gz` |
+| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B). **Trạng thái chưa rõ:** Anh cập nhật ở mục B | ? | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` |
 
-**Anh quyết (sáng):**
-- [ ] **[Anh]** Nộp public `lifemate/runs/e2e_public_turbo.jsonl` không? (Khuyến nghị: nộp, để có mốc đầu tiên; dev dự đoán khoảng 17–32.) Anh tự nộp; ghi điểm vào đây: …
-- [x] **[Anh]** Bật lượt cloud nào trong `lifemate/cloud/arms_2026-10-31.txt`. Khuyến nghị: 4 lượt mặc định + `q17b_random_asrtrain` + `q17b_random_up`; thêm `q4b_random_asrtrain` nếu có 4 GPU.
-  - *Anh chọn theo khuyến nghị (31/10, khoảng 10:00, trong chat). Claude đã bật sẵn trong gói v3 (`~/zac_cloud_bundle_20261031_v3.tar.gz`), không cần sửa file trên cloud. Lượt 4B học trên chữ ASR tự bỏ qua nếu máy có dưới 4 GPU.*
-- [ ] **[Anh]** PR: review và merge #1 rồi #2 trước; leader review #4, #6; #3 (D) có thể đóng không merge.
+- **Laptop:** cắm sạc, không gập máy, không mở game hay video (GPU còn dư rất ít). Dùng trình duyệt và Colab thoải mái, vì Colab chạy trên máy của Google.
+- **Kaggle:** log chỉ có các dòng `Debugger warning` và Output 0 B cho tới khi xong. Đó là bình thường ([`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md), bước 6–7).
 
-**Anh làm:**
-- [ ] **[Anh]** *(31/10, thay cho thuê cloud nếu anh trai chạy được)* Gửi `~/zac_cloud_bundle_20261031_v3.tar.gz` và lệnh một dòng (JOURNAL entry 33, tin nhắn mẫu trong chat) cho anh trai. Máy cần: Linux, GPU NVIDIA từ 40 GB, internet tới PyPI / pytorch.org / astral.sh / huggingface.co, ổ ≥ 100 GB.
-  - Nhận lại `cloud_results_*.tar.gz` và `zac_logs.tar.gz`, đặt vào `~/Zalo AI Challenge/cloud_results/`, báo Claude.
-  - Nhắc anh trai xoá gói, thư mục `~/ZAIC_2026` và hai file kết quả sau khi gửi.
-  - Lưu bằng chứng BTC cho phép (link hoặc ảnh chụp) vào mục 4 của file này.
-- [ ] **[Leader]** *(31/10, dự phòng; Anh nhờ vì tài khoản Kaggle của Anh chưa xác minh số điện thoại)* Chạy ô lệnh Kaggle (mặc định `ARMS="pho asr"`: agent học trên chữ PhoWhisper và trên chữ turbo) theo [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md) (GPU T4 x2, Internet On, gói tải lên dưới dạng dataset Private). Gửi Anh `zac_logs.tar.gz` và `cloud_results_*.tar.gz`; xoá dataset và notebook khi xong. Lượt này dùng khoảng 10–12 giờ trong khoảng 30 giờ GPU/tuần của tài khoản.
-- [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Dùng gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` (sha256 trong file đó); hai gói trước không dùng nữa.
-- [ ] **[Anh]** Mang `~/ZAIC_2026/cloud_results_*.tar.gz` (trên máy cloud) về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
+### B. Việc tiếp theo, làm theo thứ tự
 
-**Leader làm:**
-- [ ] **[Leader]** Fine-tune ASR (PhoWhisper-large hoặc Whisper-turbo) trên wav của fit, nhãn `audio_text`. Không dùng wav của dev_random/dev_lao để train; không dùng audio public_test. Cần gói `WITH_AUDIO=1`.
-  - Đo bằng `scripts/asr_quality.py`. Điểm agent: `ASR_FILE=<file> TAG=<tên> ADAPTER=ckpt/q17b_fit_random/final DEV=dev_random bash scripts/eval_ckpt.sh`, hoặc nhờ Claude chạy.
-  - Chọn theo điểm agent, không theo WER: PhoWhisper sai ít từ hơn turbo nhưng điểm agent thấp hơn.
-- [ ] **[Cả hai]** Nghe 10–20 câu ASR sai nhiều nhất (danh sách id trong báo cáo E2E): tiếng ồn, giọng, tốc độ nói, từ lạ.
-- [ ] **[Leader]** Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh`, chạy offline trên máy leader; ghi thời gian.
-- [ ] **[Leader]** Forum BTC: hướng dẫn Docker, máy chấm, Q1.
+**Anh:**
+- [ ] **B1.** (2 phút) Gửi leader file `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng, khoảng 180 KB; đã kiểm định dạng), để leader nộp public ở L1.
+- [ ] **B2.** (15 phút thao tác, máy chạy 1,5–2 giờ) **Colab: fine-tune ASR Whisper-turbo** theo [`docs/ASR_FINETUNE_2026-10-31.md`](docs/ASR_FINETUNE_2026-10-31.md).
+  - Tải `~/zac_asr_bundle_20261031.tar.gz` (845 MB) lên thư mục gốc My Drive.
+  - Mở Colab, chọn T4 GPU, chạy ô mount Drive, rồi dán ô lệnh và đổi `MODELS="turbo"`.
+  - **Để tab mở.** Kết quả: `My Drive/zac_out/asr_results_turbo.tar.gz`.
+  - *Chưa làm (15:30).*
+- [ ] **B3.** (2 phút) Chia sẻ riêng file gói ASR (chỉ cho leader), để leader chạy phần PhoWhisper ở L3.
+- [ ] **B4.** Máy anh trai: đã gửi gói v3 và lệnh chưa? Máy có GPU NVIDIA không, hay là TPU? Ghi vào đây: …
+  - Nếu máy là TPU, hoặc anh trai không chạy được: 4B chỉ còn cách thuê GPU từ 24 GB (xem mục E).
+- [ ] **B5.** (45–60 phút, trong lúc Colab chạy) Nghe 18 câu Whisper-turbo nghe sai nhiều nhất, cùng leader nếu được. Danh sách id ở mục "Mất điểm ở đâu" của [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md). Ghi lại tiếng ồn, giọng, tốc độ nói, từ lạ.
+- [ ] **B6.** Review [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) cùng leader rồi merge. Sau đó đổi nhánh đích của #4 sang `main`. Từ đó merge từ dưới lên (#4 → #5 → #6 → #7), mỗi lần đổi đích PR kế tiếp sang `main` trước khi merge.
+- [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
-**Điểm hẹn:** 9:00 (chốt quyết định), 13:00 (cloud setup và parity; WER đầu tiên của ASR fine-tune), 18:00 (kết quả cloud, chọn công thức vòng sau).
+**Leader:**
+- [ ] **L1.** (5 phút, **trước 18:00**) **Nộp public** file `e2e_public_turbo.jsonl` Anh gửi ở B1. Đây là mốc public đầu tiên; theo hai tập dev, điểm dự đoán khoảng 17–32. Ghi điểm và giờ nộp: … Claude không nộp.
+- [ ] **L2.** Kaggle: cứ để chạy, không cần canh.
+  - Nếu bản kết thúc bất thường (trong vài phút, hoặc sau 30–60 phút mà không có `cloud_results_*`), gửi Anh `zac_logs.tar.gz`.
+  - Nếu sau khoảng 11,5 giờ vẫn "Running", bấm dừng.
+- [ ] **L3.** (15 phút thao tác, máy chạy 2–2,5 giờ) **Colab: fine-tune ASR PhoWhisper** trên Colab của leader.
+  - Bấm "Tạo bản sao" file gói Anh chia sẻ ở B3. Tên kiểu "Bản sao của ..." vẫn dùng được.
+  - Mở Colab, chọn T4 GPU, chạy ô mount Drive, rồi dán ô lệnh và đổi `MODELS="pho"`. **Để tab mở.**
+  - Kết quả: `My Drive/zac_out/asr_results_pho.tar.gz`. Colab và Kaggle chạy song song được.
+- [ ] **L4.** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1 (so khớp tham số). Xem bảng xếp hạng public: điểm cao nhất, số đội. Ghi vào mục 4.
+- [ ] **L5.** (cùng B5) Nghe 18 câu ASR sai cùng Anh. Lập danh sách "cụm từ nguy hiểm" (số, giờ, tên người, từ phủ định, tự sửa giữa câu).
+- [ ] **L6.** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh`. Dựng trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU. Hạn Docker là 16/11.
+- [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR) khi tới lượt.
+
+**Claude** (Anh không cần nhắc):
+- [ ] **C1.** Khoảng 16:50: đọc kết quả lượt (1) trên laptop. So theo cặp với 53,92 (chữ chuẩn) và 31,69 (chữ turbo), báo trong chat, ghi JOURNAL.
+- [ ] **C2.** Khoảng 19:40: đọc lượt (2) B-up. Luật đặt trước: dev_random không giảm quá 1 điểm thì giữ công thức B-up.
+- [ ] **C3.** Khi `asr_results_*` về và GPU laptop rảnh (sau 19:40): chấm agent bằng transcript ASR mới trên laptop, so thẳng với 31,69 và 17,14. Khoảng 10 phút cho mỗi model trên mỗi tập dev.
+- [ ] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. *Chưa bắt đầu.*
+- [ ] **C5.** Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
+
+### C. Mốc giờ (ước tính)
+
+| Giờ | Việc |
+|---|---|
+| Khoảng 15:45 | Anh bắt đầu Colab turbo (B2); leader bắt đầu Colab PhoWhisper (L3) |
+| Trước 18:00 | Leader nộp public (L1) |
+| 16:50 | Laptop xong lượt (1); Claude báo (C1) |
+| 17:30–18:00 | Colab turbo xong; PhoWhisper khoảng 18:15 |
+| **18:00** | **Họp**: điểm public, lượt (1), WER của ASR fine-tune (nếu đã có), tình hình máy anh trai |
+| 19:40 | Laptop xong lượt (2) (C2) |
+| 20:00–20:40 | Claude chấm agent với transcript ASR mới (C3) |
+| 22:00–01:15 | Kaggle xong |
+
+### D. Khi máy xong: gửi kết quả một lần
+
+1. Trên laptop của Anh, tạo thư mục riêng cho từng nguồn, để các file cùng tên không đè lên nhau:
+   ```bash
+   mkdir -p ~/"Zalo AI Challenge"/cloud_results/{kaggle,colab_anh,colab_leader,anh_trai}
+   ```
+2. Đặt file vào đúng thư mục:
+
+   | Nguồn | File | Thư mục |
+   |---|---|---|
+   | Colab của Anh | `asr_results_turbo.tar.gz` (trong `My Drive/zac_out`) | `cloud_results/colab_anh/` |
+   | Colab của leader | `asr_results_pho.tar.gz` | `cloud_results/colab_leader/` |
+   | Kaggle của leader | `zac_logs.tar.gz` và `cloud_results_*.tar.gz` (tab Output) | `cloud_results/kaggle/` |
+   | Máy anh trai | `zac_logs.tar.gz` và `cloud_results_*.tar.gz` (trong `~`) | `cloud_results/anh_trai/` |
+   | Laptop của Anh | Không cần làm gì | |
+
+3. Nhắn Claude **một lần**: "Kết quả đã về", kèm nguồn nào có. Có nguồn nào trước 18:00 thì gửi trước cũng được. Claude giải nén vào chỗ riêng, không đè lên kết quả cũ.
+4. Sau khi gửi, xoá bản trên các máy ngoài, vì có dữ liệu thi:
+   - Kaggle: dataset và notebook.
+   - Drive: gói và thư mục `zac_out`.
+   - Máy anh trai: `~/ZAIC_2026`, gói và các file kết quả.
+5. Các file này không bao giờ lên git: `cloud_results/` và `*.tar.gz` đã nằm trong `.gitignore`. File `zac_logs.tar.gz` ở thư mục gốc repo là của lần chạy Kaggle bị lỗi lúc 14:05; xoá được.
+
+### E. Quyết định và việc đã xong hôm nay
+
+- [x] Bật lượt cloud theo khuyến nghị (Anh, 10:00). Gói v3 có sẵn các lượt đã bật; lượt 4B học trên chữ ASR chỉ chạy khi có từ 4 GPU.
+- [x] Nhờ anh trai train trên máy Google; Anh báo đã được cho phép (10:29).
+- [x] Chạy 2 lượt 1.7B dự phòng trên laptop (Anh, 13:46).
+- [x] Kaggle chạy `ARMS="pho asr"` (Anh, 13:58). Lỗi lần đầu (14:05: Kaggle bỏ file rác khi giải nén) đã sửa trong ô lệnh.
+- [x] Viết script fine-tune ASR (Anh, khoảng 14:40): [PR #7](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/7), hướng dẫn Colab, gói có audio.
+- [x] PR #1 merge vào `main` (Anh, 14:47). PR #2 và #3 được merge vào nhánh nền (leader, 14:47–14:48), nên Claude mở [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) để đưa chúng vào `main`.
+- [ ] **Còn mở:**
+  - nộp public (L1);
+  - merge PR #8 (B6);
+  - có thuê GPU từ 24 GB cho 2 lượt 4B không, nếu máy anh trai không train được (B4). Gói v3 và [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md) đã sẵn.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

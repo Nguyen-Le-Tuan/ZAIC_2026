@@ -6,7 +6,9 @@
 
 Chào bạn, mình nhờ bạn chạy giúp một lượt train dự phòng trên Kaggle. Bạn chỉ mất khoảng 10 phút thao tác; máy tự chạy 8–11 giờ.
 
-**Mục đích:** train dự phòng 2 lượt **agent Qwen3-1.7B** (không phải ASR) trên GPU T4 miễn phí của Kaggle, phòng khi máy Google của anh mình không train được. Tài khoản Kaggle của mình chưa xác minh số điện thoại nên không bật được Internet.
+**Mục đích:** train 2 lượt **agent Qwen3-1.7B** (không phải ASR) trên GPU T4 miễn phí của Kaggle:
+- **Agent học trên chữ PhoWhisper:** chưa ai chạy lượt này. Nó cho biết PhoWhisper có thắng Whisper-turbo không khi agent đã quen kiểu chữ của PhoWhisper. Kết quả này giúp bạn chọn model ASR để fine-tune.
+- **Agent học trên chữ Whisper-turbo:** dự phòng, phòng khi máy Google của anh mình không train được. Tài khoản Kaggle của mình chưa xác minh số điện thoại nên không bật được Internet.
 
 **Cần có:**
 - Tài khoản Kaggle **đã xác minh số điện thoại** (để bật Internet).
@@ -43,7 +45,7 @@ Chào bạn, mình nhờ bạn chạy giúp một lượt train dự phòng trê
 %%bash
 # ZAC 2026: train dự phòng agent Qwen3-1.7B trên GPU T4 miễn phí (Kaggle "GPU T4 x2", hoặc Colab T4).
 # Chỉ sửa dòng ARMS nếu cần. Hướng dẫn: docs/KAGGLE_LEADER_2026-10-31.md trong repo ZAIC_2026 (nhánh main).
-ARMS="asr up"   # asr = học trên chữ Whisper-turbo; up = công thức B-up; pho = học trên chữ PhoWhisper
+ARMS="pho asr"  # pho = học trên chữ PhoWhisper; asr = học trên chữ Whisper-turbo; up = công thức B-up
 BUNDLE=zac_cloud_bundle_20261031_v3.tar.gz
 START=$(date +%s); W=$HOME/zac
 say() { echo "[$(date '+%H:%M:%S')] $*"; }
@@ -110,8 +112,7 @@ say "XONG"
 ## Ghi chú cho Anh và Claude
 
 - **Lượt chạy:**
-  - Mặc định `ARMS="asr up"`: hai lượt dự phòng cho máy anh trai.
-  - Laptop đang chạy đúng hai lượt này (JOURNAL entry 37). Muốn Kaggle cho thêm thông tin mới thay vì trùng, đổi thành `ARMS="pho asr"`: lượt học trên chữ PhoWhisper chưa ai chạy, và giúp leader chọn ASR.
+  - Mặc định `ARMS="pho asr"` (Anh chọn 31/10, 13:58). Laptop chạy `asr` và `up` (JOURNAL entry 37), nên Kaggle thêm một lượt mới là `pho`, còn `asr` để dự phòng và để so T4 với laptop trên cùng công thức. Trước đó mặc định là `asr up`.
   - Tên lượt có đuôi `_t4`, nên không trùng lượt của laptop hay máy anh trai.
   - Nếu còn giờ, ô lệnh chấm lại adapter 1.7B của laptop trên T4 (`q17b_fit_random_t4`). Lượt này cho biết số trên T4 lệch số trên laptop bao nhiêu.
 - **Đã kiểm:** thử bằng script giả ở 11 trường hợp:

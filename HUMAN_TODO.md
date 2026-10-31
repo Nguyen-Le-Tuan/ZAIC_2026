@@ -30,6 +30,7 @@ Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 �
   - Nhận lại `cloud_results_*.tar.gz` và `zac_logs.tar.gz`, đặt vào `~/Zalo AI Challenge/cloud_results/`, báo Claude.
   - Nhắc anh trai xoá gói, thư mục `~/ZAIC_2026` và hai file kết quả sau khi gửi.
   - Lưu bằng chứng BTC cho phép (link hoặc ảnh chụp) vào mục 4 của file này.
+- [ ] **[Anh / Leader]** *(31/10, dự phòng)* Nếu dùng GPU miễn phí: Kaggle "GPU T4 x2", gói tải lên dưới dạng dataset **Private**, chạy ô lệnh trong [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md); tải 2 file ở tab Output về `~/Zalo AI Challenge/cloud_results/`. Xoá dataset khi xong. Kaggle cũng là chỗ hợp để leader fine-tune ASR (hạn mức GPU khoảng 30 giờ/tuần dùng chung).
 - [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Dùng gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` (sha256 trong file đó); hai gói trước không dùng nữa.
 - [ ] **[Anh]** Mang `~/ZAIC_2026/cloud_results_*.tar.gz` (trên máy cloud) về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
 

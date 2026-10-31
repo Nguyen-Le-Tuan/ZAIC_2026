@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 21:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 23:10, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -46,11 +46,12 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
   - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao). Thí nghiệm D nhắm vào điểm này.
-- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17. Từ 21:01 chạy trong unit `lifemate-night` từ worktree `~/zac-jobs` (entry 23); dự kiến xong khoảng 3 giờ sáng 31/10. Lượt D3 đã xong, B-up đang train.
+- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17. Từ 21:01 chạy trong unit `lifemate-night` từ worktree `~/zac-jobs` (entry 23); dự kiến xong khoảng 3 giờ sáng 31/10. Lượt D3 đã xong; B-up đang train (23:05: bước 175/254). Thứ tự chờ và việc Claude làm sau mỗi mốc: entry 26.
   - 3 lượt B-D3, B-up (đối chứng), B-D1, mỗi lượt 254 bước như B0.
   - Chấm trên dev_lao, D-eval-24 và CS-pilot-23.
   - Xem mục 7, entry 19–20.
 - **Chờ Anh:**
+  - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4.
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
@@ -735,6 +736,41 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Ép định dạng JSON lúc sinh xuống thấp hơn, vì chỉ 5/233 trace có lỗi định dạng.
       - Đề xuất thêm: chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận, để giữ phần lợi của D mà bớt hỏi thừa. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev.
     - **Đã cũ trong báo cáo:** "hai job chưa có điểm do lỗi đường chạy" (Codex đọc trước khi chạy lại). Các đề xuất sẽ được gộp vào kế hoạch khi có báo cáo giai đoạn 2 và báo cáo đầu-cuối.
+25. **Bổ sung: việc tối 30/10 cho Anh và leader** (30/10, 20:40; ghi muộn, phát hiện khi rà ở entry 26).
+    - Anh hỏi: trong lúc chờ máy chạy, Anh và leader làm gì, trong file nào, trên máy leader.
+    - Claude viết mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (commit `8d9026b`). Lượt này khi đó chỉ ghi vào HUMAN_TODO, chưa có entry ở đây.
+      - **Máy Anh chỉ đọc file:** không đổi nhánh, không commit trong thư mục repo, không mở ứng dụng nặng.
+      - **Ghi kết quả:** câu trả lời vào `HUMAN_TODO.md` trên `main`; góp ý code bằng comment trên PR #4. Không commit `data/`, `gen/`, `asr/`, `runs/`.
+    - **Các việc**, xếp theo mức có ích cho các quyết định sáng 31/10 (chọn ASR, nộp public, Docker):
+      - 0.1 [Leader] dựng môi trường từ nhánh `e2e-baseline` và chạy test. Đây cũng là lần tập dượt cho Docker.
+      - 0.2 [Cả hai] nghe audio train, gồm 3 câu Whisper-turbo nghe sai. Câu cần trả lời: `audio_text` là kịch bản người nói đọc theo, hay transcript thật? Nếu người nói đọc lệch kịch bản, WER sẽ phạt oan ASR.
+      - 0.3 [Leader] danh sách cụm từ nguy hiểm cho ASR, đối chiếu với danh sách từ phủ định trong `asr_quality.py`.
+      - 0.4 [Leader] rà model ASR và LLM mới.
+      - 0.5 [Leader] forum và câu hỏi cho BTC về Docker.
+      - 0.6 [Leader] review PR #4: định dạng file ASR và biến môi trường của `predict.sh`.
+      - 0.7 [Cả hai] chuẩn bị quyết định nộp public.
+      - 0.8 [Leader, tuỳ chọn] chạy turbo trên các câu vừa nghe. Chỉ chạy trên train.
+      - 0.9 [Anh] Codex deep research. Đã xong (entry 24).
+26. **Anh hỏi: journal có tự cập nhật các lượt vừa rồi chưa, và đang chờ gì** (30/10, 23:05).
+    - **Cách Claude ghi journal:**
+      - Sau mỗi lượt có nội dung, Claude thêm entry ở mục 7, sửa mục 0 và mục 8, commit thẳng lên `main`, rồi đồng bộ sang các nhánh code.
+      - Nội dung ghi: câu hỏi và lựa chọn của Anh, những gì đã kiểm, kết luận và lý do, kể cả chỗ Claude không đồng ý (ví dụ entry 24). Không chép nguyên văn suy nghĩ nội bộ.
+    - **Kiểm lại lúc này:**
+      - Các lượt tới "Đưa lên main" đã có ở entry 21–24.
+      - Thiếu lượt "việc tối nay": nay bổ sung ở entry 25.
+      - Mục 8 thêm các việc rút từ báo cáo Codex.
+    - **Máy lúc 23:05:**
+      - B-up ở bước 175/254, loss khoảng 0,03–0,05.
+      - Đỉnh VRAM 5,78 GB; RAM còn khoảng 5 GB.
+    - **Đang chờ** (giờ 31/10 là ước tính):
+
+      | Khoảng giờ | Mốc | Claude làm ngay sau |
+      |---|---|---|
+      | 0:15 | B-up (đối chứng) có điểm | So D3 với B-up. Hai lượt thấy cùng các dòng gold, cùng số dòng thêm; chỉ khác dòng thêm là D hay mẫu hỏi lại thật nhân bản. Đây là phép thử chính của D. Tiêu chí đặt trước: B-D phải hơn B0 ≥ 10 điểm hỏi lại (D3 đã đạt: 20,24 so với 7,48) **và** hơn B-up ≥ 5 điểm. |
+      | 3:00 | B-D1 có điểm, giai đoạn 2 xong | Chạy `phase2_report.py`. Viết `docs/D_PHASE2_2026-10-31.md` và kết luận theo tiêu chí. |
+      | 5:00–5:30 | Đo đầu-cuối xong | Viết `docs/E2E_BASELINE_2026-10-31.md`: điểm mất do ASR, model ASR được chọn, file public đã kiểm, thời gian mỗi mẫu. Anh quyết có nộp không. |
+
+    - **Trong lúc chờ:** GPU bận tới sáng, nên chỉ làm được việc chạy trên CPU. Ví dụ: đo trên trace có sẵn xem chốt chặn ID (entry 24) cứu được bao nhiêu mẫu, trước khi viết code.
 
 ---
 
@@ -756,6 +792,11 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] Giai đoạn 2 của D: 3 lượt train đang chạy (`lifemate/runs/phase2_d.log`); viết báo cáo khi xong.
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
+- [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
+  - **Chốt chặn ID** (không cần train): lệnh ghi dùng ID chưa từng xuất hiện trong kết quả tool hay history thì bị chặn. Đo trước trên trace có sẵn, chỉ dùng CPU, rồi viết code ở PR riêng.
+  - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2.
+  - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker.
+  - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
@@ -788,4 +829,4 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 
 - Server chấm có so khớp chính xác tham số không fuzzy và tách token theo khoảng trắng như bộ chấm local giả định không?
 - Licence của các model ASR tiếng Việt: một số dùng CC-BY-NC, có được dùng không?
-- Có model LLM hoặc ASR nào tốt hơn phát hành trước 26/10/2026 không?
+- Có model LLM hoặc ASR nào tốt hơn phát hành trước 26/10/2026 không? *(Một phần đã có trong mục 6 của báo cáo Codex, entry 24; leader rà tiếp ở HUMAN_TODO 0.4.)*

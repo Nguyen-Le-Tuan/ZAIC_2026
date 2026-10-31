@@ -992,6 +992,16 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Trên đúng cây `eval-protocol` (`3cd56e6`): `test_scorer` 11/11, `test_counterfactual` 22/22. GitHub báo MERGEABLE, CLEAN.
     - **Sau khi #8 merge:** đổi nhánh đích của #4 sang `main`. Từ đó merge từng PR từ dưới lên, mỗi lần merge xong thì đổi đích PR kế tiếp sang `main` trước khi merge nó. Claude không merge.
 
+43. **Log Kaggle chỉ có "Debugger warning"; không dừng** (31/10, 15:20).
+    - Leader gửi ảnh: bản đang chạy khoảng 62 phút (3.708 giây), GPU T4 x2, Output 0 B. Log chỉ có 8 dòng `Debugger warning ... frozen modules` ở giây thứ 7–8, không có dòng `OK:` như hướng dẫn dặn.
+    - **Claude kết luận: để chạy tiếp.**
+      - Các dòng đó là thông báo mặc định khi kernel của Kaggle khởi động, không liên quan tới code.
+      - Ô lệnh chỉ ghi file vào Output ở cuối, nên Output 0 B là bình thường.
+      - Nếu kiểm tra trước khi cài thất bại, bản đã kết thúc trong vài giây (ô lệnh `exit 1`). Nếu cài lỗi, nó cũng kết thúc trong khoảng 30–60 phút. Vẫn chạy sau 62 phút nghĩa là đã qua cả hai bước và đang train (hoặc vừa cài xong).
+      - Ô lệnh tự dừng trong vòng 11 giờ, nên tối đa tới khoảng 01:00 đêm nay.
+    - **Lỗi của hướng dẫn:** bước 6 dặn chờ dòng `OK:` sau 2 phút, nhưng khi chạy bằng Save & Run All, Kaggle thường chỉ hiện đầu ra của ô lệnh khi ô chạy xong. Đã sửa bước 6–7 trong [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md): nhận biết qua trạng thái của bản (kết thúc sớm, kết thúc sau 30–60 phút, hay vẫn "Running").
+    - Chưa xác minh được Kaggle có hiện đầu ra của `%%bash` trong lúc chạy hay không; kết luận trên dựa vào thời gian chạy. Lần sau có thể cho ô lệnh ghi tiến độ vào Output trong lúc chạy.
+
 ---
 
 ## 8. Việc tiếp theo

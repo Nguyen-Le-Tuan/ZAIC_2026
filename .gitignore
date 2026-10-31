@@ -229,3 +229,4 @@ sft/
 ckpt/
 .venv-gpu/
 gen/
+asr/

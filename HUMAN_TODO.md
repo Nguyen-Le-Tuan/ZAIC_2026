@@ -13,6 +13,60 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ---
 
+## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
+
+**Máy Anh:** chỉ đọc file. Không đổi nhánh, không commit trong thư mục repo, không mở ứng dụng nặng. Máy đang chạy giai đoạn 2 của D, rồi tới lượt đo đầu-cuối.
+
+**Ghi kết quả ở đâu:**
+- Câu trả lời và ghi chú: `HUMAN_TODO.md` trên `main`. Sửa trên GitHub web, hoặc trong clone của leader ở nhánh `main`.
+- Góp ý code: comment trên [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4); Claude sửa.
+- Không commit `data/`, `gen/`, `asr/`, `runs/`.
+
+Các việc dưới đây xếp theo mức có ích cho các quyết định sáng 31/10.
+
+- [ ] **[Leader] 0.1 Dựng môi trường** (khoảng 15 phút). Dùng nhánh `e2e-baseline`: có đủ code của PR #1–#4 và tài liệu mới nhất. Chạy được 2 bộ test trên máy thứ hai cũng là một lần tập dượt cho Docker.
+  ```bash
+  git clone https://github.com/Nguyen-Le-Tuan/ZAIC_2026.git && cd ZAIC_2026 && git checkout e2e-baseline
+  mkdir -p data && unzip -q /đường/dẫn/tới/train+public_test.zip -x '__MACOSX/*' -d data   # phải ra data/train+public_test/
+  cd lifemate && uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt
+  .venv/bin/python -m lifemate.tests.test_asr && .venv/bin/python -m lifemate.tests.test_scorer
+  ```
+- [ ] **[Cả hai] 0.2 Nghe audio train** (45–60 phút). Làm theo mục 3 (30 mẫu ngẫu nhiên), **cộng 3 câu Whisper-turbo nghe sai** trong lần thử: `train_0003`, `train_0019`, `train_0025`. Đó là 3 wav đầu của dev_random; nếu không có `aplay` thì mở bằng trình phát bất kỳ.
+  - **Câu cần trả lời:** `audio_text` là kịch bản người nói đọc theo, hay transcript thật? Người nói có đọc lệch không? Ví dụ `train_0019`:
+    - `audio_text`: "Chị ơi, giúp tôi đặt phòng khách sạn ở Đà Lạt với nhé"
+    - ASR: "Giờ tôi cần đặt phòng các sản ở Đà Lạt nữa nha"
+
+    Nếu người nói đọc lệch kịch bản, WER đo sáng mai sẽ phạt oan ASR, và nhãn để fine-tune ASR phải xử lý khác.
+  - Ghi vào bảng ghi chú ở mục 3.
+- [ ] **[Leader] 0.3 Danh sách "cụm từ nguy hiểm" cho ASR** (khoảng 20 phút; mục 3, Q9). Viết từ những gì vừa nghe.
+  - Đối chiếu với danh sách từ phủ định mà `lifemate/scripts/asr_quality.py` đang đo: `NEG = ["đừng", "không", "chưa", "thôi", "khỏi", "hủy", "bỏ"]`.
+  - Thiếu biến thể nào (ví dụ "hông", "hổng", "thôi khỏi", "khỏi cần", "à không" khi tự sửa) thì comment trên PR #4.
+- [ ] **[Leader] 0.4 Rà model ASR và LLM mới** phát hành từ 06/2026 tới 25/10/2026 (khoảng 30 phút; mục 5).
+  - Ghi tên, số tham số, licence, ngày phát hành, revision trên Hugging Face.
+  - Nếu có ASR tiếng Việt tốt hơn PhoWhisper, Claude thêm nó vào danh sách `MODELS` của `lifemate/scripts/e2e_baseline.sh`. Lần chạy lại chỉ đo model mới; các bước đã xong được bỏ qua.
+- [ ] **[Leader] 0.5 Forum và câu hỏi cho BTC** (khoảng 20 phút; mục 4).
+  - Ưu tiên: hướng dẫn Docker; CUDA và driver của máy chấm; giới hạn dung lượng image.
+  - 30 giây mỗi mẫu có tính thời gian nạp model không.
+  - Chấm có phân biệt chữ hoa/thường không.
+
+  Các câu trả lời này quyết định cách đóng Docker quanh `lifemate/scripts/predict.sh`.
+- [ ] **[Leader] 0.6 Review PR #4** (khoảng 30 phút). Đây là phần của leader (ASR, Docker), nên cần đồng ý với 2 giao kèo trước khi đóng Docker:
+  - Định dạng file ASR (`lifemate/lifemate/asr.py`).
+  - Giao diện biến môi trường của `lifemate/scripts/predict.sh` (`SPLIT`, `DATA`, `ASR_MODEL`, `LLM`, `ADAPTER`, `OUT`).
+
+  Đọc thêm `lifemate/scripts/asr_quality.py` và `lifemate/scripts/check_submission.py`.
+- [ ] **[Cả hai] 0.7 Chuẩn bị quyết định nộp public sáng mai** (khoảng 15 phút).
+  - Chốt quy tắc dùng 5 lượt nộp mỗi ngày (Q7, mục 8).
+  - Ghi trước con số nào sẽ coi là "khớp" với dev nội bộ. Lần nộp đầu dùng để lấy mốc điểm và kiểm các giả định của bộ chấm (Q1, Q8), không phải để leo bảng.
+- [ ] **[Leader] 0.8 (tuỳ chọn, cần GPU)** Chạy Whisper-turbo trên chính các câu vừa nghe, để so bằng tai.
+  - RTX 3050 4GB đủ cho turbo fp16 (1,6GB). PhoWhisper-large (3,1GB fp16) có thể không vừa.
+  - Lệnh mẫu, với `ids_listen.txt` là danh sách id đã nghe:
+    ```bash
+    .venv/bin/python -m lifemate.asr --split train --ids ids_listen.txt --batch-size 1 --out asr/train_listen_turbo.jsonl
+    ```
+  - Lần đầu sẽ tải model 1,6GB.
+  - **Chỉ chạy trên train.** Transcript của public_test chỉ được tạo bên trong `predict.sh` để nộp bài, không đem ra nghe, sửa hay dùng làm nhãn.
+
 ## 1. Ngay bây giờ (15 phút đầu)
 
 - [x] **[Anh]** Mở terminal, paste lệnh train (lấy ở `JOURNAL.md`, mục "Lệnh chạy train qua đêm"). *Đã chạy 28/10 23:52 → 29/10 02:40, không lỗi (theo log). Không chạy lại.*

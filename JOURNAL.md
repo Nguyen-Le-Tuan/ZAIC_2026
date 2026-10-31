@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 00:15, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-31 03:20. Giai đoạn 2 của D đã xong (entry 30); lượt đo baseline đầu-cuối đang chạy trong unit `lifemate-night`. Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -45,11 +45,10 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - **Chưa nộp public lần nào**, nên chưa kiểm được các giả định của bộ chấm local. Anh tự nộp khi có file.
   - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
   - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
-- **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao). Thí nghiệm D nhắm vào điểm này.
-- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17. Từ 21:01 chạy trong unit `lifemate-night` từ worktree `~/zac-jobs` (entry 23); dự kiến xong khoảng 3 giờ sáng 31/10. Lượt D3 đã xong; B-up đang train (23:05: bước 175/254). Thứ tự chờ và việc Claude làm sau mỗi mốc: entry 26.
-  - 3 lượt B-D3, B-up (đối chứng), B-D1, mỗi lượt 254 bước như B0.
-  - Chấm trên dev_lao, D-eval-24 và CS-pilot-23.
-  - Xem mục 7, entry 19–20.
+- **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
+  - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
+  - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud, chờ Anh bật).
+- **Đang chạy:** lượt đo đầu-cuối (ASR → agent → file nộp public), từ 03:09 trong unit `lifemate-night`; dự kiến xong khoảng 5–6 giờ sáng 31/10. Log: `lifemate/runs/e2e_baseline.log`.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4 → #5 → #6.
@@ -834,6 +833,17 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - **D3 so với B-up:** −5,70 điểm, khoảng tin cậy 95% từ −10,32 tới −1,15. D3 thua đối chứng rẻ, nên **không đạt tiêu chí đặt trước** (phải hơn B-up ít nhất 5 điểm hỏi lại).
       - **B-up so với B0:** +1,41, khoảng tin cậy từ −2,86 tới +5,82; chưa chắc chắn.
       - Theo kế hoạch đặt trước ([REVIEW_D](docs/REVIEW_D_2026-10-30.md)), trường hợp này dẫn tới: cân lại tỉ trọng mẫu hỏi lại thật, và hạ ưu tiên D. Kết luận đủ khi có B-D1 (khoảng 3 giờ sáng).
+30. **Giai đoạn 2 của D xong: D bị loại theo tiêu chí đặt trước** (31/10, 03:09–03:20; Claude tự làm trong lúc Anh ngủ). Báo cáo: [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md).
+    - **B-D1** (77 dòng D, mỗi dòng một lần): tổng 37,32, hỏi lại 20,41, execute 39,45. Cao nhất về tổng, nhưng hơn B0 chỉ +1,79 (khoảng tin cậy −2,80 tới +6,37) và hơn B-up +0,39.
+    - **Tiêu chí:** D1 và D3 đều chỉ đạt 1/5 điều kiện (hỏi lại hơn B0 ≥ 10). Cả hai thua B-up khoảng 9,6 điểm hỏi lại, hỏi thừa tăng 17–19 mẫu, D-eval chỉ lật đúng 1/24 và 4/24 cặp. → **Không giữ D; không làm giai đoạn 3.**
+    - **B-up:** hỏi lại +22,5 (khoảng tin cậy +10,7 tới +35,3), tổng +1,4 (chưa chắc). Theo kế hoạch đặt trước: thử cân lại tỉ trọng hỏi lại trên fit_random (ràng buộc dev_random không giảm quá 1 điểm). Lượt đã sẵn trong gói cloud, chờ Anh bật.
+    - **Claude tự suy luận thêm, đo bằng script mới** `scripts/overask_cost.py` (PR #5, commit `cdee489`, chỉ đọc `runs/`):
+      - Câu hỏi: hỏi thừa tăng gấp đôi (16 → 31–35 mẫu) thì mất bao nhiêu điểm? Nếu nhiều, nên làm ngưỡng hỏi lại lúc suy luận (việc Codex đề xuất).
+      - Trả lời: chỉ mất 1,2–2,4 điểm, vì model hỏi thừa ở các mẫu khó mà B0 cũng làm sai (B0 chỉ đúng 4,5/21 mẫu). Lọc hoàn hảo cũng chỉ thêm tối đa 1,7 điểm. → **Hạ ưu tiên ngưỡng hỏi lại.**
+      - D3 mất 3,9 điểm ở các mẫu nó không hỏi thừa; D1 không bị. Nhân dữ liệu tổng hợp 3 lần làm execute kém đi.
+      - Loss trên dev gần như bằng nhau (0,134–0,138) dù điểm cách nhau 6. Tiếp tục chọn bằng điểm rollout.
+    - **Không đề xuất** ghép B-up với D1: không có trong kế hoạch đặt trước, và dev_lao đã bị xem nhiều lần.
+    - Lượt đo đầu-cuối bắt đầu 03:09 trong cùng unit; ASR turbo trên dev_random mất 84 giây cho 784 wav (0,11 giây mỗi wav, batch 16).
 
 ---
 
@@ -852,7 +862,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] Anh đọc tay 23 mẫu D (`lifemate/gen/review_fit_lao.md`).
 - [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
 - [x] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước. *Anh chọn giai đoạn 2 (30/10).*
-- [ ] Giai đoạn 2 của D: 3 lượt train đang chạy (`lifemate/runs/phase2_d.log`); viết báo cáo khi xong.
+- [x] Giai đoạn 2 của D: xong 31/10 03:09. **D bị loại**, B-up thắng; xem `docs/D_PHASE2_2026-10-31.md` (entry 30).
+- [ ] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định.
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
@@ -860,7 +871,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - [x] **Tách lệnh ghi sai theo nguyên nhân** (entry 28): mất nhiều nhất là thiếu lệnh ghi và ghi sai tool, rồi tới chọn nhầm ID và ngày giờ.
   - **Dữ liệu SFT nhiều vế và điều kiện** (P1 trong báo cáo Codex), kiểm chứng bằng ToolEnv; nhắm vào lỗi "tự dừng khi chưa làm đủ" (entry 28).
   - **Ngày giờ:** thử quy ước sáng/tối và "tuần này / tuần sau" (nhãn tuần trong bảng ngày, hoặc chuẩn hoá giờ nói). Cần train lại để đo, nên làm sau giai đoạn 2.
-  - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2.
+  - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2. *(31/10: hạ ưu tiên. Trần chỉ 1,2–1,7 điểm trên dev_lao, entry 30.)*
   - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker.
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).

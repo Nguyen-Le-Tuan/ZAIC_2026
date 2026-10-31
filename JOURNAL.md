@@ -1050,6 +1050,22 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Nếu sau này anh trai có GPU mạnh và chạy thêm được một lần, Claude làm gói ASR riêng.
     - **Anh yêu cầu:** cập nhật HUMAN_TODO mỗi khi có thay đổi, để đội không bị xao nhãng vì quyết định đã đổi. Bảng điều phối nay có khung "Thay đổi gần nhất" ở đầu; quy tắc này đã lưu vào memory của Claude.
 
+48. **Lượt laptop (1) xong: agent học trên chữ turbo không đáng dùng** (31/10, 13:48–17:00; Claude đọc lúc 17:01).
+    - `q17b_random_asrtrain`: công thức `q17b_fit_random`, nhưng chữ của người nói trong dữ liệu SFT lấy từ Whisper-turbo chưa fine-tune thay cho `audio_text`. Chấm trên dev_random (233 mẫu):
+
+      | Đọc chữ gì khi chấm | Agent học trên `audio_text` | Agent học trên chữ turbo | Chênh [khoảng tin cậy 95%] | Hỏi lại / Execute / Ngoài phạm vi (mới) |
+      |---|---:|---:|---|---|
+      | Chữ turbo | 31,69 | 33,22 | +1,52 [−3,58; +6,62], tốt 25 / kém 24 | 21,8 / 31,8 / 70,6 (cũ 24,4 / 28,3 / 82,4) |
+      | Chữ chuẩn | 53,92 | 48,55 | **−5,37 [−10,75; −0,05]**, tốt 19 / kém 38 | 33,3 / 48,7 / 76,5 (cũ 49,4 / 51,0 / 94,1) |
+
+    - **Đọc:**
+      - Học trên chữ ASR chỉ giúp rất ít, và chưa chắc, khi đọc chữ ASR. Đổi lại, agent kém rõ khi chữ sạch: hỏi lại và ngoài phạm vi giảm mạnh.
+      - Lỗi ASR làm mất thông tin (tên, số, query) mà agent không đoán lại được. Tập agent quen với lỗi không thay được việc sửa ASR.
+      - → **Giữ agent học trên `audio_text`, dồn sức cho fine-tune ASR** (ưu tiên số 1). ASR càng tốt, chữ càng gần `audio_text`, thì agent hiện tại càng được lợi.
+    - **Giả thuyết, chưa thử:** trộn chữ chuẩn với chữ ASR (ví dụ một nửa mỗi loại) có thể giữ được điểm trên chữ sạch mà vẫn chịu được lỗi. Chỉ đáng thử sau khi có ASR fine-tune.
+    - **Lượt agent học trên chữ PhoWhisper** (chưa ai chạy): Claude nay khuyến nghị không chạy trên laptop. Cùng hướng với lượt vừa rồi, nên khó thắng; GPU laptop sau lượt (2) nên dành cho việc chấm transcript ASR fine-tune (C3).
+    - Lượt (2) `q17b_random_up` bắt đầu 17:00, dự kiến xong khoảng 20:00, trễ 10 phút so với ước tính cũ vì bước chấm lâu hơn.
+
 ---
 
 ## 8. Việc tiếp theo

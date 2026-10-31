@@ -58,6 +58,9 @@ Các việc dưới đây xếp theo mức có ích cho các quyết định sá
 - [ ] **[Cả hai] 0.7 Chuẩn bị quyết định nộp public sáng mai** (khoảng 15 phút).
   - Chốt quy tắc dùng 5 lượt nộp mỗi ngày (Q7, mục 8).
   - Ghi trước con số nào sẽ coi là "khớp" với dev nội bộ. Lần nộp đầu dùng để lấy mốc điểm và kiểm các giả định của bộ chấm (Q1, Q8), không phải để leo bảng.
+- [ ] **[Anh] 0.9 Deep research bằng Codex.** Mở Codex trong thư mục repo trên máy Anh, gõ: *"Đọc và làm đúng theo `docs/CODEX_RESEARCH_PROMPT_2026-10-30.md`."*
+  - Prompt cấm Codex đụng git, GPU và job đang chạy.
+  - Codex sẽ ghi kết quả vào `docs/research/`. Sáng mai cả đội và Claude đọc, đối chiếu, rồi mới đưa lên `main`.
 - [ ] **[Leader] 0.8 (tuỳ chọn, cần GPU)** Chạy Whisper-turbo trên chính các câu vừa nghe, để so bằng tai.
   - RTX 3050 4GB đủ cho turbo fp16 (1,6GB). PhoWhisper-large (3,1GB fp16) có thể không vừa.
   - Lệnh mẫu, với `ids_listen.txt` là danh sách id đã nghe:

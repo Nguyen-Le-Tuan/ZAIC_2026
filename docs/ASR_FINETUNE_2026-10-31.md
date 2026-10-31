@@ -32,17 +32,17 @@
 
 ## Các bước
 
-1. **Tải gói lên Drive.** File `~/zac_asr_bundle_20261031.tar.gz` (845 MB, trên máy Anh) gồm code, dữ liệu train kèm audio train (không có audio public) và transcript gốc. Tải lên **thư mục gốc My Drive** của tài khoản sẽ chạy. Nếu leader chạy, Anh gửi riêng file cho leader. File có dữ liệu thi: không chia sẻ thư mục, xoá khi xong.
+1. **Tải gói lên Drive.** File `~/zac_asr_bundle_20261031.tar.gz` (845 MB, trên máy Anh) gồm code, dữ liệu train kèm audio train (không có audio public) và transcript gốc. Tải lên **thư mục gốc My Drive** của tài khoản sẽ chạy. Nếu leader chạy, Anh chia sẻ riêng file cho leader; leader bấm **Tạo bản sao** (Make a copy) để file nằm trong My Drive của leader. Tên bản sao kiểu "Bản sao của ..." vẫn dùng được. File có dữ liệu thi: không chia sẻ thư mục, xoá khi xong.
 2. Mở https://colab.research.google.com → **New notebook**. Chọn **Runtime → Change runtime type → T4 GPU → Save**.
 3. **Ô thứ nhất** (Python), chạy rồi bấm cho phép truy cập Drive:
    ```python
    from google.colab import drive; drive.mount('/content/drive')
    ```
 4. **Ô thứ hai:** dán toàn bộ ô lệnh bên dưới. Chỉ sửa dòng `MODELS` nếu cần, rồi chạy. **Để tab mở** tới khi xong; Colab free có thể ngắt khi lâu không tương tác.
-5. Theo dõi trong ô:
-   - dòng `OK: Tesla T4 ...` nghĩa là kiểm tra trước khi cài đã qua;
-   - mỗi epoch in `val_wer` (epoch 0 là model gốc);
-   - cuối cùng in chất lượng trên hai tập dev.
+5. **Theo dõi** *(bổ sung 31/10, 15:24)*. Ô lệnh in ra theo từng bước: dòng `OK: Tesla T4 ...`, `val_wer` của mỗi epoch (epoch 0 là model gốc), rồi chất lượng trên hai tập dev. Nhưng **có thể nó chỉ hiện khi ô chạy xong**, như đã gặp trên Kaggle. Trong lúc chờ, xem tiến độ như sau:
+   - **Kết thúc trong vài giây với dòng `LỖI: ...`:** sửa theo lời nhắc (chọn GPU T4, chạy ô mount Drive, đặt gói vào My Drive) rồi chạy lại ô.
+   - **Thanh Resources** (góc trên bên phải, chỗ RAM/Disk): GPU RAM khoảng 5–14 GB nghĩa là đang train hoặc đang nhận dạng. Nếu GPU RAM gần 0 thì đang cài môi trường (10–20 phút đầu).
+   - **Thư mục Files** (biểu tượng thư mục ở cột trái): vào `/root/zac/ZAIC_2026/`. Mở `setup.log`, `asr_train_turbo.log`, hoặc `lifemate/ckpt/asr_turboft/train_log.jsonl`; hai file sau ghi thêm một dòng sau mỗi 20 bước và sau mỗi epoch.
 6. **Kết quả:** `My Drive/zac_out/asr_results_turbo.tar.gz` và `asr_results_pho.tar.gz`. Tải về, đặt vào `~/Zalo AI Challenge/cloud_results/` rồi báo Claude. Nếu cài lỗi thì có `zac_asr_logs.tar.gz`; gửi file đó.
 7. Xoá gói và `zac_out` trên Drive khi xong.
 
@@ -61,7 +61,7 @@ left_min() { echo $(( 11 * 60 - ($(date +%s) - START) / 60 )); }   # phiên dừ
 MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1)
 [ "${MEM:-0}" -ge 15000 ] || { say "LỖI: cần GPU từ 16 GB (Colab: Runtime > Change runtime type > T4 GPU). Đang có: $(nvidia-smi -L 2>/dev/null || echo không có GPU)"; exit 1; }
 curl -sfI https://huggingface.co >/dev/null || { say "LỖI: không có Internet"; exit 1; }
-B=$(find "$IN" -name "$BUNDLE" 2>/dev/null | head -1)
+B=$(find "$IN" -name "*$BUNDLE" 2>/dev/null | head -1)   # cũng nhận bản sao Drive đổi tên ("Bản sao của ...")
 D=$(find "$IN" -maxdepth 6 -type d -name ZAIC_2026 2>/dev/null | head -1)
 [ -n "$B$D" ] || { say "LỖI: không thấy $BUNDLE trong $IN (Colab: chạy ô mount Drive trước; file phải ở thư mục gốc My Drive)"; exit 1; }
 FREE=$(df -BG --output=avail "$HOME" | tail -1 | tr -dc 0-9)

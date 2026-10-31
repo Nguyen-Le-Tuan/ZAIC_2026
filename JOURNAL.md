@@ -1040,6 +1040,16 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Coi trọng dev_lao (app chưa thấy), vì tập private có thể có app mới.
       - Public chỉ để kiểm, nộp ít, không bao giờ chỉnh theo public. Không train trên public, không pseudo-label.
 
+47. **Đã gửi anh trai; Colab vẫn chạy ngay; HUMAN_TODO cập nhật theo mỗi thay đổi** (31/10, 16:12).
+    - Anh đã gửi anh trai gói v3 và lệnh có kiểm GPU; đang chờ phản hồi.
+    - Anh hỏi: tiếp tục Colab, hay gửi luôn việc fine-tune ASR cho anh trai. Anh cũng nói thêm: chuyện dữ liệu đã hỏi BTC rõ ràng, được phép.
+    - **Claude khuyến nghị chạy Colab ngay** và không gửi ASR cho anh trai:
+      - Anh trai chỉ chạy một lần, lần đó dành cho các lượt agent (nhất là 4B, thứ chỉ máy đó chạy được).
+      - Máy anh trai chưa rõ GPU gì.
+      - Colab T4 fine-tune ASR được bình thường (fp16) và có kết quả khoảng 18:00–18:30.
+      - Nếu sau này anh trai có GPU mạnh và chạy thêm được một lần, Claude làm gói ASR riêng.
+    - **Anh yêu cầu:** cập nhật HUMAN_TODO mỗi khi có thay đổi, để đội không bị xao nhãng vì quyết định đã đổi. Bảng điều phối nay có khung "Thay đổi gần nhất" ở đầu; quy tắc này đã lưu vào memory của Claude.
+
 ---
 
 ## 8. Việc tiếp theo

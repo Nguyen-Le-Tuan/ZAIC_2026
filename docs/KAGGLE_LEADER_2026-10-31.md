@@ -2,6 +2,10 @@
 
 *Anh nhờ leader chạy vì tài khoản Kaggle của Anh chưa xác minh số điện thoại, nên chưa bật được Internet. Bối cảnh và lý do chọn Kaggle: [`FREE_GPU_2026-10-31.md`](FREE_GPU_2026-10-31.md). Phần dưới đây là tin nhắn gửi leader, kèm ô lệnh hoàn chỉnh.*
 
+*Kết quả (cập nhật 16:05, JOURNAL entry 46):*
+- *Lượt Kaggle xong lúc khoảng 15:50 mà không train: ô lệnh đo được T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên tự bỏ qua 2 lượt train. Nó chỉ chấm lại adapter của laptop: 54,35 so với 53,92, chênh +0,43 (khoảng tin cậy −1,29 đến +2,15), 228/233 mẫu giống hệt.*
+- *Không cần chạy lại lượt agent trên Kaggle.*
+
 ---
 
 > **Sửa lỗi 31/10, 14:11.** Nếu bản trước dừng với `SETUP FAILED: bundle files differ from BUNDLE_MANIFEST.json`: thay **toàn bộ** ô lệnh bằng bản dưới đây, rồi Save Version → Save & Run All lại. **Không cần tải lại dataset.** (Kaggle tự giải nén gói và bỏ 99 file rác `.DS_Store` và `__pycache__`; ô lệnh mới bỏ chúng khỏi danh sách kiểm, mọi file khác vẫn kiểm đủ.)

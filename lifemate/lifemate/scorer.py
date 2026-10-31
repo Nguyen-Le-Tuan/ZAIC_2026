@@ -11,12 +11,16 @@ Points the official text leaves open (kept strict here, may differ from the serv
   * argument key sets must be equal (an extra optional argument breaks the match)
   * non-fuzzy values are compared exactly (no case folding); lists in order
   * fuzzy tokens = whitespace split after lowercase + NFC
+
+Local protocol for incomplete files: a gold id with no prediction row scores 0 even when its gold is empty
+("no answer" is not "answered with no call"); a repeated id or an id outside the split is an error.
 """
 from __future__ import annotations
 
 import argparse
 import collections
 import json
+import sys
 import unicodedata
 
 from .data import DEFAULT_ROOT, fuzzy_params, load_catalog, load_jsonl, load_split, zaic_tools
@@ -115,19 +119,27 @@ def gold_from_train(split: str, root, ids=None) -> dict[str, dict]:
 
 
 def evaluate(pred: dict[str, dict], gold: dict[str, dict], fuzzy) -> dict:
+    """Scores every gold id. A gold id without a prediction row scores 0 (score, call-F1 and hash), also when
+    its gold is empty. Prediction ids outside gold are ignored and counted in "extra"."""
     per_cat = collections.defaultdict(list)
     rows = []
     for sid, g in gold.items():
-        p = pred.get(sid, {"tool_calls": [], "state_hash": None})
-        s = score_sample(p["tool_calls"], p["state_hash"], g["tool_calls"], g["state_hash"], fuzzy)
-        f1 = call_f1(p["tool_calls"], g["tool_calls"], fuzzy)
-        hash_ok = (not g["tool_calls"] and not p["tool_calls"]) or (bool(g["tool_calls"]) and p["state_hash"] == g["state_hash"])
         cat = category(g["tool_calls"])
-        per_cat[cat].append(s)
-        rows.append({"id": sid, "score": s, "call_f1": f1, "hash_ok": hash_ok, "category": cat})
+        p = pred.get(sid)
+        if p is None:
+            row = {"id": sid, "score": 0.0, "call_f1": 0.0, "hash_ok": False, "category": cat, "missing": True}
+        else:
+            s = score_sample(p["tool_calls"], p["state_hash"], g["tool_calls"], g["state_hash"], fuzzy)
+            f1 = call_f1(p["tool_calls"], g["tool_calls"], fuzzy)
+            hash_ok = (not g["tool_calls"] and not p["tool_calls"]) or (bool(g["tool_calls"]) and p["state_hash"] == g["state_hash"])
+            row = {"id": sid, "score": s, "call_f1": f1, "hash_ok": hash_ok, "category": cat}
+        per_cat[cat].append(row["score"])
+        rows.append(row)
     n = len(rows)
     return {
         "n": n,
+        "missing": sum(r.get("missing", False) for r in rows),
+        "extra": len(set(pred) - set(gold)),
         "score": 100 * sum(r["score"] for r in rows) / max(n, 1),
         "call_f1": 100 * sum(r["call_f1"] for r in rows) / max(n, 1),
         "hash_acc": 100 * sum(r["hash_ok"] for r in rows) / max(n, 1),
@@ -136,19 +148,39 @@ def evaluate(pred: dict[str, dict], gold: dict[str, dict], fuzzy) -> dict:
     }
 
 
+def load_predictions(path) -> dict[str, dict]:
+    """{id: row}. A repeated id is an error: which of its lines would be scored is ambiguous."""
+    rows = load_jsonl(path)
+    dup = sorted(i for i, c in collections.Counter(r["id"] for r in rows).items() if c > 1)
+    if dup:
+        raise ValueError(f"{path}: {len(dup)} ids appear more than once, e.g. {dup[:5]}")
+    return {r["id"]: r for r in rows}
+
+
 def main():
     ap = argparse.ArgumentParser(description="score a submission.jsonl against train labels")
     ap.add_argument("pred")
     ap.add_argument("--split", default="train")
     ap.add_argument("--root", default=str(DEFAULT_ROOT))
-    ap.add_argument("--ids", help="file with one sample id per line (default: every id in pred)")
+    ap.add_argument("--ids", help="file with one sample id per line (default: every id in pred); "
+                                  "ids missing from pred score 0")
     ap.add_argument("--rows", help="write per-sample rows to this jsonl")
     a = ap.parse_args()
-    pred = {r["id"]: r for r in load_jsonl(a.pred)}
+    try:
+        pred = load_predictions(a.pred)
+    except ValueError as e:
+        sys.exit(str(e))
+    split_ids = {s["id"] for s in load_split(a.split, a.root)}
+    for name, bad in (("predicted", set(pred) - split_ids),
+                      ("--ids", (set(open(a.ids).read().split()) if a.ids else set()) - split_ids)):
+        if bad:  # would silently drop out of the denominator
+            sys.exit(f"{len(bad)} {name} ids are not in split {a.split}, e.g. {sorted(bad)[:5]}")
     ids = set(open(a.ids).read().split()) if a.ids else set(pred)
     gold = gold_from_train(a.split, a.root, ids)
     res = evaluate(pred, gold, fuzzy_params(load_catalog(a.split, a.root)))
     rows = res.pop("rows")
+    if res["missing"]:
+        print(f"warning: {res['missing']} of {res['n']} ids have no prediction and score 0", file=sys.stderr)
     print(json.dumps(res, ensure_ascii=False, indent=1))
     if a.rows:
         with open(a.rows, "w", encoding="utf-8") as f:

@@ -13,6 +13,31 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ---
 
+## Ngày 31/10: làm song song (kế hoạch chi tiết: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md))
+
+*Claude viết rạng sáng 31/10. Đọc trước: mục 1 của file kế hoạch, rồi phần kết luận của [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md) và [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md).*
+
+Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên ASR lên ưu tiên số 1. D bị loại.
+
+**Anh quyết (sáng):**
+- [ ] **[Anh]** Nộp public `lifemate/runs/e2e_public_turbo.jsonl` không? (Khuyến nghị: nộp, để có mốc đầu tiên; dev dự đoán khoảng 17–32.) Anh tự nộp; ghi điểm vào đây: …
+- [ ] **[Anh]** Bật lượt cloud nào trong `lifemate/cloud/arms_2026-10-31.txt`. Khuyến nghị: 4 lượt mặc định + `q17b_random_asrtrain` + `q17b_random_up`; thêm `q4b_random_asrtrain` nếu có 4 GPU.
+- [ ] **[Anh]** PR: review và merge #1 rồi #2 trước; leader review #4, #6; #3 (D) có thể đóng không merge.
+
+**Anh làm:**
+- [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Gói mới nằm ở `~/` (tên và sha256 trong file đó).
+- [ ] **[Anh]** Mang `cloud_results_*.tar.gz` về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
+
+**Leader làm:**
+- [ ] **[Leader]** Fine-tune ASR (PhoWhisper-large hoặc Whisper-turbo) trên wav của fit, nhãn `audio_text`. Không dùng wav của dev_random/dev_lao để train; không dùng audio public_test. Cần gói `WITH_AUDIO=1`.
+  - Đo bằng `scripts/asr_quality.py`. Điểm agent: `ASR_FILE=<file> TAG=<tên> ADAPTER=ckpt/q17b_fit_random/final DEV=dev_random bash scripts/eval_ckpt.sh`, hoặc nhờ Claude chạy.
+  - Chọn theo điểm agent, không theo WER: PhoWhisper sai ít từ hơn turbo nhưng điểm agent thấp hơn.
+- [ ] **[Cả hai]** Nghe 10–20 câu ASR sai nhiều nhất (danh sách id trong báo cáo E2E): tiếng ồn, giọng, tốc độ nói, từ lạ.
+- [ ] **[Leader]** Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh`, chạy offline trên máy leader; ghi thời gian.
+- [ ] **[Leader]** Forum BTC: hướng dẫn Docker, máy chấm, Q1.
+
+**Điểm hẹn:** 9:00 (chốt quyết định), 13:00 (cloud setup và parity; WER đầu tiên của ASR fine-tune), 18:00 (kết quả cloud, chọn công thức vòng sau).
+
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 
 **Máy Anh:** chỉ đọc file. Không đổi nhánh, không commit trong thư mục repo, không mở ứng dụng nặng. Máy đang chạy giai đoạn 2 của D, rồi tới lượt đo đầu-cuối.
@@ -201,6 +226,7 @@ Các việc dưới đây xếp theo mức có ích cho các quyết định sá
   ```
   - *29/10:* Anh đã audit lỗi với Codex hỗ trợ ([`docs/TRAIN_REVIEW_2026-10-29.md`](docs/TRAIN_REVIEW_2026-10-29.md)), Claude đã đối chiếu ([`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md)). Chưa ghi nhận việc hai người tự phân loại toàn bộ bằng mắt, nên việc này vẫn để mở.
 - [ ] **[Anh]** *(30/10)* Đọc tay 23 mẫu thí nghiệm D trong `lifemate/gen/review_fit_lao.md` (chỉ có trên máy Anh). Đánh dấu `[x]` mẫu hợp lý, ghi lý do mẫu sai. Xem [`docs/EXPERIMENT_D.md`](docs/EXPERIMENT_D.md) mục 6.
+  - *31/10: không còn cần.* D bị loại ở giai đoạn 2 ([`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)). Anh quyết bỏ việc này hay vẫn đọc để lưu.
 - [ ] **[Anh]** *(30/10)* Quyết có sinh đủ khoảng 230 mẫu D và chạy hai lượt D-lao, D-random hay không (EXPERIMENT_D mục 8).
   - *Cập nhật sau review 30/10:* kế hoạch đã đổi thành 4 giai đoạn có cổng chặn và có đối chứng "nhân bản mẫu hỏi lại thật" ([`docs/REVIEW_D_2026-10-30.md`](docs/REVIEW_D_2026-10-30.md) mục 5). Việc cần quyết bây giờ là **duyệt giai đoạn 1**.
 - [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 30 nhãn D của giai đoạn 1 (R8 trong review): nhãn có đúng cách BTC sẽ gán không, nhất là các nhãn không có tiền lệ.
@@ -227,6 +253,7 @@ Các việc dưới đây xếp theo mức có ích cho các quyết định sá
   - `audio_text` viết số bằng chữ nhiều hơn chữ số (1.371 so với 481 câu).
 - [ ] **[Leader]** Khi BTC có hướng dẫn Docker: đóng image quanh `lifemate/scripts/predict.sh` (một lệnh offline từ thư mục dữ liệu ra `submission.jsonl` đã kiểm).
 - [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 24 mẫu mới của giai đoạn 1b trong `lifemate/gen/review_1b.md` (chỉ có trên máy Anh). Chú ý: 7/8 câu B-vague được viết bằng cách bỏ hẳn người nhận, và 3 mẫu `banking.transfer.amount` không có tiền lệ hỏi thật.
+  - *31/10: không còn cần.* D bị loại ở giai đoạn 2 ([`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)). Anh quyết bỏ việc này hay vẫn đọc để lưu.
 - [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl`, `lifemate/gen/*_v1*` và `lifemate/gen/*_1b*` (mốc so sánh, hash ghi trong `docs/baselines/`). Không xoá, không train trên nguồn của CS-pilot-23 hay D-eval-24.
   - *Ghi chú 30/10:* D-eval-24 có 1 mẫu rò rỉ nhãn (`train_1140#d1`). Tập vẫn giữ nguyên để so được với mốc; báo cáo kèm kết quả trên D-eval-23 (bỏ mẫu này).
 - [x] **[Anh]** Mở chat với Claude: *29/10, kèm [`docs/CLAUDE_HANDOFF_2026-10-29.md`](docs/CLAUDE_HANDOFF_2026-10-29.md).* *"Đọc `JOURNAL.md`, `docs/PIPELINE.md` và `HUMAN_TODO.md`. Đây là kết quả train và câu trả lời của đội…"*

@@ -21,12 +21,13 @@ Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 �
 
 **Anh quyết (sáng):**
 - [ ] **[Anh]** Nộp public `lifemate/runs/e2e_public_turbo.jsonl` không? (Khuyến nghị: nộp, để có mốc đầu tiên; dev dự đoán khoảng 17–32.) Anh tự nộp; ghi điểm vào đây: …
-- [ ] **[Anh]** Bật lượt cloud nào trong `lifemate/cloud/arms_2026-10-31.txt`. Khuyến nghị: 4 lượt mặc định + `q17b_random_asrtrain` + `q17b_random_up`; thêm `q4b_random_asrtrain` nếu có 4 GPU.
+- [x] **[Anh]** Bật lượt cloud nào trong `lifemate/cloud/arms_2026-10-31.txt`. Khuyến nghị: 4 lượt mặc định + `q17b_random_asrtrain` + `q17b_random_up`; thêm `q4b_random_asrtrain` nếu có 4 GPU.
+  - *Anh chọn theo khuyến nghị (31/10, khoảng 10:00, trong chat). Claude đã bật sẵn trong gói v3 (`~/zac_cloud_bundle_20261031_v3.tar.gz`), không cần sửa file trên cloud. Lượt 4B học trên chữ ASR tự bỏ qua nếu máy có dưới 4 GPU.*
 - [ ] **[Anh]** PR: review và merge #1 rồi #2 trước; leader review #4, #6; #3 (D) có thể đóng không merge.
 
 **Anh làm:**
-- [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Gói mới nằm ở `~/` (tên và sha256 trong file đó).
-- [ ] **[Anh]** Mang `cloud_results_*.tar.gz` về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
+- [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Dùng gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` (sha256 trong file đó); hai gói trước không dùng nữa.
+- [ ] **[Anh]** Mang `~/ZAIC_2026/cloud_results_*.tar.gz` (trên máy cloud) về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
 
 **Leader làm:**
 - [ ] **[Leader]** Fine-tune ASR (PhoWhisper-large hoặc Whisper-turbo) trên wav của fit, nhãn `audio_text`. Không dùng wav của dev_random/dev_lao để train; không dùng audio public_test. Cần gói `WITH_AUDIO=1`.

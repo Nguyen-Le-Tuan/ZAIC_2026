@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 05:00. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`. Bản trước xem lịch sử git.*
+*Cập nhật: 2026-10-31 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -48,12 +48,13 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Kế hoạch hôm nay (31/10):** [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md). Ưu tiên: fine-tune ASR (leader), train agent trên chữ ASR và 4B (Anh chạy cloud), Docker (leader).
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
-  - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud, chờ Anh bật).
-- **Đang chạy:** không có job train. Đêm 31/10 đã chạy ASR trên toàn bộ wav train (`lifemate/asr/train_all_*.jsonl`) để làm dữ liệu cho lượt cloud train agent trên chữ ASR.
+  - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud `q17b_random_up`, Anh đã bật 31/10).
+- **Đang chạy:** không có job. Lượt chạy thử đường train của bộ cloud trên laptop đã xong 10:21 (entry 32).
+- **Chờ Anh quyết:** có nhờ anh trai (làm ở Google) train giùm không. Gói có dữ liệu thi mà BTC cấm chia sẻ ra ngoài đội (entry 33).
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4 → #5 → #6.
-  - Thuê cloud và chạy gói train theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md).
+  - Thuê cloud và chạy gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md); các lượt Anh chọn đã bật sẵn (entry 32).
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
@@ -864,6 +865,29 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - **Chạy thật trên laptop** một lượt qua `cloud_arms.sh` từ gói vừa giải nén (chấm 1.7B trên chữ turbo): 31,69, giống hệt 233/233 dự đoán của lượt đầu-cuối. Bộ công cụ chạy đúng đầu-cuối; chưa chạy thật lượt train nào.
     - **Kế hoạch ngày 31/10** cho Anh, leader và Claude: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md).
 
+32. **Anh chọn lượt cloud theo khuyến nghị; gói v3; chạy thử đường train trên laptop** (31/10, 10:00–10:20).
+    - Anh trả lời "As recommended" cho câu hỏi "bật lượt cloud nào".
+    - **PR #6, commit `8c70d4f`:**
+      - Bật `q17b_random_asrtrain` (1.7B học trên chữ turbo) và `q17b_random_up` (B-up trên fit_random). `q17b_random_up` nay chấm thêm trên chữ turbo; luật quyết vẫn trên chữ chuẩn (không giảm quá 1 điểm so với 53,92).
+      - Bật `q4b_random_asrtrain` với khoá mới `MIN_GPUS=4`: `cloud_arms.sh` tự bỏ qua lượt này (và ghi log) khi các lượt có dưới 4 GPU. Như vậy "bật nếu có 4 GPU" không cần Anh sửa file trên cloud.
+      - Thứ tự dòng chọn sao cho, với 2 hoặc 4 GPU, lượt này chạy sau lượt gốc `q4b_fit_random` trên cùng GPU. Kiểm bằng `DRY_RUN=1` với 1, 2, 3, 4 và 8 GPU. Với 5 GPU trở lên, bước so theo cặp của nó có thể báo FAILED; chạy lại `lifemate.compare` sau là được.
+      - Lượt PhoWhisper và 4B B-up vẫn tắt, nằm cuối file.
+    - **Gói v3:** `~/zac_cloud_bundle_20261031_v3.tar.gz` (256 MB, sha256 `bfe980b32f46…`, code `8c70d4f`). Hai gói trước không dùng nữa; chưa xoá.
+    - **Claude tự làm thêm: chạy thử đường train trên laptop.** Trước đó chưa lượt train nào chạy thật qua `cloud_arms.sh`. Chạy từ gói v3 giải nén, 2 lượt 1.7B, mỗi lượt chỉ 2 bước train và chấm 10 mẫu dev_random. Đây là kiểm đường chạy, không phải kết quả.
+      - `smoke_asrtrain` (như `q17b_random_asrtrain`, 10:07–10:13): file ASR phủ 4.252/4.252 lượt user của fit_random; dựng 4.150 dòng SFT; train; chấm trên chữ chuẩn và chữ turbo; so theo cặp với hai lượt gốc.
+      - `smoke_up` (như `q17b_random_up`, 10:13–10:21): dựng 4.979 dòng SFT, gồm 829 dòng từ 263 mẫu hỏi lại nhân bản; các bước còn lại như trên.
+      - Lượt có `MIN_GPUS=4` được bỏ qua và ghi log. Gói kết quả 189 MB, có 2 adapter (mỗi adapter 1.7B khoảng 144 MB).
+      - **Phát hiện:** gói kết quả nằm ở `ZAIC_2026/cloud_results_*.tar.gz`, không phải `~/` như hướng dẫn cũ ghi. Đã sửa đường dẫn `scp` trong `CLOUD_TRAIN`, HUMAN_TODO và `PLAN_2026-10-31.md` (sửa chỗ sai, không phải cập nhật kết quả).
+      - Chưa chạy lượt train đầy đủ hay lượt 4B nào qua `cloud_arms.sh`; laptop 8 GB không nạp nổi 4B.
+    - Sửa [`CLOUD_TRAIN`](docs/CLOUD_TRAIN_2026-10-31.md): tên gói v3, bảng số GPU → lượt chạy → thời gian ước tính, cách giải nén đè lên gói cũ khi đã cài, `GPUS=` khi leader giữ 1 GPU cho ASR.
+33. **Anh hỏi: nhờ anh trai làm ở Google train giùm** (31/10, khoảng 10:15).
+    - Anh trai nhận đúng một lần, không có thời gian đọc hướng dẫn. Anh muốn một lệnh hoàn chỉnh, giải thích lệnh đó, và biết làm gì sau khi train xong.
+    - **Claude kiểm điều khoản dữ liệu:** README của BTC (`data/train+public_test/README.md`, dòng đầu) ghi: dữ liệu chỉ cấp cho đội đã đăng ký, các đội không chia sẻ, phát tán hay phân phối.
+      - Gói có dữ liệu train và public_test. Gửi gói cho người ngoài đội là trái điều này, nên có thể bị loại.
+      - Claude khuyến nghị: hỏi BTC trước (leader đang theo dõi forum); hoặc anh trai cấp cho Anh một máy GPU và Anh tự chạy, để dữ liệu chỉ do người trong đội xử lý. Dùng máy của công ty cho việc riêng cũng cần công ty cho phép. Anh quyết.
+    - **Yêu cầu của máy:** Linux, GPU NVIDIA (không chạy được trên TPU), driver ≥ 550, internet tới PyPI, pytorch.org, astral.sh và Hugging Face, ổ ≥ 100 GB. Revision model ghim vẫn là bản `main` hiện tại trên Hugging Face (kiểm 10:14), nên bước tải model sẽ không dừng.
+    - **Lệnh một dòng** Claude đưa: giải nén gói v3, cài, chạy các lượt trong nền (`nohup`, thoát SSH vẫn chạy), rồi luôn để lại ở `~` hai file cần gửi về: `cloud_results_*.tar.gz` (khoảng 1 GB) và `zac_logs.tar.gz`. Đã thử với script giả: khi thành công có đủ hai file; khi cài đặt lỗi vẫn có file log ghi lý do.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -882,12 +906,12 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
 - [x] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước. *Anh chọn giai đoạn 2 (30/10).*
 - [x] Giai đoạn 2 của D: xong 31/10 03:09. **D bị loại**, B-up thắng; xem `docs/D_PHASE2_2026-10-31.md` (entry 30).
-- [ ] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định.
+- [ ] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud; Anh bật 31/10, entry 32): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định.
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [x] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): xong 31/10 (entry 31). ASR làm mất khoảng 20 điểm.
 - [ ] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp).
 - [ ] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot.
-- [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; chờ Anh bật).
+- [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; Anh bật 31/10, entry 32; bản 4B `q4b_random_asrtrain` chỉ chạy khi có ≥ 4 GPU).
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
   - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.
   - [x] **Tách lệnh ghi sai theo nguyên nhân** (entry 28): mất nhiều nhất là thiếu lệnh ghi và ghi sai tool, rồi tới chọn nhầm ID và ngày giờ.

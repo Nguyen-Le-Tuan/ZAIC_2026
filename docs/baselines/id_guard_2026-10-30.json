@@ -1,0 +1,472 @@
+{
+ "rule": "block a write call whose x-ref value is not in system/history/user/earlier tool results",
+ "gold_check_fit": {
+  "n_samples": 1087,
+  "n_values": 912,
+  "sources": {
+   "turn_results": 698,
+   "history": 213,
+   "unseen": 1
+  },
+  "false_block_rate": 0.0011,
+  "blocked_gold": [
+   {
+    "id": "train_1696",
+    "tool": "chat_ott.send_message",
+    "param": "chat_id"
+   }
+  ]
+ },
+ "runs": {
+  "sft_q17b_fit_random": {
+   "n": 233,
+   "replay_mismatch": 0,
+   "flag_samples": 0,
+   "flag_calls": 0,
+   "flag_calls_gold": 0,
+   "unseen_id_reads": 0,
+   "writes": {
+    "right": 157,
+    "wrong": 91
+   },
+   "wrong_by_cause": {
+    "ask_missing|tool_not_in_gold": 13,
+    "execute|id_right_other_param_wrong": 15,
+    "execute|id_wrong:history": 5,
+    "execute|id_wrong:turn_results": 18,
+    "execute|no_id_param_wrong": 24,
+    "execute|tool_not_in_gold": 16
+   },
+   "wrong_id_params": {
+    "banking.transfer.from_account_id": 5,
+    "home_automation.delete_rule.rule_id": 5,
+    "smart_home.light_set.device_id": 2,
+    "chat_ott.send_message.chat_id": 1,
+    "learning.schedule_lesson.course_id": 1,
+    "household_chores.assign.chore_id": 1,
+    "flights.cancel.booking_id": 1,
+    "video_meeting.join.meeting_id": 1,
+    "podcast_radio.play.episode_id": 1,
+    "library.reserve.book_id": 1,
+    "tv.record.program_id": 1,
+    "bike_rental.reserve.bike_id": 1,
+    "flights.book.flight_id": 1,
+    "news.save.article_id": 1
+   },
+   "orig": 53.92,
+   "drop": 53.92,
+   "ask": 53.92,
+   "drop_better": 0,
+   "drop_worse": 0,
+   "ask_better": 0,
+   "ask_worse": 0,
+   "wrong_id_samples": 16,
+   "by_category": {
+    "ask_missing": {
+     "n": 33,
+     "flag_samples": 0,
+     "orig": 49.39,
+     "drop": 49.39,
+     "ask": 49.39
+    },
+    "execute": {
+     "n": 183,
+     "flag_samples": 0,
+     "orig": 51.0,
+     "drop": 51.0,
+     "ask": 51.0
+    },
+    "out_of_scope": {
+     "n": 17,
+     "flag_samples": 0,
+     "orig": 94.12,
+     "drop": 94.12,
+     "ask": 94.12
+    }
+   },
+   "cases": []
+  },
+  "sft_q17b_fit_lao": {
+   "n": 262,
+   "replay_mismatch": 0,
+   "flag_samples": 4,
+   "flag_calls": 4,
+   "flag_calls_gold": 0,
+   "unseen_id_reads": 1,
+   "writes": {
+    "wrong": 157,
+    "right": 140
+   },
+   "wrong_by_cause": {
+    "ask_missing|no_id_param_wrong": 1,
+    "ask_missing|tool_not_in_gold": 29,
+    "execute|id_right_other_param_wrong": 19,
+    "execute|id_wrong:history": 7,
+    "execute|id_wrong:turn_results": 15,
+    "execute|id_wrong:unseen": 2,
+    "execute|id_wrong:user": 1,
+    "execute|no_id_param_wrong": 54,
+    "execute|tool_not_in_gold": 29
+   },
+   "wrong_id_params": {
+    "sms.send.contact_id": 3,
+    "home_security.acknowledge_alert.alert_id": 3,
+    "library.reserve.book_id": 2,
+    "smart_home.light_set.device_id": 2,
+    "flights.book.flight_id": 2,
+    "video_meeting.join.meeting_id": 2,
+    "medication.log_taken.schedule_id": 2,
+    "home_automation.create_rule.device_id": 1,
+    "door_lock.set_lock.lock_id": 1,
+    "smart_home.switch_set.device_id": 1,
+    "smart_home.fan_set.device_id": 1,
+    "maps.save_place.place_id": 1,
+    "chat_ott.send_message.chat_id": 1,
+    "tv.record.program_id": 1,
+    "alarm.update.alarm_id": 1,
+    "medication.remove.schedule_id": 1
+   },
+   "orig": 35.53,
+   "drop": 35.53,
+   "ask": 35.53,
+   "drop_better": 0,
+   "drop_worse": 0,
+   "ask_better": 0,
+   "ask_worse": 0,
+   "wrong_id_samples": 23,
+   "by_category": {
+    "ask_missing": {
+     "n": 41,
+     "flag_samples": 0,
+     "orig": 7.48,
+     "drop": 7.48,
+     "ask": 7.48
+    },
+    "execute": {
+     "n": 214,
+     "flag_samples": 4,
+     "orig": 39.73,
+     "drop": 39.73,
+     "ask": 39.73
+    },
+    "out_of_scope": {
+     "n": 7,
+     "flag_samples": 0,
+     "orig": 71.43,
+     "drop": 71.43,
+     "ask": 71.43
+    }
+   },
+   "cases": [
+    {
+     "id": "train_0871",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "video_meeting.join",
+       "params": [
+        "meeting_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1093",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "sms.send",
+       "params": [
+        "contact_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1130",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "reminders.delete",
+       "params": [
+        "reminder_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1608",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "alarm.update",
+       "params": [
+        "alarm_id"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "sft_q17b_lao_d3": {
+   "n": 262,
+   "replay_mismatch": 0,
+   "flag_samples": 7,
+   "flag_calls": 7,
+   "flag_calls_gold": 0,
+   "unseen_id_reads": 0,
+   "writes": {
+    "wrong": 135,
+    "right": 120
+   },
+   "wrong_by_cause": {
+    "ask_missing|no_id_param_wrong": 2,
+    "ask_missing|tool_not_in_gold": 25,
+    "execute|id_right_other_param_wrong": 16,
+    "execute|id_wrong:history": 11,
+    "execute|id_wrong:turn_results": 7,
+    "execute|id_wrong:unseen": 5,
+    "execute|id_wrong:user": 1,
+    "execute|no_id_param_wrong": 41,
+    "execute|tool_not_in_gold": 26,
+    "out_of_scope|tool_not_in_gold": 1
+   },
+   "wrong_id_params": {
+    "home_security.acknowledge_alert.alert_id": 4,
+    "medication.log_taken.schedule_id": 3,
+    "home_automation.create_rule.device_id": 2,
+    "door_lock.set_lock.lock_id": 2,
+    "sms.send.contact_id": 2,
+    "flights.book.flight_id": 2,
+    "smart_home.light_set.device_id": 1,
+    "smart_home.switch_set.device_id": 1,
+    "smart_home.fan_set.device_id": 1,
+    "video_meeting.join.meeting_id": 1,
+    "chat_ott.send_message.chat_id": 1,
+    "tasks.complete.task_id": 1,
+    "tv.record.program_id": 1,
+    "library.reserve.book_id": 1,
+    "medication.remove.schedule_id": 1
+   },
+   "orig": 31.23,
+   "drop": 31.49,
+   "ask": 31.42,
+   "drop_better": 1,
+   "drop_worse": 0,
+   "ask_better": 1,
+   "ask_worse": 0,
+   "wrong_id_samples": 22,
+   "by_category": {
+    "ask_missing": {
+     "n": 41,
+     "flag_samples": 1,
+     "orig": 20.24,
+     "drop": 20.24,
+     "ask": 20.24
+    },
+    "execute": {
+     "n": 214,
+     "flag_samples": 6,
+     "orig": 32.49,
+     "drop": 32.8,
+     "ask": 32.73
+    },
+    "out_of_scope": {
+     "n": 7,
+     "flag_samples": 0,
+     "orig": 57.14,
+     "drop": 57.14,
+     "ask": 57.14
+    }
+   },
+   "cases": [
+    {
+     "id": "train_0868",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "home_automation.create_rule",
+       "params": [
+        "device_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_0912",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "door_lock.set_lock",
+       "params": [
+        "lock_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_0946",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "medication.log_taken",
+       "params": [
+        "schedule_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_0996",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "smart_home.switch_set",
+       "params": [
+        "device_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1036",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.667,
+     "ask": 0.5,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "phone.call",
+       "params": [
+        "contact_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1093",
+     "category": "execute",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "sms.send",
+       "params": [
+        "contact_id"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "train_1735",
+     "category": "ask_missing",
+     "orig": 0.0,
+     "drop": 0.0,
+     "ask": 0.0,
+     "flagged_right_calls": 0,
+     "flagged": [
+      {
+       "tool": "music.play",
+       "params": [
+        "track_id"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "sft_q17b_fit_random_probefit": {
+   "n": 233,
+   "replay_mismatch": 0,
+   "flag_samples": 0,
+   "flag_calls": 0,
+   "flag_calls_gold": 0,
+   "unseen_id_reads": 0,
+   "writes": {
+    "right": 215,
+    "wrong": 42
+   },
+   "wrong_by_cause": {
+    "ask_missing|tool_not_in_gold": 10,
+    "execute|id_right_other_param_wrong": 8,
+    "execute|id_wrong:history": 1,
+    "execute|id_wrong:turn_results": 5,
+    "execute|no_id_param_wrong": 13,
+    "execute|tool_not_in_gold": 5
+   },
+   "wrong_id_params": {
+    "banking.transfer.from_account_id": 2,
+    "tv.record.program_id": 2,
+    "chat_ott.send_message.chat_id": 1,
+    "bike_rental.reserve.bike_id": 1
+   },
+   "orig": 80.22,
+   "drop": 80.22,
+   "ask": 80.22,
+   "drop_better": 0,
+   "drop_worse": 0,
+   "ask_better": 0,
+   "ask_worse": 0,
+   "wrong_id_samples": 5,
+   "by_category": {
+    "ask_missing": {
+     "n": 35,
+     "flag_samples": 0,
+     "orig": 64.67,
+     "drop": 64.67,
+     "ask": 64.67
+    },
+    "execute": {
+     "n": 187,
+     "flag_samples": 0,
+     "orig": 81.97,
+     "drop": 81.97,
+     "ask": 81.97
+    },
+    "out_of_scope": {
+     "n": 11,
+     "flag_samples": 0,
+     "orig": 100.0,
+     "drop": 100.0,
+     "ask": 100.0
+    }
+   },
+   "cases": []
+  }
+ }
+}

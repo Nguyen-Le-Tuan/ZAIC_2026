@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 23:10, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 23:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -52,7 +52,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Xem mục 7, entry 19–20.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
-  - Review PR #1 → #2 → #3 → #4.
+  - Review PR #1 → #2 → #3 → #4 → #5.
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
@@ -771,6 +771,18 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       | 5:00–5:30 | Đo đầu-cuối xong | Viết `docs/E2E_BASELINE_2026-10-31.md`: điểm mất do ASR, model ASR được chọn, file public đã kiểm, thời gian mỗi mẫu. Anh quyết có nộp không. |
 
     - **Trong lúc chờ:** GPU bận tới sáng, nên chỉ làm được việc chạy trên CPU. Ví dụ: đo trên trace có sẵn xem chốt chặn ID (entry 24) cứu được bao nhiêu mẫu, trước khi viết code.
+27. **Đo chốt chặn ID trên CPU** (30/10, 23:15–23:45; Anh chọn "Làm luôn"). Chi tiết ở [`docs/ID_GUARD_2026-10-30.md`](docs/ID_GUARD_2026-10-30.md); số liệu ở [`docs/baselines/id_guard_2026-10-30.json`](docs/baselines/id_guard_2026-10-30.json); script ở [PR #5](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/5), chỉ phân tích, không đổi agent.
+    - **Quy tắc:** chặn lệnh ghi khi một tham số có `x-ref` trong schema mang ID chưa từng xuất hiện trong prompt, history hay kết quả tool trước đó.
+      - Quy tắc dựa trên catalog, nên áp dụng được cho app chưa thấy.
+      - Chạy lại các call của 4 lượt có sẵn trên ToolEnv: khớp file nộp 100%.
+    - **Kết quả:**
+      - Chặn nhầm 1/912 giá trị của đáp án fit. Ca đó là do dữ liệu lệch.
+      - dev_random chặn 0 call, điểm không đổi. dev_lao chặn 4 call (B0) và 7 call (D3), tất cả đều sai.
+      - Điểm chỉ đổi ở D3: +0,19 tới +0,26, nhờ 1 mẫu.
+    - **Lỗi ID thật là chọn nhầm một ID đã thấy** (7–9% mẫu), ví dụ chuyển tiền từ nhầm tài khoản. Chốt chặn không bắt được loại này.
+    - **Lệnh ghi sai nhiều nhất** là ở tham số không phải ID (giờ, số tiền, nội dung: 24 / 54 / 41 call), rồi tới ghi sai tool và ghi thay vì hỏi lại.
+    - **Quyết định đề xuất:** hạ chốt chặn ID từ P0 xuống lưới an toàn. Viết khoảng 20 dòng cùng lúc với phần sửa thời gian ở `agent.py` trước Docker; không cần lượt GPU riêng.
+    - **Việc CPU tiếp theo đáng làm:** tách nhóm "sai tham số khác" theo loại (ngày giờ, số tiền, chữ tự do, enum).
 
 ---
 
@@ -793,7 +805,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
-  - **Chốt chặn ID** (không cần train): lệnh ghi dùng ID chưa từng xuất hiện trong kết quả tool hay history thì bị chặn. Đo trước trên trace có sẵn, chỉ dùng CPU, rồi viết code ở PR riêng.
+  - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.
+  - **Tách lệnh ghi sai ở tham số không phải ID theo loại** (ngày giờ, số tiền, chữ tự do, enum), chỉ dùng CPU. Đây là nhóm lệnh ghi sai lớn nhất (entry 27).
   - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2.
   - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker.
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).

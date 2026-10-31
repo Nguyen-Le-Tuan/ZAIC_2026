@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 18:40, trong lúc chạy giai đoạn 2 của thí nghiệm D. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 20:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối đã xếp lịch chạy ngay sau. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -33,9 +33,16 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
   - Chi tiết: [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
   - Code ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) → [#2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) → [#3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3), chưa merge.
-- **Baseline đầu-cuối theo đề (audio → ASR → agent → Docker offline): chưa có.**
-  - **Chưa có ASR trong pipeline** (việc của leader). Mọi điểm ở trên dùng chữ chuẩn, nên chưa đo được điểm sẽ giảm bao nhiêu khi có lỗi ASR. Ở test, các lượt user trong history cũng chỉ có audio.
-  - **Chưa nộp public lần nào**, nên chưa kiểm được các giả định của bộ chấm local.
+- **Baseline đầu-cuối theo đề (audio → ASR → agent → Docker offline): đang làm, ưu tiên số 1** (Anh chọn 30/10).
+  - **Code đã có** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge):
+    - Bước ASR dùng model có sẵn, chưa fine-tune: Whisper-large-v3-turbo và PhoWhisper-large.
+    - Các chỉ số ASR theo slot.
+    - Lệnh offline `scripts/predict.sh` từ thư mục dữ liệu ra `submission.jsonl` đã kiểm.
+  - **Lượt đo** (unit `lifemate-e2e-baseline`) tự chạy khi giai đoạn 2 xong; dự kiến có số liệu khoảng 6 giờ sáng 31/10.
+    - Điểm agent khi đọc chữ ASR, so theo cặp với chữ chuẩn.
+    - File nộp public đã kiểm.
+    - Thời gian mỗi mẫu trên máy này.
+  - **Chưa nộp public lần nào**, nên chưa kiểm được các giả định của bộ chấm local. Anh tự nộp khi có file.
   - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
   - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao). Thí nghiệm D nhắm vào điểm này.
@@ -44,9 +51,9 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Chấm trên dev_lao, D-eval-24 và CS-pilot-23.
   - Xem mục 7, entry 19–20.
 - **Chờ Anh:**
-  - Review PR #1 → #2 → #3.
+  - Review PR #1 → #2 → #3 → #4.
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
-  - Quyết ưu tiên sau D: hoàn thiện baseline đầu-cuối (khuyến nghị) hay tiếp tục cải tiến agent.
+  - Quyết có chuyển repo sang private không. Repo đang public, và commit `1bbd05a` (dữ liệu sinh từ train) vẫn còn trong lịch sử dù đã gỡ khỏi `main`. Xem mục 7, entry 21.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -635,6 +642,51 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Đo được:** khoảng 150 phút train mỗi lượt (như B0), đỉnh VRAM 5,62GB.
     - **Chấm mỗi lượt:** dev_lao (so theo cặp với B0), D-eval-24 và CS-pilot-23.
     - **Ghi chú vận hành:** trong lúc train, không đổi nhánh trong thư mục repo. `main` không có code `lifemate/`, nên đổi nhánh sẽ xoá script đang chạy. Tài liệu trên `main` được sửa qua một git worktree riêng.
+21. **Ưu tiên baseline đầu-cuối; sự cố `lifemate/gen/` trên repo public** (30/10, 20:10–20:45).
+    - **Anh trả lời "Baseline đã xong chưa?":**
+      - Phần agent (đọc chữ chuẩn) đã xong.
+      - Đầu-cuối (audio → ASR → agent → Docker) thì chưa.
+    - **Anh chọn:**
+      - "Ưu tiên đầu-cuối" sau giai đoạn 2.
+      - "Claude làm ASR baseline với 2 model".
+      - "Gỡ `gen/` khỏi `main`".
+    - **Sự cố `gen/`:**
+      - Lúc 20:03, commit `1bbd05a` ("update") đưa 29 file `lifemate/gen/` (3,4 MB: lời nói, nhãn, kết quả tool chép từ train) lên `main`. Lý do: `.gitignore` của `main` khi đó chưa có `gen/`. Repo đang **public**, trong khi README dữ liệu cấm phát tán.
+      - Có vẻ thư mục repo chính đã được đổi sang `main` để commit rồi đổi lại `exp-d`. Khi đổi lại, git **xoá các file `gen/` trên máy**, đúng lúc giai đoạn 2 sắp cần chúng: CS-pilot-23, D-eval-24, dữ liệu thêm của B-up và B-D1.
+      - **Đã xử lý:**
+        - Khôi phục cả 29 file từ `1bbd05a`. Hash của `d_train_1b_x3.jsonl` khớp manifest SFT của lượt D3; `tasks_v1.jsonl` vẫn là `67f48ca1…`.
+        - Gỡ `gen/` khỏi `main` (`4e908be`) và thêm `gen/` vào `.gitignore` của `main`.
+        - Đồng bộ sang `agent-pipeline`, `eval-protocol`, `exp-d`. Giai đoạn 2 không bị gián đoạn.
+      - **Còn lại:** bản cũ vẫn xem được trong lịch sử git. Chuyển repo sang private, hoặc viết lại lịch sử, là việc Anh quyết. Muốn chia sẻ file `gen/` cho leader thì gửi riêng, không qua repo.
+    - **Code baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), nhánh `e2e-baseline` xếp chồng lên PR #3, commit `236bca1`). Chỉ thêm file mới; `infer.py`, `agent.py`, `prompt.py` giữ nguyên vì giai đoạn 2 đang chạy từ thư mục này.
+      - `lifemate/asr.py`: ASR có sẵn cho mọi wav của một split (lượt cuối và lượt user trong history). Giải mã greedy, tiếng Việt, ghi đúng giao kèo mà `infer.py --text asr` đọc; không bao giờ đọc `<split>_environment/`.
+      - `scripts/asr_quality.py`: WER (có và không dấu) cho lượt cuối và history. Đo riêng những gì làm đổi hash: số, tiền, giờ của lệnh ghi còn được nói ra không (chữ số và chữ đều tính), từ phủ định, query tìm kiếm.
+      - `scripts/check_submission.py`: kiểm cấu trúc, id và `zaic_tools --validate` của BTC; tính thời gian ASR + agent mỗi mẫu.
+      - `scripts/predict.sh`: một lệnh offline (`HF_HUB_OFFLINE=1`) từ thư mục dữ liệu ra `submission.jsonl` đã kiểm. Đây là lõi để đóng Docker.
+      - `scripts/e2e_baseline.sh`: lượt đo đêm nay. Không train.
+      - Test: `test_asr` 8/8, `test_scorer` 11/11, `test_counterfactual` 22/22.
+    - **Model ASR** (đã tải về cache, ghim revision; cả hai phát hành trước 26/10/2026):
+
+      | Model | Tham số | Licence | Revision |
+      |---|---|---|---|
+      | `openai/whisper-large-v3-turbo` | 0,8B | MIT | `41f01f3f` |
+      | `vinai/PhoWhisper-large` | 1,55B | BSD-3 | `b9136a44` |
+
+    - **Thử nhanh trên CPU, 3 câu dev, Whisper-turbo bf16:** chạy được, nhưng nghe kém. Ví dụ "huỷ lịch" → "bị dịch", "nạp giúp" → "nặng chúc". Chưa kết luận được: chỉ 3 câu, và bf16 trên CPU có thể làm kém đi.
+    - **Đã đo:** `audio_text` của train viết số bằng chữ nhiều hơn chữ số (1.371 so với 481 trên 5.036 câu), trong khi Whisper hay xuất chữ số. Model agent học theo kiểu của `audio_text`, nên đây là một nguồn lệch cần đo.
+    - **Lượt đo đã xếp lịch** (unit `lifemate-e2e-baseline`, MemoryHigh 7G / MemoryMax 9G, chặn idle-sleep). Unit chờ `lifemate-phase2-d` xong rồi chạy `e2e_baseline.sh`, log ở `lifemate/runs/e2e_baseline.log`:
+      1. ASR 2 model trên wav của dev_random (784) và dev_lao (1.117), rồi đo chất lượng ASR.
+      2. Agent đọc chữ ASR: `q17b_fit_random/final` trên dev_random, B0 trên dev_lao. So theo cặp với run chữ chuẩn đã có (53,92 và 35,53).
+      3. Chọn model ASR theo luật đặt trước: điểm gộp dev_random + dev_lao cao hơn; cách nhau dưới 1 điểm thì chọn turbo.
+      4. public_test qua `predict.sh` (ASR batch 1 để đo độ trễ), được `runs/e2e_public_<asr>.jsonl` đã kiểm.
+      5. Chạy lại ASR trên 50 wav để kiểm tái lập.
+    - Dự kiến khoảng 2–2,5 giờ GPU, có số liệu khoảng 6 giờ sáng 31/10. Báo cáo sẽ ở `docs/E2E_BASELINE_2026-10-31.md`.
+    - **Ngoài phạm vi, cần Anh quyết riêng:**
+      - Nộp public: Anh tự nộp.
+      - Train thêm.
+      - Thuê cloud (4B, A30, vLLM).
+      - Cài Docker trên máy này.
+      - Fine-tune ASR và chuẩn hoá số (phần của leader).
 
 ---
 
@@ -654,6 +706,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
 - [x] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước. *Anh chọn giai đoạn 2 (30/10).*
 - [ ] Giai đoạn 2 của D: 3 lượt train đang chạy (`lifemate/runs/phase2_d.log`); viết báo cáo khi xong.
+- [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
+- [ ] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): lượt đo tự chạy sau giai đoạn 2 (`lifemate/runs/e2e_baseline.log`); viết `docs/E2E_BASELINE_2026-10-31.md` khi xong. Sau đó Anh quyết có nộp file public không.
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
@@ -666,11 +720,11 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - SFT 4B trên `all.jsonl`.
   - Thử nghiệm so sánh `--history tagged` và `--rename 0/2/4`.
 - [ ] Phần ASR (leader):
-  - Benchmark Whisper-turbo và PhoWhisper trên audio train: WER và độ đúng của số, giờ, tên.
+  - Benchmark Whisper-turbo và PhoWhisper trên audio train: WER và độ đúng của số, giờ, tên. *(30/10: Claude chạy bản không fine-tune trên dev_random + dev_lao trong lượt đo đầu-cuối, `scripts/asr_quality.py`; leader dùng số liệu này làm điểm xuất phát.)*
   - Viết bộ chuẩn hoá chữ thành số (ITN).
-  - Xuất `asr/<split>.jsonl` theo giao kèo; làm transcript k-fold cho SFT (`--asr-file`).
+  - Xuất `asr/<split>.jsonl` theo giao kèo; làm transcript k-fold cho SFT (`--asr-file`). *(Định dạng file đã có trong `lifemate/asr.py`, PR #4.)*
 - [ ] Dữ liệu app tổng hợp: LLM mạnh sinh app, schema, simulator, câu yêu cầu và đáp án; chạy thật qua executor để kiểm chứng.
-- [ ] Docker offline: dùng backend vLLM, đo thời gian trên GPU 24GB, chạy 5 lần kiểm tra tính tái lập.
+- [ ] Docker offline: dùng backend vLLM, đo thời gian trên GPU 24GB, chạy 5 lần kiểm tra tính tái lập. *(Lõi chạy offline: `scripts/predict.sh`, PR #4.)*
 
 ### Lộ trình tới hạn Docker 16/11
 

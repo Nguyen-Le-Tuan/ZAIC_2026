@@ -151,10 +151,22 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *Anh đã chọn trong chat (30/10):* "Làm giai đoạn 1b". Kết quả ở [`docs/D_PHASE1B_2026-10-30.md`](docs/D_PHASE1B_2026-10-30.md): D-train 77 mẫu; tỉ lệ người viết phải bỏ 27% (C 0%, B-vague 53%), cổng ≤ 15% vẫn không đạt.
 - [x] **[Anh]** *(30/10)* Chọn bước tiếp theo sau giai đoạn 1b: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật để có thêm tool) trước ([`docs/D_PHASE1B_2026-10-30.md`](docs/D_PHASE1B_2026-10-30.md) mục 6). Giai đoạn 2 tốn khoảng 3 × 3,3 giờ GPU trên máy Anh.
   - *Anh đã chọn trong chat (30/10):* "Train giai đoạn 2". Đang chạy từ 18:17 trong unit `lifemate-phase2-d`, dự kiến khoảng 9 giờ.
-- [ ] **[Anh]** *(30/10)* Trong khoảng 9 giờ train giai đoạn 2:
+- [ ] **[Anh]** *(30/10)* Trong khoảng 9 giờ train giai đoạn 2, cộng khoảng 2–2,5 giờ đo đầu-cuối ngay sau đó (tới khoảng 6 giờ sáng 31/10):
   - Giữ máy cắm điện; không gập nắp, vì unit chỉ chặn idle-sleep.
   - Hạn chế mở ứng dụng nặng (ngày 29/10 systemd-oomd đã từng kill app vì thiếu RAM).
-  - Không đổi nhánh git trong thư mục repo.
+  - **Không đổi nhánh git trong thư mục repo, và không commit từ thư mục đó.** Ngày 30/10 lúc 20:03, việc đổi sang `main` rồi đổi lại đã xoá `lifemate/gen/` trên máy. Claude đã khôi phục (JOURNAL entry 21). Muốn sửa tài liệu trên `main` thì dùng một git worktree riêng.
+- [x] **[Anh]** *(30/10)* Chọn ưu tiên sau D. *Anh đã chọn trong chat:* "Ưu tiên đầu-cuối", và "Claude làm ASR baseline với 2 model" (Whisper-large-v3-turbo, PhoWhisper-large, không fine-tune). Code ở [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4); lượt đo chạy sau giai đoạn 2 (JOURNAL entry 21).
+- [ ] **[Anh]** *(30/10)* **Repo đang public.**
+  - Commit `1bbd05a` đã đưa `lifemate/gen/` lên `main`. Thư mục này chứa lời nói, nhãn và kết quả tool chép từ train, trong khi README dữ liệu cấm phát tán.
+  - Claude đã gỡ khỏi `main` (`4e908be`, Anh chọn "Gỡ khỏi main"), nhưng **bản cũ vẫn xem được trong lịch sử git**.
+  - Quyết: chuyển repo sang private (GitHub → Settings → General → Danger Zone → Change visibility), hoặc viết lại lịch sử. Viết lại lịch sử thì leader phải đồng bộ lại.
+  - Muốn chia sẻ file `gen/` cho leader thì gửi riêng, không qua repo.
+- [ ] **[Anh]** *(sáng 31/10)* Khi có `docs/E2E_BASELINE_2026-10-31.md`, quyết có nộp `lifemate/runs/e2e_public_<asr>.jsonl` lên public không. File đã qua `check_submission.py`. Anh tự nộp trên trang thi; Claude không nộp. Mục đích: lấy mốc điểm public đầu tiên và kiểm các giả định của bộ chấm local (Q1, Q7, Q8).
+- [ ] **[Leader]** *(30/10)* Claude đã dựng bước ASR baseline (`lifemate/asr.py`, PR #4) với 2 model chưa fine-tune.
+  - Xem số liệu sáng 31/10: WER; số, tiền, giờ còn giữ được; từ phủ định; query tìm kiếm. Dùng chúng để quyết hướng fine-tune ASR và chuẩn hoá số (Q9, Q12).
+  - Thử nhanh 3 câu trên CPU: Whisper-turbo nghe kém ("huỷ lịch" → "bị dịch").
+  - `audio_text` viết số bằng chữ nhiều hơn chữ số (1.371 so với 481 câu).
+- [ ] **[Leader]** Khi BTC có hướng dẫn Docker: đóng image quanh `lifemate/scripts/predict.sh` (một lệnh offline từ thư mục dữ liệu ra `submission.jsonl` đã kiểm).
 - [ ] **[Anh hoặc Leader]** *(30/10)* Đọc tay 24 mẫu mới của giai đoạn 1b trong `lifemate/gen/review_1b.md` (chỉ có trên máy Anh). Chú ý: 7/8 câu B-vague được viết bằng cách bỏ hẳn người nhận, và 3 mẫu `banking.transfer.amount` không có tiền lệ hỏi thật.
 - [ ] **[Anh]** *(30/10)* Giữ nguyên các file `lifemate/gen/*_fit_lao.jsonl`, `lifemate/gen/*_v1*` và `lifemate/gen/*_1b*` (mốc so sánh, hash ghi trong `docs/baselines/`). Không xoá, không train trên nguồn của CS-pilot-23 hay D-eval-24.
   - *Ghi chú 30/10:* D-eval-24 có 1 mẫu rò rỉ nhãn (`train_1140#d1`). Tập vẫn giữ nguyên để so được với mốc; báo cáo kèm kết quả trên D-eval-23 (bỏ mẫu này).

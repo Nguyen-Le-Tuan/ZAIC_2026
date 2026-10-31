@@ -25,10 +25,13 @@ Chào bạn, mình nhờ bạn chạy giúp một lượt train dự phòng trê
    - **Add Input** → Your Datasets (Your Work) → chọn `zac-bundle`.
 4. Xoá ô có sẵn, dán **toàn bộ** ô lệnh bên dưới vào một ô. Không sửa gì.
 5. Bấm **Save Version** (góc trên bên phải) → chọn **Save & Run All (Commit)** → Save. Đóng trình duyệt cũng được.
-6. Khoảng 2 phút sau, mở bản vừa lưu và xem **Logs**:
-   - Phải thấy dòng `OK: 2 x Tesla T4; có Internet; gói ...; ổ trống ...`.
-   - Nếu thấy dòng `LỖI: ...`, làm theo lời nhắc trong dòng đó (bật GPU T4 x2, bật Internet, hoặc Add Input), rồi Save Version lại.
-7. Khoảng 30–40 phút sau, log có dòng dạng `2 GPU, ~X h/epoch, ... -> train 2/2 arm(s)`. Chụp màn hình dòng này gửi mình: đó là tốc độ T4 đo thật.
+6. **Theo dõi** *(sửa 31/10, 15:20)*. Trong lúc bản Save & Run All đang chạy, Kaggle thường chỉ hiện vài dòng `Debugger warning: It seems that frozen modules are being used ...`, và Output đứng ở 0 B.
+   - Đó là thông báo của Kaggle, **không phải lỗi**. Các dòng của ô lệnh (`OK: ...`, tốc độ T4, kết quả) chỉ hiện khi ô lệnh chạy xong. Ô lệnh cũng chỉ ghi file vào Output ở cuối.
+   - Xem trạng thái của bản để biết nó có chạy ổn không:
+     - **Kết thúc trong vài phút:** kiểm tra trước khi cài thất bại (thiếu GPU T4, Internet hoặc dataset). Mở log hoặc tab Notebook của bản đó, đọc dòng `LỖI: ...`, sửa theo lời nhắc rồi Save Version lại.
+     - **Kết thúc sau khoảng 30–60 phút, không có `cloud_results_*`:** cài lỗi. Gửi mình `zac_logs.tar.gz`.
+     - **Vẫn "Running" sau 1 giờ:** đã qua kiểm tra và cài đặt, đang train. Cứ để chạy.
+7. Không cần ngồi canh. Ô lệnh tự dừng trong vòng 11 giờ, để Kaggle không cắt ở mốc 12 giờ. Nếu sau khoảng 11,5 giờ bản vẫn "Running", bấm dừng và báo mình. Tốc độ T4 đo được nằm trong `zac_logs.tar.gz` (file `plan.log`).
 8. Khi chạy xong (8–11 giờ; Kaggle dừng mọi phiên ở 12 giờ), mở bản đã lưu → tab **Output** → tải về:
    - `zac_logs.tar.gz` (luôn có);
    - `cloud_results_*.tar.gz` (có khi đã train; khoảng 0,3–0,5 GB).

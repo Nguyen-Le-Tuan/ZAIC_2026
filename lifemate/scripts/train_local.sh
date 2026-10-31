@@ -5,7 +5,8 @@
 #   FIT=fit_lao DEV=dev_lao TAG=q17b_fit_lao SKIP_ZS=1 bash scripts/train_local.sh     # unseen-app measurement
 # Measured with Qwen3-1.7B: ~1.5K tok/s (1 epoch of fit_random ~2.5h), peak 5.6GB VRAM, eval ~2.5s/sample.
 # Env overrides: MODEL, FIT, DEV, TAG, EPOCHS, SKIP_ZS=1, TRAIN_ARGS (extra args for lifemate.train),
-#   FIT_SFT_ARGS (default: --drop-apps splits/heldout_apps.json for fit_lao), EVAL_STEPS=0 (only evaluate final).
+#   FIT_SFT_ARGS (default: --drop-apps splits/heldout_apps.json for fit_lao), EVAL_STEPS=0 (only evaluate final),
+#   EXTRA_SAMPLES=gen/x.jsonl (appended with sft --extra-samples; the train file is then sft/${FIT}_$TAG.jsonl).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODEL=${MODEL:-Qwen/Qwen3-1.7B}
@@ -15,6 +16,12 @@ TAG=${TAG:-q17b_$FIT}
 EPOCHS=${EPOCHS:-1}
 PY=.venv/bin/python
 case $FIT in fit_lao) FIT_SFT_ARGS=${FIT_SFT_ARGS:---drop-apps splits/heldout_apps.json} ;; *) FIT_SFT_ARGS=${FIT_SFT_ARGS:-} ;; esac
+SFT_FIT=sft/$FIT.jsonl
+if [ -n "${EXTRA_SAMPLES:-}" ]; then
+  [ -f "$EXTRA_SAMPLES" ] || { echo "no $EXTRA_SAMPLES" >&2; exit 1; }
+  FIT_SFT_ARGS="$FIT_SFT_ARGS --extra-samples $EXTRA_SAMPLES"
+  SFT_FIT=sft/${FIT}_$TAG.jsonl
+fi
 mkdir -p runs ckpt sft
 stamp() { echo "[$(date '+%F %T')] $*"; }
 
@@ -25,7 +32,7 @@ overlap=$(comm -12 <(tr -s ' \n' '\n' < "splits/$FIT.txt" | sort -u) <(tr -s ' \
 
 # SFT files are reused only when their manifest proves same split, settings, inputs and code (else rebuilt)
 # shellcheck disable=SC2086
-$PY -m lifemate.sft --reuse --fit "splits/$FIT.txt" $FIT_SFT_ARGS --out "sft/$FIT.jsonl"
+$PY -m lifemate.sft --reuse --fit "splits/$FIT.txt" $FIT_SFT_ARGS --out "$SFT_FIT"
 $PY -m lifemate.sft --reuse --fit "splits/$DEV.txt" --rename 0 --p-remove 0 --p-distract 0 --p-lower 0 --out "sft/$DEV.jsonl"
 
 if [ "${SKIP_ZS:-0}" != 1 ]; then
@@ -33,9 +40,9 @@ if [ "${SKIP_ZS:-0}" != 1 ]; then
   TAG="$TAG" MODEL="$MODEL" DEV="$DEV" bash scripts/eval_ckpt.sh     # -> runs/zs_$TAG*
 fi
 
-stamp "training $MODEL on sft/$FIT.jsonl ($EPOCHS epoch), dev loss on every row of sft/$DEV.jsonl"
+stamp "training $MODEL on $SFT_FIT ($EPOCHS epoch), dev loss on every row of sft/$DEV.jsonl"
 # shellcheck disable=SC2086
-$PY -m lifemate.train --model "$MODEL" --data "sft/$FIT.jsonl" --eval-data "sft/$DEV.jsonl" \
+$PY -m lifemate.train --model "$MODEL" --data "$SFT_FIT" --eval-data "sft/$DEV.jsonl" \
     --epochs "$EPOCHS" --out "ckpt/$TAG" ${TRAIN_ARGS:-}
 
 stamp "rollout eval on $DEV (oracle text) of the saved checkpoints"

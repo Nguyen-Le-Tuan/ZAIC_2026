@@ -26,6 +26,10 @@ Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 �
 - [ ] **[Anh]** PR: review và merge #1 rồi #2 trước; leader review #4, #6; #3 (D) có thể đóng không merge.
 
 **Anh làm:**
+- [ ] **[Anh]** *(31/10, thay cho thuê cloud nếu anh trai chạy được)* Gửi `~/zac_cloud_bundle_20261031_v3.tar.gz` và lệnh một dòng (JOURNAL entry 33, tin nhắn mẫu trong chat) cho anh trai. Máy cần: Linux, GPU NVIDIA từ 40 GB, internet tới PyPI / pytorch.org / astral.sh / huggingface.co, ổ ≥ 100 GB.
+  - Nhận lại `cloud_results_*.tar.gz` và `zac_logs.tar.gz`, đặt vào `~/Zalo AI Challenge/cloud_results/`, báo Claude.
+  - Nhắc anh trai xoá gói, thư mục `~/ZAIC_2026` và hai file kết quả sau khi gửi.
+  - Lưu bằng chứng BTC cho phép (link hoặc ảnh chụp) vào mục 4 của file này.
 - [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Dùng gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` (sha256 trong file đó); hai gói trước không dùng nữa.
 - [ ] **[Anh]** Mang `~/ZAIC_2026/cloud_results_*.tar.gz` (trên máy cloud) về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
 

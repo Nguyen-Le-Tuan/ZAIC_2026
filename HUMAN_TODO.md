@@ -30,7 +30,7 @@ Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 �
   - Nhận lại `cloud_results_*.tar.gz` và `zac_logs.tar.gz`, đặt vào `~/Zalo AI Challenge/cloud_results/`, báo Claude.
   - Nhắc anh trai xoá gói, thư mục `~/ZAIC_2026` và hai file kết quả sau khi gửi.
   - Lưu bằng chứng BTC cho phép (link hoặc ảnh chụp) vào mục 4 của file này.
-- [ ] **[Leader]** *(31/10, dự phòng; Anh nhờ vì tài khoản Kaggle của Anh chưa xác minh số điện thoại)* Chạy ô lệnh Kaggle theo [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md) (GPU T4 x2, Internet On, gói tải lên dưới dạng dataset Private). Gửi Anh `zac_logs.tar.gz` và `cloud_results_*.tar.gz`; xoá dataset và notebook khi xong. Lượt này dùng khoảng 10–12 giờ trong khoảng 30 giờ GPU/tuần của tài khoản.
+- [ ] **[Leader]** *(31/10, dự phòng; Anh nhờ vì tài khoản Kaggle của Anh chưa xác minh số điện thoại)* Chạy ô lệnh Kaggle (mặc định `ARMS="pho asr"`: agent học trên chữ PhoWhisper và trên chữ turbo) theo [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md) (GPU T4 x2, Internet On, gói tải lên dưới dạng dataset Private). Gửi Anh `zac_logs.tar.gz` và `cloud_results_*.tar.gz`; xoá dataset và notebook khi xong. Lượt này dùng khoảng 10–12 giờ trong khoảng 30 giờ GPU/tuần của tài khoản.
 - [ ] **[Anh]** Thuê máy cloud (2–4 GPU từ 40 GB; ổ ≥ 150 GB nếu leader dùng chung để fine-tune ASR). Chạy theo [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md). Dùng gói v3 `~/zac_cloud_bundle_20261031_v3.tar.gz` (sha256 trong file đó); hai gói trước không dùng nữa.
 - [ ] **[Anh]** Mang `~/ZAIC_2026/cloud_results_*.tar.gz` (trên máy cloud) về `~/Zalo AI Challenge/cloud_results/`, báo Claude. Tắt máy và xoá dữ liệu trên đó khi xong.
 

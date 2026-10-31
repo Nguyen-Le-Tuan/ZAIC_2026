@@ -7,7 +7,9 @@
 #   train TAG=q4b_fit_random MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random REF=runs/sft_q17b_fit_random
 #   eval  TAG=q17b_fit_lao_cloud ADAPTER=ckpt/q17b_fit_lao/final DEV=dev_lao REF=runs/sft_q17b_fit_lao
 # KEY=value pairs become the environment of train_local.sh / eval_ckpt.sh (TAG, MODEL, FIT, DEV, EPOCHS, ADAPTER,
-# EXTRA_SAMPLES, TRAIN_ARGS=--lr,1e-4 where commas become spaces...). REF: paired comparison with that run -> runs/compare_<TAG>_vs_ref.json.
+# EXTRA_SAMPLES, ASR_FIT, ASR_DEV, ASR_FILE, TRAIN_ARGS=--lr,1e-4 where commas become spaces...).
+# REF: paired comparison with that run -> runs/compare_<TAG>_vs_ref.json. REF_ASR: the same for the ASR-text rollout
+# of a train arm with ASR_DEV (runs/sft_<TAG>_asr) -> runs/compare_<TAG>_asr_vs_ref.json.
 # Train arms default to SKIP_ZS=1 EVAL_STEPS=0 (only the final checkpoint is rolled out).
 # At the end: ../cloud_results_<host>_<time>.tar.gz with runs/ and the new adapters, to bring back.
 # Env: GPUS (default: all visible), PACK=0 to skip the tarball, DRY_RUN=1 to print the plan and stop.
@@ -44,8 +46,8 @@ run_arm() {   # gpu, line
   read -ra kv <<< "$rest"
   local i
   for i in "${!kv[@]}"; do [[ ${kv[$i]} == TRAIN_ARGS=* ]] && kv[$i]=${kv[$i]//,/ } || true; done   # commas -> spaces
-  local tag dev ref log
-  tag=$(get TAG "${kv[@]}"); dev=$(get DEV "${kv[@]}"); ref=$(get REF "${kv[@]}")
+  local tag dev ref ref_asr log
+  tag=$(get TAG "${kv[@]}"); dev=$(get DEV "${kv[@]}"); ref=$(get REF "${kv[@]}"); ref_asr=$(get REF_ASR "${kv[@]}")
   dev=${dev:-dev_random}
   log=runs/cloud_$tag.log
   stamp "GPU $gpu: start $kind $tag" | tee -a "runs/cloud_arms_$STARTED.log"
@@ -63,6 +65,10 @@ run_arm() {   # gpu, line
     $PY -m lifemate.compare "$ref" "runs/sft_$tag" --ids "splits/$dev.txt" --slices \
         --json "runs/compare_${tag}_vs_ref.json" >> "$log" 2>&1 || ok=0
   fi
+  if [ "$ok" = 1 ] && [ -n "$ref_asr" ]; then
+    $PY -m lifemate.compare "$ref_asr" "runs/sft_${tag}_asr" --ids "splits/$dev.txt" --slices \
+        --json "runs/compare_${tag}_asr_vs_ref.json" >> "$log" 2>&1 || ok=0
+  fi
   stamp "GPU $gpu: $([ $ok = 1 ] && echo done || echo FAILED) $kind $tag (log $log)" | tee -a "runs/cloud_arms_$STARTED.log"
 }
 
@@ -76,10 +82,12 @@ wait
 [ "${DRY_RUN:-0}" = 1 ] && exit 0
 for l in "${LINES[@]}"; do
   read -r _ rest <<< "$l"; read -ra kv <<< "$rest"; tag=$(get TAG "${kv[@]}")
-  f=runs/sft_${tag}_score.json
-  if [ -f "$f" ]; then
-    echo "$tag: $($PY -c "import json; d=json.load(open('$f')); print(round(d['score'], 2), {c: round(v['score'], 2) for c, v in d['by_category'].items()})")"
-  fi
+  for t in "$tag" "${tag}_asr"; do
+    f=runs/sft_${t}_score.json
+    if [ -f "$f" ]; then
+      echo "$t: $($PY -c "import json; d=json.load(open('$f')); print(round(d['score'], 2), {c: round(v['score'], 2) for c, v in d['by_category'].items()})")"
+    fi
+  done
 done | tee -a "runs/cloud_arms_$STARTED.log"
 
 if [ "${PACK:-1}" = 1 ]; then

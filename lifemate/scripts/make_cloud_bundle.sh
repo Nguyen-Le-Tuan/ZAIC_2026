@@ -3,6 +3,7 @@
 #   ZAIC_2026/                     code at REF (git archive, so exactly the reviewed commit)
 #   ZAIC_2026/data/train+public_test/   licensed competition data (audio only with WITH_AUDIO=1)
 #   ZAIC_2026/lifemate/gen/        D-experiment data (train-derived, never in git)
+#   ZAIC_2026/lifemate/asr/train_* ASR transcripts of train wavs (train-derived, never in git); public ASR is not packed
 #   ZAIC_2026/lifemate/ckpt/<tag>/final   LoRA adapters to re-evaluate on the cloud (parity check)
 #   ZAIC_2026/lifemate/runs/<run>* local runs those re-evaluations are compared with
 #   ZAIC_2026/BUNDLE_MANIFEST.json commit, sha256 of every file that is not in git, sha256 of the local SFT files
@@ -40,6 +41,10 @@ else
   (cd "$SRC/data" && tar -c --exclude='train+public_test/*/audio' train+public_test) | tar -x -C "$B/data"
 fi
 cp -a "$SRC/lifemate/gen" "$B/lifemate/gen"
+mkdir -p "$B/lifemate/asr"
+for f in "$SRC"/lifemate/asr/train_*; do
+  if [ -f "$f" ]; then cp -a "$f" "$B/lifemate/asr/"; fi
+done
 for t in $ADAPTERS; do
   [ -f "$SRC/lifemate/ckpt/$t/final/adapter_config.json" ] || { echo "no adapter ckpt/$t/final" >&2; exit 1; }
   mkdir -p "$B/lifemate/ckpt/$t" && cp -a "$SRC/lifemate/ckpt/$t/final" "$B/lifemate/ckpt/$t/final"
@@ -59,7 +64,7 @@ b, commit, ref, audio = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 files = {}
 for p in sorted(b.rglob("*")):
     rel = p.relative_to(b).as_posix()
-    if p.is_file() and rel.startswith(("data/", "lifemate/gen/", "lifemate/ckpt/", "lifemate/runs/")):
+    if p.is_file() and rel.startswith(("data/", "lifemate/gen/", "lifemate/asr/", "lifemate/ckpt/", "lifemate/runs/")):
         files[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
 # SFT files the cloud rebuilds; their local hashes prove the cloud trains on the same rows
 sft = Path(sys.argv[5])

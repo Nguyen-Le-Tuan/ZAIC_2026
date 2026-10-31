@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-30 20:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối đã xếp lịch chạy ngay sau. Bản trước (29/10) xem lịch sử git.*
+*Cập nhật: 2026-10-30 21:45, trong lúc chạy giai đoạn 2 của thí nghiệm D; lượt đo baseline đầu-cuối chạy ngay sau trong cùng unit. Bản trước (29/10) xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -38,7 +38,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
     - Bước ASR dùng model có sẵn, chưa fine-tune: Whisper-large-v3-turbo và PhoWhisper-large.
     - Các chỉ số ASR theo slot.
     - Lệnh offline `scripts/predict.sh` từ thư mục dữ liệu ra `submission.jsonl` đã kiểm.
-  - **Lượt đo** (unit `lifemate-e2e-baseline`) tự chạy khi giai đoạn 2 xong; dự kiến có số liệu khoảng 6 giờ sáng 31/10.
+  - **Lượt đo** chạy trong unit `lifemate-night` ngay sau giai đoạn 2; dự kiến có số liệu khoảng 5 giờ sáng 31/10 (entry 23).
     - Điểm agent khi đọc chữ ASR, so theo cặp với chữ chuẩn.
     - File nộp public đã kiểm.
     - Thời gian mỗi mẫu trên máy này.
@@ -46,7 +46,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - **Chưa có Docker offline**, chưa đo thời gian trên A30 hay với vLLM.
   - **Model 4B** (kiến trúc đã chốt 28/10) cần GPU cloud, Anh quyết.
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao). Thí nghiệm D nhắm vào điểm này.
-- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17 (unit `lifemate-phase2-d`, dự kiến xong khoảng 3–4 giờ sáng 31/10).
+- **Đang chạy:** giai đoạn 2 của D, từ 30/10 18:17. Từ 21:01 chạy trong unit `lifemate-night` từ worktree `~/zac-jobs` (entry 23); dự kiến xong khoảng 3 giờ sáng 31/10. Lượt D3 đã xong, B-up đang train.
   - 3 lượt B-D3, B-up (đối chứng), B-D1, mỗi lượt 254 bước như B0.
   - Chấm trên dev_lao, D-eval-24 và CS-pilot-23.
   - Xem mục 7, entry 19–20.
@@ -696,6 +696,45 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - tiêu chuẩn trích dẫn; bộ lọc tuân thủ luật thi; khung chấm đề xuất;
       - 7 điểm phản biện bắt buộc về các lựa chọn hiện tại.
     - **Đầu ra dự kiến:** `docs/research/CODEX_DEEP_RESEARCH_2026-10-31.md` và `docs/research/codex_sources_2026-10-31.csv`. Codex chỉ ghi file, không commit; đội đọc rồi mới đưa lên `main`.
+23. **Sự cố đổi nhánh lần 2; job chuyển sang worktree riêng** (30/10, 20:56–21:18).
+    - Lúc 20:56:43, thư mục repo chính bị chuyển từ `e2e-baseline` sang `main` (reflog: `checkout: moving from e2e-baseline to main`). Không rõ người làm; Codex desktop đang chạy trên máy từ 20:38.
+    - **Hậu quả:**
+      - `main` không có code `lifemate/`. Lúc 20:58:53 bước chấm lượt D3 báo `No module named lifemate.infer`, và unit giai đoạn 2 dừng.
+      - Unit đo đầu-cuối thấy giai đoạn 2 dừng nên tự khởi động, rồi hỏng vì không có script.
+      - Train D3 đã xong và checkpoint `final` đã lưu trước đó, nên không mất gì.
+      - `gen/` lần này không bị xoá, vì `main` đã bỏ qua `gen/` (entry 21).
+    - **Xử lý:** từ 21:01, mọi job dài chạy từ worktree riêng **`~/zac-jobs`** (detached, ở commit `e19fb0e` của `e2e-baseline`).
+      - `data`, `lifemate/{.venv,ckpt,runs,sft,gen,asr}` là symlink về thư mục chính, nên kết quả vẫn ghi đúng chỗ cũ.
+      - Đổi nhánh trong thư mục chính không còn làm hỏng job.
+      - Unit `lifemate-night` (script `~/zac-jobs/run_night.sh`) chạy lần lượt: chấm D3 → B-up → B-D1 → đo đầu-cuối. Dự kiến xong khoảng 5 giờ sáng 31/10.
+    - **D3 đã có số** (chưa kết luận khi chưa có đối chứng; báo cáo đầy đủ sẽ có trong `docs/D_PHASE2_*.md`):
+      - dev_lao 31,23 so với 35,53 của B0 (−4,30; khoảng tin cậy 95% từ −9,18 tới +0,55).
+      - Hỏi lại 20,24 so với 7,48; hỏi đúng ở app chưa thấy 8/23 so với 0/23.
+      - Nhưng hỏi thừa ở mẫu execute tăng từ 15 lên 34.
+24. **Báo cáo deep research của Codex** (30/10, 21:23; Anh đồng ý đưa lên `main`): [`docs/research/CODEX_DEEP_RESEARCH_2026-10-31.md`](docs/research/CODEX_DEEP_RESEARCH_2026-10-31.md), kèm [bảng 81 nguồn](docs/research/codex_sources_2026-10-31.csv).
+    - **Claude đã kiểm:**
+      - **Không có dữ liệu thi:** dò mọi đoạn 6 từ liên tiếp của 5.036 câu `audio_text` trong train, 0 câu trùng.
+      - **6 paper ACL 2025–2026:** When2Call, Learning to Ask, Ask-Answer-or-Act, Calibration is the Bottleneck, ToolWeave, State-Path Menu. Tiêu đề đều khớp.
+      - **9 model trên Hugging Face:** ngày, licence, số tham số khớp. Riêng Gemma-4-E2B có repo từ 02/03/2026, không phải 02/04; vẫn trước mốc.
+      - **NeMo `r1.2.0`** (05/06/2026): có ITN tiếng Việt.
+      - **Qwen3-ASR-0.6B:** có tiếng Việt, cần package `qwen-asr`.
+      - **`agent.py:150`** đúng là chỉ xem đồng hồ ở đầu mỗi bước, nên bước cuối có thể vượt 30 giây.
+    - **Thông tin mới quan trọng:**
+      - Qwen3-ASR-0.6B (thực tế 938M tham số; với Qwen3-4B tổng 4,96B).
+      - NeMo ITN tiếng Việt.
+      - Gipformer 68M và BuzzASR (số tự báo).
+      - Bẫy đếm tham số: Qwen3.5-4B thực tế 4,66B; Qwen3-ASR-1.7B cộng Qwen3-4B vượt 6B.
+      - Hướng "calibration theo kiểu hành vi" (hỏi / làm / bỏ qua) cho ranh giới hỏi lại.
+    - **Claude đồng ý:**
+      - P0: chặn lệnh ghi dùng ID chưa từng xuất hiện trong kết quả tool hay history (rẻ, không train).
+      - P0: thêm Qwen3-ASR-0.6B vào so sánh ASR; thử NeMo ITN.
+      - P0: Qwen3-4B; Docker/A30 tái lập 5 lần.
+      - P1: dữ liệu tổng hợp quy mô nhỏ.
+      - P2: RL, audio-LLM end-to-end.
+    - **Claude xếp khác:**
+      - Ép định dạng JSON lúc sinh xuống thấp hơn, vì chỉ 5/233 trace có lỗi định dạng.
+      - Đề xuất thêm: chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận, để giữ phần lợi của D mà bớt hỏi thừa. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev.
+    - **Đã cũ trong báo cáo:** "hai job chưa có điểm do lỗi đường chạy" (Codex đọc trước khi chạy lại). Các đề xuất sẽ được gộp vào kế hoạch khi có báo cáo giai đoạn 2 và báo cáo đầu-cuối.
 
 ---
 

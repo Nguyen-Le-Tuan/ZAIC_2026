@@ -895,7 +895,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Việc tiếp: Anh gửi gói v3 cùng lệnh một dòng (entry 33) cho anh trai. Anh trai gửi lại `~/cloud_results_*.tar.gz` và `~/zac_logs.tar.gz`, rồi xoá gói, thư mục `~/ZAIC_2026` và hai file đó.
     - Nếu anh trai chạy các lượt này thì máy cloud Anh thuê (nếu có) không cần chạy lại chúng; có thể chỉ dùng cho phần fine-tune ASR của leader.
 
-35. **Anh hỏi: dùng Colab free / Kaggle làm dự phòng cho máy của anh trai** (31/10, 10:40–11:00). Hướng dẫn: [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md).
+35. **Anh hỏi: dùng Colab free / Kaggle làm dự phòng cho máy của anh trai** (31/10, 13:25–13:40). Hướng dẫn: [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md).
     - Anh muốn tận dụng Colab free của mình; leader đang cân nhắc Kaggle. Mục đích: không phụ thuộc máy Google của anh trai, phòng khi máy đó là TPU.
     - **Claude kiểm:** code train và chấm dùng bf16. GPU miễn phí thường là T4, không có bf16 phần cứng, nên chạy được nhưng chậm. Ước tính thô, chưa đo: 1.7B mất 6–9 giờ mỗi epoch trên T4, so với 2,5 giờ trên laptop. 4B không thực tế trên T4.
     - Giới hạn theo nguồn bên thứ ba: Kaggle khoảng 30 giờ GPU/tuần, mỗi phiên tối đa 12 giờ, có T4 x2, chạy nền được. Colab free tối đa khoảng 12 giờ, có thể bị ngắt khi không tương tác, không đảm bảo có GPU.
@@ -905,6 +905,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Nếu dùng GPU miễn phí thì chọn Kaggle. Kaggle hợp hơn cho việc fine-tune ASR của leader (Whisper fp16 chạy tốt trên T4).
     - **Ô lệnh notebook** dùng chung cho Kaggle và Colab: cài, đo tốc độ T4, chỉ train những lượt kịp xong trong phiên 12 giờ, luôn để lại file log. Tên lượt có đuôi `_t4` để không trùng lượt của máy anh trai. Đã thử logic ở 6 trường hợp bằng script giả; chưa chạy trên Kaggle hay Colab thật.
     - Claude chưa chạy gì trên laptop. Chạy 2 lượt 1.7B trên laptop là train dài, nên cần Anh đồng ý.
+    - Laptop đã khởi động lại lúc 11:00 (giữa entry 34 và 35); thư mục tạm của Claude trong `/tmp` mất theo. Không mất gì cần giữ: code và tài liệu đã trên git, gói v3 ở `~` còn nguyên (sha256 khớp). Hai mốc giờ ghi nhầm 10:40 trong lần commit đầu của entry này đã sửa.
 
 ---
 

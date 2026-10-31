@@ -4,6 +4,8 @@
 
 ---
 
+> **Sửa lỗi 31/10, 14:11.** Nếu bản trước dừng với `SETUP FAILED: bundle files differ from BUNDLE_MANIFEST.json`: thay **toàn bộ** ô lệnh bằng bản dưới đây, rồi Save Version → Save & Run All lại. **Không cần tải lại dataset.** (Kaggle tự giải nén gói và bỏ 99 file rác `.DS_Store` và `__pycache__`; ô lệnh mới bỏ chúng khỏi danh sách kiểm, mọi file khác vẫn kiểm đủ.)
+
 Chào bạn, mình nhờ bạn chạy giúp một lượt train dự phòng trên Kaggle. Bạn chỉ mất khoảng 10 phút thao tác; máy tự chạy 8–11 giờ.
 
 **Mục đích:** train 2 lượt **agent Qwen3-1.7B** (không phải ASR) trên GPU T4 miễn phí của Kaggle:
@@ -72,6 +74,21 @@ say "OK: $(echo "$GPU" | wc -l) x $(echo "$GPU" | head -1); có Internet; gói $
 mkdir -p "$OUT" "$W" && cd "$W" || exit 1
 if [ -n "$B" ]; then tar -xzf "$B"; else cp -r "$D" .; fi
 cd ZAIC_2026 || exit 1
+chmod -R u+w . 2>/dev/null
+# Kaggle tự giải nén gói khi tải lên và bỏ file rác (.DS_Store, __pycache__): bỏ chúng khỏi danh sách kiểm gói.
+# Mọi file khác (dữ liệu, gen, asr, adapter, lượt gốc) vẫn được kiểm sha256 như cũ.
+python3 - <<'PY'
+import json
+from pathlib import Path
+p = Path("BUNDLE_MANIFEST.json")
+if p.exists():
+    m = json.loads(p.read_text())
+    junk = [f for f in m["files"] if not Path(f).is_file() and (Path(f).name == ".DS_Store" or "__pycache__" in Path(f).parts)]
+    for f in junk:
+        del m["files"][f]
+    p.write_text(json.dumps(m, indent=1, ensure_ascii=False) + "\n")
+    print(f"Bỏ {len(junk)} file rác khỏi danh sách kiểm gói; còn {len(m['files'])} file được kiểm")
+PY
 say "Đang cài đặt (log: setup.log)..."
 SMOKE_MODELS=Qwen/Qwen3-1.7B bash lifemate/scripts/cloud_setup.sh > setup.log 2>&1 || { say "LỖI khi cài, 25 dòng cuối:"; tail -25 setup.log; pack; say "DỪNG: gửi zac_logs.tar.gz cho Anh"; exit 0; }  # exit 0: Kaggle keeps the output
 
@@ -129,3 +146,6 @@ say "XONG"
   Các thông báo và file ra đều đúng.
 - **Chưa kiểm:** chưa chạy trên Kaggle thật. Bản torch có hợp với driver của Kaggle không thì chỉ biết khi chạy: script tự thử các bản CUDA, và nếu không hợp thì dừng ở bước cài kèm file log.
 - **Khi nhận file:** đặt vào `~/Zalo AI Challenge/cloud_results/` rồi báo Claude.
+- **Lỗi lần chạy đầu (14:05):** Kaggle tự giải nén gói khi tải lên dataset và bỏ 2 file `.DS_Store` cùng 97 file `__pycache__/*.pyc` trong thư mục dữ liệu BTC. Bước kiểm gói của `cloud_setup.sh` đòi đủ từng file nên dừng. Các file này không cần để chạy. Ô lệnh nay bỏ chúng khỏi `BUNDLE_MANIFEST.json` trước khi cài; 2.369 file còn lại vẫn kiểm sha256.
+  - Đã thử trên bản giải nén thật của gói v3, xoá đúng các file như Kaggle (thư mục chỉ đọc): trước khi sửa ra 99 file khác, giống hệt log Kaggle; sau khi sửa 0 file khác.
+  - Đổi 1 byte trong `train.jsonl` thì bước kiểm vẫn bắt được. Hai bộ test CPU đạt trên bản thiếu `__pycache__`.

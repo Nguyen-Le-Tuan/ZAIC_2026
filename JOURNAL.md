@@ -907,6 +907,14 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Claude chưa chạy gì trên laptop. Chạy 2 lượt 1.7B trên laptop là train dài, nên cần Anh đồng ý.
     - Laptop đã khởi động lại lúc 11:00 (giữa entry 34 và 35); thư mục tạm của Claude trong `/tmp` mất theo. Không mất gì cần giữ: code và tài liệu đã trên git, gói v3 ở `~` còn nguyên (sha256 khớp). Hai mốc giờ ghi nhầm 10:40 trong lần commit đầu của entry này đã sửa.
 
+36. **Anh hỏi: Kaggle fine-tune ASR dùng 1.7B hay 4B; T4 x2 có chạy song song không** (31/10, 13:42).
+    - **1.7B và 4B là LLM Qwen3 của agent, không phải ASR.** ASR là Whisper: turbo (0,8B) hoặc PhoWhisper-large (1,55B). Ô lệnh Kaggle/Colab ở entry 35 train agent Qwen3-1.7B, không train ASR.
+    - **Chưa có code fine-tune ASR** trên nhánh nào. `lifemate/asr.py` chỉ chạy Whisper có sẵn để nhận dạng. Fine-tune ASR là phần của leader (Anh chốt 30/10); Claude viết script nếu leader muốn.
+    - **Song song:** `cloud_arms.sh` chạy mỗi lượt trên 1 GPU (`CUDA_VISIBLE_DEVICES`), nên T4 x2 chạy 2 lượt khác nhau cùng lúc. Một lượt không nhanh hơn khi có 2 GPU: `train.py` nạp model lên đúng 1 GPU, không có DDP.
+      - Thêm DDP thì mỗi lượt có thể nhanh gần gấp đôi, nhưng phải sửa code qua PR và kiểm parity lại. Không đáng làm lúc này, vì laptop (2,5 giờ mỗi lượt) vẫn nhanh hơn T4.
+      - Fine-tune Whisper bằng HF Trainer thì dùng được cả 2 T4 (chạy bằng `torchrun --nproc_per_node 2`, fp16). Việc này thuộc script ASR của leader.
+    - Anh sẽ quyết sau câu trả lời này: có chạy 2 lượt 1.7B dự phòng trên laptop không.
+
 ---
 
 ## 8. Việc tiếp theo

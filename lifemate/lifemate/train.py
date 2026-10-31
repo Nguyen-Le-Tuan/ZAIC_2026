@@ -27,17 +27,20 @@ from pathlib import Path  # noqa: E402
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
+from . import runinfo  # noqa: E402
+
 LORA_TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 
 
-def load_examples(path, tok, max_len: int, limit: int | None = None):
-    """[(input_ids, labels)], labels = -100 outside loss segments. Too-long examples are skipped, not truncated."""
+def load_rows(path, tok, max_len: int, limit: int | None = None):
+    """[(row id, input_ids, labels)], labels = -100 outside loss segments. Too-long rows are skipped, not truncated."""
     out, skipped = [], 0
     with open(path, encoding="utf-8") as f:
         for line in f:
             if limit and len(out) >= limit:
                 break
-            segs = json.loads(line)["segments"]
+            row = json.loads(line)
+            segs = row["segments"]
             enc = tok([t for t, _ in segs], add_special_tokens=False)["input_ids"]
             ids, labels = [], []
             for (_, loss), t in zip(segs, enc):
@@ -46,8 +49,14 @@ def load_examples(path, tok, max_len: int, limit: int | None = None):
             if len(ids) > max_len:
                 skipped += 1
                 continue
-            out.append((ids, labels))
+            out.append((row["id"], ids, labels))
     return out, skipped
+
+
+def load_examples(path, tok, max_len: int, limit: int | None = None):
+    """[(input_ids, labels)] (see load_rows)."""
+    rows, skipped = load_rows(path, tok, max_len, limit)
+    return [(ids, labels) for _, ids, labels in rows], skipped
 
 
 def build_model(a):
@@ -98,7 +107,9 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3-1.7B")
     ap.add_argument("--data", required=True)
     ap.add_argument("--eval-data", help="segments jsonl (e.g. sft/dev_random.jsonl) for a periodic loss check")
-    ap.add_argument("--eval-n", type=int, default=100)
+    ap.add_argument("--eval-n", type=int, default=0,
+                    help="0 = every dev example (default). >0 takes a seeded random subset, never the head of the "
+                         "file: dev files are sorted by id and later ids are harder")
     ap.add_argument("--eval-every", type=int, default=50, help="optimizer steps")
     ap.add_argument("--out", required=True)
     ap.add_argument("--load-4bit", action="store_true")
@@ -114,6 +125,7 @@ def main():
     ap.add_argument("--save-every", type=int, default=100, help="optimizer steps")
     ap.add_argument("--log-every", type=int, default=5)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--overwrite", action="store_true", help="allow writing into an --out that already has a checkpoint")
     a = ap.parse_args()
 
     from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
@@ -122,13 +134,20 @@ def main():
     torch.manual_seed(a.seed)
     device = torch.device("cuda")
     out = Path(a.out)
+    runinfo.refuse_existing(out / "final", out / "log.jsonl", overwrite=a.overwrite)
     out.mkdir(parents=True, exist_ok=True)
     (out / "train_args.json").write_text(json.dumps(vars(a), indent=1))
 
     tok = AutoTokenizer.from_pretrained(a.model)
     t0 = time.time()
     data, skipped = load_examples(a.data, tok, a.max_len)
-    dev = load_examples(a.eval_data, tok, a.max_len, limit=a.eval_n)[0] if a.eval_data else []
+    dev, dev_ids, dev_skipped = [], [], 0
+    if a.eval_data:
+        rows, dev_skipped = load_rows(a.eval_data, tok, a.max_len)
+        if dev_skipped:
+            print(f"warning: {dev_skipped} dev rows longer than --max-len are not in the dev loss", flush=True)
+        pick = sorted(random.Random(a.seed).sample(range(len(rows)), a.eval_n)) if 0 < a.eval_n < len(rows) else range(len(rows))
+        dev, dev_ids = [rows[k][1:] for k in pick], [rows[k][0] for k in pick]
     n_tok = sum(len(i) for i, _ in data)
     print(f"data: {len(data)} examples ({skipped} too long), {n_tok / 1e6:.1f}M tokens, "
           f"{sum(sum(x != -100 for x in lab) for _, lab in data) / 1e6:.2f}M loss tokens; dev {len(dev)}; tokenized in {time.time() - t0:.0f}s", flush=True)
@@ -136,6 +155,11 @@ def main():
     model = build_model(a)
     base = model.get_base_model()
     model.print_trainable_parameters()
+    runinfo.write_json(out / "run_info.json", {
+        "kind": "train", "created": runinfo.now(), "args": vars(a), "git": runinfo.git_state(), "env": runinfo.env_info(),
+        "data": {"path": a.data, "sha256": runinfo.sha256_file(a.data), "examples": len(data), "skipped_too_long": skipped},
+        "eval": {"path": a.eval_data, "sha256": runinfo.sha256_file(a.eval_data) if a.eval_data else None,
+                 "examples": len(dev), "skipped_too_long": dev_skipped, "ids": runinfo.ids_digest(dev_ids)}})
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=a.lr, weight_decay=0.0, betas=(0.9, 0.999))
     total_steps = math.ceil(len(data) * a.epochs / a.grad_accum)
@@ -179,7 +203,7 @@ def main():
             log_file.flush()
             log_loss, log_n = 0.0, 0
         if dev and (step % a.eval_every == 0 or step == total_steps):
-            rec = {"step": step, "dev_loss": round(evaluate_loss(model, base, dev, device), 4)}
+            rec = {"step": step, "dev_loss": round(evaluate_loss(model, base, dev, device), 4), "dev_n": len(dev)}
             print(json.dumps(rec), flush=True)
             log_file.write(json.dumps(rec) + "\n")
             log_file.flush()

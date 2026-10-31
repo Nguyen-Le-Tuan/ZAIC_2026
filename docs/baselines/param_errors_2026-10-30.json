@@ -1,0 +1,1032 @@
+{
+ "runs": {
+  "sft_q17b_fit_random": {
+   "n": 233,
+   "n_by_category": {
+    "execute": 183,
+    "out_of_scope": 17,
+    "ask_missing": 33
+   },
+   "replay_mismatch": 0,
+   "writes": {
+    "right": 157,
+    "wrong": 91
+   },
+   "wrong_calls_by_cause": {
+    "missing_write": 39,
+    "wrong_tool": 35,
+    "datetime": 18,
+    "id": 17,
+    "fuzzy_text": 14,
+    "number": 6,
+    "extra_arg": 4,
+    "enum": 3,
+    "array": 2,
+    "missing_arg": 1,
+    "text_exact": 1
+   },
+   "wrong_args_by_type": {
+    "datetime": 22,
+    "id": 17,
+    "fuzzy_text": 14,
+    "number": 6,
+    "extra_arg": 4,
+    "enum": 3,
+    "array": 2,
+    "text_exact": 2,
+    "missing_arg": 1
+   },
+   "oracle_fix": {
+    "id": {
+     "points": 4.86,
+     "samples_up": 13,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 4.86
+     }
+    },
+    "datetime": {
+     "points": 3.96,
+     "samples_up": 11,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 3.96
+     }
+    },
+    "number": {
+     "points": 2.13,
+     "samples_up": 6,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 2.13
+     }
+    },
+    "enum": {
+     "points": 0.86,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.86
+     }
+    },
+    "bool": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "fuzzy_text": {
+     "points": 1.04,
+     "samples_up": 6,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.04
+     }
+    },
+    "phone": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "text_exact": {
+     "points": 0.43,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.43
+     }
+    },
+    "array": {
+     "points": 0.82,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.82
+     }
+    },
+    "extra_arg": {
+     "points": 0.43,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.43
+     }
+    },
+    "missing_arg": {
+     "points": 0.43,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.43
+     }
+    },
+    "wrong_tool": {
+     "points": 2.63,
+     "samples_up": 10,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 1.19,
+      "execute": 1.44
+     }
+    },
+    "missing_write": {
+     "points": 6.15,
+     "samples_up": 21,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 6.15
+     }
+    },
+    "all_params": {
+     "points": 16.42,
+     "samples_up": 46,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 16.42
+     }
+    },
+    "all": {
+     "points": 29.94,
+     "samples_up": 90,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 1.19,
+      "execute": 28.75
+     }
+    }
+   },
+   "missing_write_samples_why": {
+    "execute|stop=done": 20,
+    "execute|asked": 14
+   },
+   "where": {
+    "id": {
+     "banking.transfer.from_account_id": 5,
+     "chat_ott.send_message.chat_id": 1,
+     "smart_home.light_set.device_id": 1,
+     "learning.schedule_lesson.course_id": 1,
+     "household_chores.assign.chore_id": 1,
+     "flights.cancel.booking_id": 1,
+     "video_meeting.join.meeting_id": 1,
+     "podcast_radio.play.episode_id": 1
+    },
+    "datetime": {
+     "reminders.create.time": 5,
+     "calendar.create_event.start": 4,
+     "calendar.create_event.end": 3,
+     "ride_hailing.book.schedule_time": 2,
+     "alarm.create.time": 2,
+     "alarm.update.time": 1,
+     "calendar.update_event.end": 1,
+     "calendar.update_event.start": 1
+    },
+    "number": {
+     "ewallet.transfer.amount": 2,
+     "banking.transfer.amount": 1,
+     "music.control.volume": 1,
+     "home_energy.set_alert.threshold_kwh": 1,
+     "shopping_list.add.quantity": 1
+    },
+    "enum": {
+     "bill_payment.pay.source": 2,
+     "ride_hailing.book.vehicle": 1
+    },
+    "fuzzy_text": {
+     "reminders.create.content": 3,
+     "sms.send.content": 3,
+     "calendar.create_event.title": 3,
+     "chat_ott.send_message.content": 3,
+     "tasks.add.title": 1,
+     "ride_hailing.book.dropoff": 1
+    },
+    "text_exact": {
+     "loyalty.redeem.program": 1,
+     "loyalty.redeem.reward_id": 1
+    },
+    "array": {
+     "food_delivery.place_order.items": 2
+    },
+    "extra_arg": {
+     "tasks.add.priority": 1,
+     "calendar.create_event.location": 1,
+     "home_automation.create_rule.title": 1,
+     "medication.add.days": 1
+    },
+    "missing_arg": {
+     "fitness.log_workout.time": 1
+    },
+    "wrong_tool": {
+     "execute|home_automation.delete_rule": 5,
+     "execute|reminders.create": 3,
+     "execute|video_meeting.create": 2,
+     "ask_missing|tv.tune": 2,
+     "ask_missing|package_tracking.reschedule_delivery": 2,
+     "execute|calendar.cancel_event": 1,
+     "execute|sms.send": 1,
+     "ask_missing|video_meeting.create": 1
+    },
+    "missing_write": {
+     "execute|ewallet.transfer": 3,
+     "execute|phone.call": 3,
+     "execute|sms.send": 2,
+     "execute|calendar.update_event": 2,
+     "execute|chat_ott.send_message": 2,
+     "execute|learning.schedule_lesson": 2,
+     "execute|home_automation.create_rule": 2,
+     "execute|smart_home.fan_set": 2
+    }
+   },
+   "detail": {
+    "datetime": {
+     "time_of_day": 15,
+     "date": 7
+    },
+    "datetime_delta": {
+     "-30 min": 3,
+     "+2 d": 3,
+     "+4 d": 3,
+     "-60 min": 2,
+     "+150 min": 2,
+     "+180 min": 2,
+     "+30 min": 1,
+     "-70 min": 1,
+     "-40 min": 1,
+     "-90 min": 1,
+     "+12 min": 1,
+     "-135 min": 1
+    },
+    "number": {
+     "other": 4,
+     "off_by_le_60": 2
+    },
+    "enum": {
+     "source: ewallet -> bank": 2,
+     "vehicle: bike -> car4": 1
+    },
+    "fuzzy_text_f1": {
+     "0.3-0.6": 12,
+     "<0.3": 2
+    }
+   }
+  },
+  "sft_q17b_fit_lao": {
+   "n": 262,
+   "n_by_category": {
+    "execute": 214,
+    "ask_missing": 41,
+    "out_of_scope": 7
+   },
+   "replay_mismatch": 0,
+   "writes": {
+    "right": 140,
+    "wrong": 157
+   },
+   "wrong_calls_by_cause": {
+    "wrong_tool": 64,
+    "missing_write": 58,
+    "fuzzy_text": 30,
+    "id": 23,
+    "datetime": 23,
+    "extra_arg": 17,
+    "text_exact": 13,
+    "missing_arg": 6,
+    "array": 4,
+    "enum": 1
+   },
+   "wrong_args_by_type": {
+    "fuzzy_text": 30,
+    "datetime": 25,
+    "id": 23,
+    "text_exact": 22,
+    "extra_arg": 17,
+    "missing_arg": 6,
+    "array": 4,
+    "enum": 1
+   },
+   "oracle_fix": {
+    "id": {
+     "points": 3.98,
+     "samples_up": 15,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 3.98
+     }
+    },
+    "datetime": {
+     "points": 3.9,
+     "samples_up": 13,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 3.9
+     }
+    },
+    "number": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "enum": {
+     "points": 0.19,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.19
+     }
+    },
+    "bool": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "fuzzy_text": {
+     "points": 1.05,
+     "samples_up": 8,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.05
+     }
+    },
+    "phone": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "text_exact": {
+     "points": 0.99,
+     "samples_up": 6,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.99
+     }
+    },
+    "array": {
+     "points": 0.48,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.48
+     }
+    },
+    "extra_arg": {
+     "points": 1.11,
+     "samples_up": 6,
+     "samples_down": 1,
+     "by_category_points": {
+      "execute": 1.11
+     }
+    },
+    "missing_arg": {
+     "points": 0.33,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.33
+     }
+    },
+    "wrong_tool": {
+     "points": 6.82,
+     "samples_up": 25,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 2.51,
+      "execute": 4.32
+     }
+    },
+    "missing_write": {
+     "points": 8.36,
+     "samples_up": 33,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 0.1,
+      "execute": 8.26
+     }
+    },
+    "all_params": {
+     "points": 16.43,
+     "samples_up": 62,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 16.43
+     }
+    },
+    "all": {
+     "points": 38.78,
+     "samples_up": 142,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 3.28,
+      "execute": 35.5
+     }
+    }
+   },
+   "missing_write_samples_why": {
+    "execute|stop=done": 30,
+    "execute|asked": 14,
+    "ask_missing|stop=done": 3,
+    "ask_missing|asked": 1,
+    "execute|stop=retries": 1
+   },
+   "where": {
+    "id": {
+     "sms.send.contact_id": 3,
+     "home_security.acknowledge_alert.alert_id": 3,
+     "library.reserve.book_id": 2,
+     "flights.book.flight_id": 2,
+     "video_meeting.join.meeting_id": 2,
+     "medication.log_taken.schedule_id": 2,
+     "home_automation.create_rule.device_id": 1,
+     "door_lock.set_lock.lock_id": 1
+    },
+    "datetime": {
+     "reminders.create.time": 6,
+     "home_automation.create_rule.time": 4,
+     "video_meeting.create.start": 3,
+     "calendar.create_event.start": 3,
+     "alarm.create.time": 3,
+     "calendar.create_event.end": 2,
+     "tasks.add.due": 2,
+     "medication.log_taken.time": 1
+    },
+    "enum": {
+     "medication.add.days": 1
+    },
+    "fuzzy_text": {
+     "chat_ott.send_message.content": 10,
+     "sms.send.content": 6,
+     "reminders.create.content": 5,
+     "video_meeting.create.title": 2,
+     "tasks.add.title": 2,
+     "calendar.create_event.title": 2,
+     "notes.create.content": 1,
+     "home_automation.create_rule.title": 1
+    },
+    "text_exact": {
+     "loyalty.redeem.program": 13,
+     "loyalty.redeem.reward_id": 9
+    },
+    "array": {
+     "robot_vacuum.start.rooms": 3,
+     "medication.add.times": 1
+    },
+    "extra_arg": {
+     "robot_vacuum.start.mode": 9,
+     "calendar.create_event.end": 3,
+     "food_delivery.place_order.address": 2,
+     "tasks.add.due": 1,
+     "sms.send.phone_number": 1,
+     "medication.log_taken.time": 1
+    },
+    "missing_arg": {
+     "video_meeting.create.attendees": 3,
+     "calendar.create_event.location": 2,
+     "sms.send.contact_id": 1
+    },
+    "wrong_tool": {
+     "ask_missing|video_meeting.create": 6,
+     "execute|loyalty.redeem": 6,
+     "execute|video_meeting.join": 3,
+     "execute|sms.send": 3,
+     "ask_missing|library.reserve": 3,
+     "execute|home_security.arm": 2,
+     "execute|smart_home.light_set": 2,
+     "execute|reminders.create": 2
+    },
+    "missing_write": {
+     "execute|loyalty.redeem": 7,
+     "execute|door_lock.set_lock": 5,
+     "execute|chat_ott.send_message": 4,
+     "execute|phone.call": 4,
+     "execute|robot_vacuum.start": 3,
+     "execute|sms.send": 3,
+     "execute|robot_vacuum.stop": 3,
+     "execute|notes.create": 2
+    }
+   },
+   "detail": {
+    "datetime": {
+     "date": 14,
+     "time_of_day": 11
+    },
+    "datetime_delta": {
+     "+7 d": 3,
+     "-3 d": 3,
+     "-720 min": 2,
+     "+30 min": 2,
+     "-1 d": 2,
+     "+1 d": 2,
+     "+120 min": 1,
+     "+31 d": 1,
+     "-2 d": 1,
+     "-90 min": 1,
+     "-60 min": 1,
+     "-75 min": 1
+    },
+    "number": {},
+    "enum": {
+     "days: weekdays -> daily": 1
+    },
+    "fuzzy_text_f1": {
+     "0.3-0.6": 17,
+     "<0.3": 13
+    }
+   }
+  },
+  "sft_q17b_lao_d3": {
+   "n": 262,
+   "n_by_category": {
+    "execute": 214,
+    "ask_missing": 41,
+    "out_of_scope": 7
+   },
+   "replay_mismatch": 0,
+   "writes": {
+    "right": 120,
+    "wrong": 135
+   },
+   "wrong_calls_by_cause": {
+    "missing_write": 89,
+    "wrong_tool": 53,
+    "fuzzy_text": 29,
+    "id": 25,
+    "datetime": 18,
+    "extra_arg": 17,
+    "missing_arg": 5,
+    "text_exact": 5,
+    "array": 3,
+    "phone": 1
+   },
+   "wrong_args_by_type": {
+    "fuzzy_text": 29,
+    "id": 25,
+    "datetime": 20,
+    "extra_arg": 17,
+    "text_exact": 7,
+    "missing_arg": 5,
+    "array": 3,
+    "phone": 1
+   },
+   "oracle_fix": {
+    "id": {
+     "points": 4.57,
+     "samples_up": 17,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 4.57
+     }
+    },
+    "datetime": {
+     "points": 1.84,
+     "samples_up": 7,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.84
+     }
+    },
+    "number": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "enum": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "bool": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "fuzzy_text": {
+     "points": 1.43,
+     "samples_up": 10,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.43
+     }
+    },
+    "phone": {
+     "points": 0.38,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.38
+     }
+    },
+    "text_exact": {
+     "points": 0.28,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.28
+     }
+    },
+    "array": {
+     "points": 0.57,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.57
+     }
+    },
+    "extra_arg": {
+     "points": 1.75,
+     "samples_up": 7,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.75
+     }
+    },
+    "missing_arg": {
+     "points": 0.45,
+     "samples_up": 2,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.45
+     }
+    },
+    "wrong_tool": {
+     "points": 5.47,
+     "samples_up": 20,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 2.37,
+      "execute": 2.72,
+      "out_of_scope": 0.38
+     }
+    },
+    "missing_write": {
+     "points": 14.37,
+     "samples_up": 59,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 0.17,
+      "execute": 14.2
+     }
+    },
+    "all_params": {
+     "points": 14.48,
+     "samples_up": 52,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 14.48
+     }
+    },
+    "all": {
+     "points": 42.04,
+     "samples_up": 154,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 3.28,
+      "execute": 38.37,
+      "out_of_scope": 0.38
+     }
+    }
+   },
+   "missing_write_samples_why": {
+    "execute|stop=done": 43,
+    "execute|asked": 31,
+    "ask_missing|asked": 2,
+    "execute|stop=retries": 1,
+    "ask_missing|stop=done": 1
+   },
+   "where": {
+    "id": {
+     "home_security.acknowledge_alert.alert_id": 4,
+     "medication.log_taken.schedule_id": 3,
+     "sms.send.contact_id": 3,
+     "home_automation.create_rule.device_id": 2,
+     "door_lock.set_lock.lock_id": 2,
+     "flights.book.flight_id": 2,
+     "smart_home.light_set.device_id": 1,
+     "smart_home.switch_set.device_id": 1
+    },
+    "datetime": {
+     "reminders.create.time": 6,
+     "video_meeting.create.start": 3,
+     "home_automation.create_rule.time": 2,
+     "tasks.add.due": 2,
+     "calendar.update_event.end": 1,
+     "calendar.update_event.start": 1,
+     "calendar.create_event.end": 1,
+     "calendar.create_event.start": 1
+    },
+    "fuzzy_text": {
+     "chat_ott.send_message.content": 9,
+     "sms.send.content": 7,
+     "reminders.create.content": 6,
+     "tasks.add.title": 2,
+     "calendar.create_event.title": 2,
+     "home_automation.create_rule.title": 1,
+     "email.create_draft.body": 1,
+     "video_meeting.create.title": 1
+    },
+    "phone": {
+     "phone.call.phone_number": 1
+    },
+    "text_exact": {
+     "loyalty.redeem.program": 5,
+     "loyalty.redeem.reward_id": 2
+    },
+    "array": {
+     "robot_vacuum.start.rooms": 2,
+     "medication.add.times": 1
+    },
+    "extra_arg": {
+     "robot_vacuum.start.mode": 10,
+     "video_meeting.create.attendees": 2,
+     "calendar.create_event.end": 2,
+     "tasks.add.due": 1,
+     "medication.log_taken.time": 1,
+     "robot_vacuum.start.rooms": 1
+    },
+    "missing_arg": {
+     "video_meeting.create.attendees": 2,
+     "calendar.create_event.location": 2,
+     "medication.add.days": 1
+    },
+    "wrong_tool": {
+     "ask_missing|video_meeting.create": 5,
+     "execute|video_meeting.create": 4,
+     "execute|medication.add": 3,
+     "execute|home_security.arm": 2,
+     "execute|video_meeting.join": 2,
+     "execute|robot_vacuum.stop": 2,
+     "ask_missing|home_security.acknowledge_alert": 2,
+     "ask_missing|medication.add": 2
+    },
+    "missing_write": {
+     "execute|loyalty.redeem": 17,
+     "execute|library.reserve": 7,
+     "execute|video_meeting.join": 7,
+     "execute|door_lock.set_lock": 4,
+     "execute|notes.create": 4,
+     "execute|chat_ott.send_message": 4,
+     "execute|phone.call": 4,
+     "execute|robot_vacuum.stop": 4
+    }
+   },
+   "detail": {
+    "datetime": {
+     "date": 10,
+     "time_of_day": 8,
+     "date_and_time": 2
+    },
+    "datetime_delta": {
+     "+120 min": 3,
+     "-1 d": 3,
+     "-5 d": 3,
+     "-720 min": 2,
+     "-19 d": 1,
+     "-30 min": 1,
+     "-2 d": 1,
+     "-4 d": 1,
+     "-60 min": 1,
+     "-19.5 h": 1,
+     "+23.3 h": 1,
+     "-120 min": 1
+    },
+    "number": {},
+    "enum": {},
+    "fuzzy_text_f1": {
+     "0.3-0.6": 20,
+     "<0.3": 9
+    }
+   }
+  },
+  "sft_q17b_fit_random_probefit": {
+   "n": 233,
+   "n_by_category": {
+    "execute": 187,
+    "out_of_scope": 11,
+    "ask_missing": 35
+   },
+   "replay_mismatch": 0,
+   "writes": {
+    "right": 215,
+    "wrong": 42
+   },
+   "wrong_calls_by_cause": {
+    "wrong_tool": 17,
+    "missing_write": 11,
+    "fuzzy_text": 8,
+    "datetime": 6,
+    "id": 6,
+    "number": 3,
+    "missing_arg": 1,
+    "text_exact": 1,
+    "extra_arg": 1
+   },
+   "wrong_args_by_type": {
+    "fuzzy_text": 8,
+    "datetime": 6,
+    "id": 6,
+    "number": 3,
+    "text_exact": 2,
+    "missing_arg": 1,
+    "extra_arg": 1
+   },
+   "oracle_fix": {
+    "id": {
+     "points": 1.5,
+     "samples_up": 4,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.5
+     }
+    },
+    "datetime": {
+     "points": 1.79,
+     "samples_up": 5,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.79
+     }
+    },
+    "number": {
+     "points": 1.14,
+     "samples_up": 3,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.14
+     }
+    },
+    "enum": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "bool": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "fuzzy_text": {
+     "points": 1.13,
+     "samples_up": 6,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.13
+     }
+    },
+    "phone": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "text_exact": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "array": {
+     "points": 0.0,
+     "samples_up": 0,
+     "samples_down": 0,
+     "by_category_points": {}
+    },
+    "extra_arg": {
+     "points": 0.21,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.21
+     }
+    },
+    "missing_arg": {
+     "points": 0.21,
+     "samples_up": 1,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 0.21
+     }
+    },
+    "wrong_tool": {
+     "points": 1.94,
+     "samples_up": 8,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 1.7,
+      "execute": 0.23
+     }
+    },
+    "missing_write": {
+     "points": 1.62,
+     "samples_up": 5,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 1.62
+     }
+    },
+    "all_params": {
+     "points": 5.99,
+     "samples_up": 20,
+     "samples_down": 0,
+     "by_category_points": {
+      "execute": 5.99
+     }
+    },
+    "all": {
+     "points": 11.6,
+     "samples_up": 39,
+     "samples_down": 0,
+     "by_category_points": {
+      "ask_missing": 1.7,
+      "execute": 9.9
+     }
+    }
+   },
+   "missing_write_samples_why": {
+    "execute|stop=done": 9,
+    "execute|asked": 1
+   },
+   "where": {
+    "id": {
+     "banking.transfer.from_account_id": 2,
+     "tv.record.program_id": 2,
+     "chat_ott.send_message.chat_id": 1,
+     "bike_rental.reserve.bike_id": 1
+    },
+    "datetime": {
+     "reminders.create.time": 3,
+     "ride_hailing.book.schedule_time": 1,
+     "calendar.create_event.end": 1,
+     "calendar.create_event.start": 1
+    },
+    "number": {
+     "learning.log_progress.minutes": 2,
+     "ewallet.pay_qr.amount": 1
+    },
+    "fuzzy_text": {
+     "chat_ott.send_message.content": 5,
+     "email.create_draft.body": 1,
+     "notes.create.content": 1,
+     "sms.send.content": 1
+    },
+    "text_exact": {
+     "loyalty.redeem.program": 1,
+     "loyalty.redeem.reward_id": 1
+    },
+    "extra_arg": {
+     "notes.create.title": 1
+    },
+    "missing_arg": {
+     "calendar.create_event.location": 1
+    },
+    "wrong_tool": {
+     "ask_missing|reminders.create": 2,
+     "ask_missing|video_meeting.join": 2,
+     "execute|bill_payment.pay": 1,
+     "execute|calendar.cancel_event": 1,
+     "execute|medication.add": 1,
+     "execute|banking.transfer": 1,
+     "execute|fitness.log_workout": 1,
+     "execute|loyalty.redeem": 1
+    },
+    "missing_write": {
+     "execute|reminders.create": 2,
+     "execute|flights.book": 2,
+     "execute|smart_home.climate_set": 1,
+     "execute|ride_hailing.cancel": 1,
+     "execute|fitness.set_goal": 1,
+     "execute|sms.send": 1,
+     "execute|notes.append": 1,
+     "execute|chat_ott.send_message": 1
+    }
+   },
+   "detail": {
+    "datetime": {
+     "time_of_day": 5,
+     "date": 1
+    },
+    "datetime_delta": {
+     "-30 min": 2,
+     "-10 min": 1,
+     "+1 d": 1,
+     "+20 min": 1,
+     "+60 min": 1
+    },
+    "number": {
+     "other": 2,
+     "off_by_le_60": 1
+    },
+    "enum": {},
+    "fuzzy_text_f1": {
+     "0.3-0.6": 6,
+     "<0.3": 2
+    }
+   }
+  }
+ }
+}

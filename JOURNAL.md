@@ -687,6 +687,15 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Thuê cloud (4B, A30, vLLM).
       - Cài Docker trên máy này.
       - Fine-tune ASR và chuẩn hoá số (phần của leader).
+22. **Prompt deep research cho Codex** (30/10, 21:00).
+    - Anh muốn dùng Codex, trong lúc máy chạy, để nghiên cứu rộng các paper, kỹ thuật và repo liên quan, rồi đối chiếu với những gì đội đã, đang và định làm.
+    - Claude viết prompt: [`docs/CODEX_RESEARCH_PROMPT_2026-10-30.md`](docs/CODEX_RESEARCH_PROMPT_2026-10-30.md). Nội dung gồm:
+      - luật an toàn trên máy đang chạy job: không đụng git, GPU, `runs/`; không đưa dữ liệu thi ra ngoài;
+      - bối cảnh và số liệu; danh sách file phải đọc;
+      - 12 trục nghiên cứu A–L, gắn với Q1–Q20;
+      - tiêu chuẩn trích dẫn; bộ lọc tuân thủ luật thi; khung chấm đề xuất;
+      - 7 điểm phản biện bắt buộc về các lựa chọn hiện tại.
+    - **Đầu ra dự kiến:** `docs/research/CODEX_DEEP_RESEARCH_2026-10-31.md` và `docs/research/codex_sources_2026-10-31.csv`. Codex chỉ ghi file, không commit; đội đọc rồi mới đưa lên `main`.
 
 ---
 

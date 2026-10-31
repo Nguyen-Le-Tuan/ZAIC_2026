@@ -50,7 +50,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
   - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud `q17b_random_up`, Anh đã bật 31/10).
 - **Đang chạy:** không có job. Lượt chạy thử đường train của bộ cloud trên laptop đã xong 10:21 (entry 32).
-- **Chờ Anh quyết:** có nhờ anh trai (làm ở Google) train giùm không. Gói có dữ liệu thi mà BTC cấm chia sẻ ra ngoài đội (entry 33).
+- **Anh trai của Anh (làm ở Google) sẽ chạy gói v3** bằng lệnh một dòng; Anh báo đã hỏi và được cho phép (entry 33–34). Chờ 2 file kết quả gửi về.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4 → #5 → #6.
@@ -887,6 +887,12 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Claude khuyến nghị: hỏi BTC trước (leader đang theo dõi forum); hoặc anh trai cấp cho Anh một máy GPU và Anh tự chạy, để dữ liệu chỉ do người trong đội xử lý. Dùng máy của công ty cho việc riêng cũng cần công ty cho phép. Anh quyết.
     - **Yêu cầu của máy:** Linux, GPU NVIDIA (không chạy được trên TPU), driver ≥ 550, internet tới PyPI, pytorch.org, astral.sh và Hugging Face, ổ ≥ 100 GB. Revision model ghim vẫn là bản `main` hiện tại trên Hugging Face (kiểm 10:14), nên bước tải model sẽ không dừng.
     - **Lệnh một dòng** Claude đưa: giải nén gói v3, cài, chạy các lượt trong nền (`nohup`, thoát SSH vẫn chạy), rồi luôn để lại ở `~` hai file cần gửi về: `cloud_results_*.tar.gz` (khoảng 1 GB) và `zac_logs.tar.gz`. Đã thử với script giả: khi thành công có đủ hai file; khi cài đặt lỗi vẫn có file log ghi lý do.
+
+34. **Anh báo đã được cho phép nhờ anh trai train** (31/10, 10:29).
+    - Anh viết: "Tôi đã hỏi và họ cho phép rồi nên không sao." Claude hiểu "họ" là BTC (câu trả lời trước đề xuất hỏi BTC). Claude không tự kiểm được; ghi đúng theo lời Anh.
+    - Claude đề nghị lưu lại bằng chứng cho phép (link forum hoặc ảnh chụp) ở HUMAN_TODO mục 4, phòng khi BTC hỏi lại.
+    - Việc tiếp: Anh gửi gói v3 cùng lệnh một dòng (entry 33) cho anh trai. Anh trai gửi lại `~/cloud_results_*.tar.gz` và `~/zac_logs.tar.gz`, rồi xoá gói, thư mục `~/ZAIC_2026` và hai file đó.
+    - Nếu anh trai chạy các lượt này thì máy cloud Anh thuê (nếu có) không cần chạy lại chúng; có thể chỉ dùng cho phần fine-tune ASR của leader.
 
 ---
 

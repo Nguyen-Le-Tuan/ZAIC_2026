@@ -1,0 +1,17 @@
+# Cloud arms for 31/10/2026 (docs/CLOUD_TRAIN_2026-10-31.md). Run: bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-10-31.txt
+# Arms are spread round-robin over the GPUs (line 1 -> GPU 0, line 2 -> GPU 1, ...); each GPU runs its arms in order.
+
+# 1. Parity: re-evaluate the local 1.7B adapters on this machine. Identical rows to the local runs (53.92 / 35.53)
+#    mean cloud and local numbers compare directly; otherwise compare cloud arms only with these two runs.
+eval  TAG=q17b_fit_random_cloud ADAPTER=ckpt/q17b_fit_random/final DEV=dev_random REF=runs/sft_q17b_fit_random
+eval  TAG=q17b_fit_lao_cloud    ADAPTER=ckpt/q17b_fit_lao/final    DEV=dev_lao    REF=runs/sft_q17b_fit_lao
+
+# 2. Qwen3-4B-Instruct-2507 with the exact 1.7B recipe (LoRA r32, lr 2e-4, 1 epoch, seed 0, same SFT files):
+#    the only change is the base model, so the paired difference is the effect of model size.
+train TAG=q4b_fit_random MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random REF=runs/sft_q17b_fit_random
+train TAG=q4b_fit_lao    MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao    DEV=dev_lao    REF=runs/sft_q17b_fit_lao
+
+# 3. Only after the phase-2 verdict (docs/D_PHASE2_2026-10-31.md) and Anh's decision; uncomment the winner.
+#    254 steps = the step count of B0, as in phase 2. REF is the 4B fit_lao arm above (run that first).
+# train TAG=q4b_lao_d3 MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao EXTRA_SAMPLES=gen/d_train_1b_x3.jsonl TRAIN_ARGS=--max-steps,254 REF=runs/sft_q4b_fit_lao
+# train TAG=q4b_lao_up MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao EXTRA_SAMPLES=gen/up_real_asks_232.jsonl TRAIN_ARGS=--max-steps,254 REF=runs/sft_q4b_fit_lao

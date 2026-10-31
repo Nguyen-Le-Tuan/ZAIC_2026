@@ -10,6 +10,8 @@
 # EXTRA_SAMPLES, ASR_FIT, ASR_DEV, ASR_FILE, TRAIN_ARGS=--lr,1e-4 where commas become spaces...).
 # REF: paired comparison with that run -> runs/compare_<TAG>_vs_ref.json. REF_ASR: the same for the ASR-text rollout
 # of a train arm with ASR_DEV (runs/sft_<TAG>_asr) -> runs/compare_<TAG>_asr_vs_ref.json.
+# MIN_GPUS=N: run the arm only when the machine gives the arms at least N GPUs; otherwise it is skipped (and logged)
+# before the round-robin placement, so the other arms keep their places.
 # Train arms default to SKIP_ZS=1 EVAL_STEPS=0 (only the final checkpoint is rolled out).
 # At the end: ../cloud_results_<host>_<time>.tar.gz with runs/ and the new adapters, to bring back.
 # Env: GPUS (default: all visible), PACK=0 to skip the tarball, DRY_RUN=1 to print the plan and stop.
@@ -38,6 +40,20 @@ get() {   # value of KEY in KEY=value args, empty if absent
   local k=$1 kv; shift
   for kv in "$@"; do if [[ $kv == "$k="* ]]; then echo "${kv#*=}"; return 0; fi; done
 }
+
+KEPT=()
+for l in "${LINES[@]}"; do   # drop arms that need more GPUs than this run has (MIN_GPUS)
+  read -r _ rest <<< "$l"; read -ra kv <<< "$rest"
+  need=$(get MIN_GPUS "${kv[@]}")
+  [[ -z $need || $need =~ ^[0-9]+$ ]] || { echo "bad MIN_GPUS in: $l" >&2; exit 1; }
+  if [ -n "$need" ] && [ "$need" -gt "$NGPU" ]; then
+    stamp "skip $(get TAG "${kv[@]}"): MIN_GPUS=$need, this run has $NGPU GPU(s)" | tee -a "runs/cloud_arms_$STARTED.log"
+  else
+    KEPT+=("$l")
+  fi
+done
+[ "${#KEPT[@]}" -gt 0 ] || { echo "every arm needs more than $NGPU GPU(s)" >&2; exit 1; }
+LINES=("${KEPT[@]}")
 
 run_arm() {   # gpu, line
   local gpu=$1 kind rest

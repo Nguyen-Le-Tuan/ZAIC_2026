@@ -4,8 +4,8 @@
 
 ## Tóm tắt
 
-- **Gói đã sẵn:** `~/zac_cloud_bundle_20261031.tar.gz` (255 MB, sha256 bắt đầu bằng `f9e9981a3e6e`, chỉ chủ máy đọc được).
-  - Code ở commit `1c9f9fc` của `cloud-train`.
+- **Gói đã sẵn:** `~/zac_cloud_bundle_20261031.tar.gz` (255 MB, sha256 bắt đầu bằng `bf7b4e87ee17`, chỉ chủ máy đọc được).
+  - Code ở commit `b080de3` của `cloud-train`.
   - Dữ liệu train và public_test, **không có audio**.
   - `gen/`, hai adapter 1.7B và hai lượt chạy gốc, để kiểm parity.
   - **Gói có dữ liệu thi có licence:** chỉ tải lên máy thuê của đội, không đưa lên git hay drive chia sẻ, và xoá khi trả máy.
@@ -100,6 +100,7 @@ Rồi báo Claude. Claude giải nén vào `lifemate/runs/` và `lifemate/ckpt/`
 
 **Sau giai đoạn 2 của D.** Kết quả tạm lúc 00:07: lượt đối chứng B-up 36,94, D3 31,23, B0 35,53. D3 kém B-up 5,70 điểm, khoảng tin cậy 95% từ −10,32 tới −1,15. Xem `docs/D_PHASE2_2026-10-31.md` khi có.
 - Ứng viên tiếp theo là **4B cùng dữ liệu B-up** (`q4b_lao_up`). Dòng này đang được ghi chú tắt sẵn trong file danh sách lượt.
+- **Cân lại tỉ trọng trên fit_random** (`q17b_random_up`, `q4b_random_up`; 260 bước như `q17b_fit_random`) cũng được ghi chú tắt sẵn. Dữ liệu `gen/up_real_asks_random.jsonl` (263 dòng, từ 127 mẫu hỏi lại thật) do `scripts/make_upsample.py` tạo, và đã có trong gói. Script này tái tạo đúng file B-up trên fit_lao.
 - Bỏ dấu `#` trước dòng đó sau khi Anh quyết.
 
 ## Quy tắc

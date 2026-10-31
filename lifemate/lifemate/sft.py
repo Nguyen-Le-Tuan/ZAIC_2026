@@ -26,6 +26,7 @@ import copy
 import json
 import random
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -279,6 +280,7 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
         for a in drop_apps:  # leave-apps-out: never show held-out schemas
             s["context"]["installed_apps"].pop(a, None)
         calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
+        src = s.get("_src", "gold")
         utext, htexts = user_texts(s, asr)
 
         for k in range(1 + rename):
@@ -293,13 +295,13 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
                 aug = [f"rename{k}"] + aug
             low = rng.random() < p_lower
             u, h = (asr_style(utext), [asr_style(x) for x in htexts]) if low else (utext, htexts)
-            out.append({"id": s["id"], "src": "gold", "aug": aug + (["lower"] if low else []),
+            out.append({"id": s["id"], "src": src, "aug": aug + (["lower"] if low else []),
                         "segments": build_example(it, u, h, cl, results, tb, ab)})
         if calls and rng.random() < p_remove:
             r = make_removal(s, calls, apps)
             if r is not None:
-                out.append({"id": s["id"], "src": "gold", "aug": ["remove"], "segments": build_example(r, utext, htexts, [], [], tools, apps)})
-        if history != "off":
+                out.append({"id": s["id"], "src": src, "aug": ["remove"], "segments": build_example(r, utext, htexts, [], [], tools, apps)})
+        if history != "off" and src == "gold":  # a synthetic sample shares its history with its origin
             out += history_examples(s, htexts + [utext], tools, apps, tagged=history == "tagged")
     return out
 
@@ -317,6 +319,8 @@ def main():
     ap.add_argument("--asr-file", help="use ASR transcripts (k-fold, so not trained on) instead of audio_text")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--extra-samples", help="synthetic samples (lifemate.counterfactual build) appended after --fit; "
+                                           "each _origin must be in --fit")
     ap.add_argument("--reuse", action="store_true",
                     help="keep an existing --out only if its manifest matches these settings and its sha256 "
                          "(a file without manifest is kept only if a rebuild is byte-identical); otherwise rebuild")
@@ -340,6 +344,14 @@ def main():
     if a.fit:
         keep = set(Path(a.fit).read_text().split())
         samples = [s for s in samples if s["id"] in keep]
+    if a.extra_samples:
+        if a.asr_file:
+            sys.exit("--extra-samples has rewritten text and no audio: not combinable with --asr-file")
+        extra = load_jsonl(a.extra_samples)
+        outside = sorted({x.get("_origin") for x in extra} - {s["id"] for s in samples})
+        if outside:
+            sys.exit(f"{len(outside)} extra samples come from outside --fit, e.g. {outside[:5]}")
+        samples = samples + extra
     asr = {r["audio"]: r["text"] for r in load_jsonl(a.asr_file)} if a.asr_file else None
     rows = build_all(samples, tools, apps, pool, rename=a.rename, p_remove=a.p_remove, p_distract=a.p_distract,
                      p_lower=a.p_lower, history=a.history, drop_apps=drop, asr=asr, seed=a.seed)
@@ -379,6 +391,7 @@ def _spec(a) -> dict:
         "fit_ids": runinfo.ids_digest(runinfo.read_ids(a.fit)) if a.fit else "all",
         "drop_apps": sorted(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else [],
         "asr_sha256": runinfo.sha256_file(a.asr_file) if a.asr_file else None,
+        "extra_samples_sha256": runinfo.sha256_file(a.extra_samples) if getattr(a, "extra_samples", None) else None,
         "inputs_sha256": {k: runinfo.sha256_file(p) for k, p in files.items()},
         "code_sha256": runinfo.code_digest(("data.py", "prompt.py", "sft.py")),
     }

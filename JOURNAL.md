@@ -1008,6 +1008,16 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Bước 5 thêm cách xem tiến độ khi ô lệnh chưa in gì: thanh Resources (GPU RAM), và log trong thư mục Files (`/root/zac/ZAIC_2026/...`). Lý do: rút kinh nghiệm từ Kaggle (entry 43).
     - Leader chạy `MODELS="pho"` trên Colab của mình, nếu leader đồng ý.
 
+45. **HUMAN_TODO viết lại thành bảng điều phối chiều–tối 31/10** (31/10, 15:31; Anh yêu cầu trước khi bắt đầu Colab).
+    - Mục "Ngày 31/10, chiều và tối" thay cho mục viết lúc sáng sớm, gồm:
+      - A. Máy nào đang chạy gì, xong lúc nào, kết quả ở đâu.
+      - B. Việc tiếp theo theo thứ tự: B1–B7 cho Anh, L1–L7 cho leader, C1–C5 cho Claude. Leader nộp public trước 18:00 (L1); Anh chạy Colab turbo (B2), leader chạy Colab PhoWhisper (L3).
+      - C. Mốc giờ.
+      - D. Gửi kết quả một lần: mỗi nguồn một thư mục trong `cloud_results/` (`kaggle`, `colab_anh`, `colab_leader`, `anh_trai`), để các file cùng tên `zac_logs.tar.gz` không đè lên nhau.
+      - E. Các quyết định đã chốt trong ngày, và việc còn mở.
+    - Cập nhật mục "Cách dùng file": `main` đã có code PR #1; các mục cũ từ "0." trở xuống giữ lại để tra cứu.
+    - Trạng thái lúc này: laptop ở bước 165/260 của lượt (1). Anh chưa chạy Colab. Kaggle đang chạy. Máy anh trai chưa rõ.
+
 ---
 
 ## 8. Việc tiếp theo

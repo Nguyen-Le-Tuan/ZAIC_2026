@@ -53,7 +53,6 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Chờ Anh:**
   - Review PR #1 → #2 → #3 → #4.
   - Đọc tay `lifemate/gen/review_v1_30.md` và `review_1b.md`.
-  - Quyết có chuyển repo sang private không. Repo đang public, và commit `1bbd05a` (dữ liệu sinh từ train) vẫn còn trong lịch sử dù đã gỡ khỏi `main`. Xem mục 7, entry 21.
 - **Việc tiếp theo:** xem [mục 8](#8-việc-tiếp-theo).
 
 ---
@@ -658,6 +657,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
         - Gỡ `gen/` khỏi `main` (`4e908be`) và thêm `gen/` vào `.gitignore` của `main`.
         - Đồng bộ sang `agent-pipeline`, `eval-protocol`, `exp-d`. Giai đoạn 2 không bị gián đoạn.
       - **Còn lại:** bản cũ vẫn xem được trong lịch sử git. Chuyển repo sang private, hoặc viết lại lịch sử, là việc Anh quyết. Muốn chia sẻ file `gen/` cho leader thì gửi riêng, không qua repo.
+      - **Anh quyết giữ repo public** (30/10, trong chat). Lịch sử không bị viết lại; `1bbd05a` vẫn còn. Từ nay `gen/`, `asr/`, `runs/`, `sft/`, `ckpt/`, `data/` đều được bỏ qua trên mọi nhánh.
     - **Code baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), nhánh `e2e-baseline` xếp chồng lên PR #3, commit `236bca1`). Chỉ thêm file mới; `infer.py`, `agent.py`, `prompt.py` giữ nguyên vì giai đoạn 2 đang chạy từ thư mục này.
       - `lifemate/asr.py`: ASR có sẵn cho mọi wav của một split (lượt cuối và lượt user trong history). Giải mã greedy, tiếng Việt, ghi đúng giao kèo mà `infer.py --text asr` đọc; không bao giờ đọc `<split>_environment/`.
       - `scripts/asr_quality.py`: WER (có và không dấu) cho lượt cuối và history. Đo riêng những gì làm đổi hash: số, tiền, giờ của lệnh ghi còn được nói ra không (chữ số và chữ đều tính), từ phủ định, query tìm kiếm.

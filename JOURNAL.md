@@ -953,6 +953,16 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Chưa kiểm:** các bước sau bước kiểm gói trên Kaggle thật (cài torch, tải model, chạy thử GPU). Lỗi tiếp theo, nếu có, sẽ nằm ở đó.
     - Gói tạo sau này nên loại sẵn `.DS_Store` và `__pycache__`. Việc này cần sửa `make_cloud_bundle.sh` qua PR #6; gói v3 hiện tại vẫn dùng được nhờ ô lệnh.
 
+40. **Anh hỏi: trong lúc chờ laptop và Kaggle thì Anh và leader nên làm gì** (31/10, 14:35).
+    - Tình hình: laptop ở bước 75/260 lúc 14:34, đúng dự kiến (lượt chữ ASR xong khoảng 16:50, lượt B-up khoảng 19:40). Kaggle chạy lại theo ô lệnh đã sửa (entry 39).
+    - **Claude đề xuất** (ghi vào HUMAN_TODO, đầu mục "Ngày 31/10"):
+      - **Anh:** nộp public; xác minh số điện thoại Kaggle; nghe 18 câu ASR sai nhiều nhất cùng leader; review rồi merge PR #1, #2.
+      - **Leader:** forum BTC; Docker đầu tiên; nghe audio.
+    - **Fine-tune ASR (ưu tiên số 1) đang bị chặn.** GPU của leader (RTX 3050 4 GB) không đủ fine-tune Whisper-large, Kaggle của leader đang bận lượt agent, và repo chưa có script fine-tune.
+      - Đề xuất: Claude viết script fine-tune Whisper (LoRA hoặc chỉ train decoder, fp16, vừa T4 16 GB) cùng gói có audio, để leader chạy trên Colab T4 của Anh.
+      - Phần này thuộc leader, nên Claude chờ Anh và leader đồng ý.
+    - **Claude làm trong lúc chờ (chỉ CPU, vì GPU laptop đang bận):** PR #7 (sửa `agent.py:150` cho giới hạn 30 giây, kèm chốt chặn ID làm lưới an toàn); đọc kết quả lượt chữ ASR khi xong; chuẩn bị số cho buổi 18:00.
+
 ---
 
 ## 8. Việc tiếp theo

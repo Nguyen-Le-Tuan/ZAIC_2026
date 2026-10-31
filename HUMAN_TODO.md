@@ -19,6 +19,15 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên ASR lên ưu tiên số 1. D bị loại.
 
+**Trong lúc chờ laptop và Kaggle (chiều 31/10, Claude đề xuất lúc 14:35).** Laptop: lượt chữ ASR xong khoảng 16:50, lượt B-up khoảng 19:40. Kaggle: 8–11 giờ sau khi leader chạy lại.
+- [ ] **[Anh]** (5 phút) Quyết và nộp public `lifemate/runs/e2e_public_turbo.jsonl` (mục ngay dưới). Ghi điểm vào đây; có điểm trước 18:00 thì buổi họp có mốc public đầu tiên.
+- [ ] **[Anh]** (10 phút) Xác minh số điện thoại cho tài khoản Kaggle của Anh, để Anh có thêm khoảng 30 giờ GPU/tuần. Lưu bằng chứng BTC cho phép vào mục 4.
+- [ ] **[Cả hai]** (45–60 phút) Nghe 18 câu Whisper-turbo nghe sai nhiều nhất (id trong `docs/E2E_BASELINE_2026-10-31.md`). Ghi tiếng ồn, giọng, tốc độ nói, từ lạ; leader lập danh sách "cụm từ nguy hiểm" (0.2, 0.3).
+- [ ] **[Anh]** (1–2 giờ) Review rồi merge PR #1, sau đó #2. Các PR sau xếp chồng lên hai PR này. Claude không merge.
+- [ ] **[Leader]** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1; xem bảng xếp hạng public.
+- [ ] **[Leader]** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh` (dựng được trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU).
+- [ ] **[Leader]** Fine-tune ASR (ưu tiên số 1): RTX 3050 4 GB không đủ, Kaggle đang bận lượt agent. Chạy trên Colab T4 của Anh (Colab không cần xác minh số điện thoại), cần script và gói có audio (`WITH_AUDIO=1`). Claude viết script nếu leader đồng ý.
+
 **Anh quyết (sáng):**
 - [ ] **[Anh]** Nộp public `lifemate/runs/e2e_public_turbo.jsonl` không? (Khuyến nghị: nộp, để có mốc đầu tiên; dev dự đoán khoảng 17–32.) Anh tự nộp; ghi điểm vào đây: …
 - [x] **[Anh]** Bật lượt cloud nào trong `lifemate/cloud/arms_2026-10-31.txt`. Khuyến nghị: 4 lượt mặc định + `q17b_random_asrtrain` + `q17b_random_up`; thêm `q4b_random_asrtrain` nếu có 4 GPU.

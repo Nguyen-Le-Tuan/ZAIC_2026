@@ -931,6 +931,14 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Chọn lượt bằng dòng `ARMS`; mặc định `asr up`. Claude gợi ý `pho asr` để Kaggle không trùng việc với laptop.
       - Khi cài lỗi vẫn lưu file log. Thử bằng script giả ở 11 trường hợp; chưa chạy trên Kaggle thật.
 
+38. **Anh chọn Kaggle chạy `pho asr`** (31/10, 13:58).
+    - Mặc định của ô lệnh trong [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md) đổi từ `asr up` sang `pho asr`. Phần mục đích trong tin nhắn cho leader cũng sửa theo.
+      - `pho`: agent 1.7B học trên chữ PhoWhisper. Đây là lượt mới, chưa ai chạy; nó giúp leader chọn model ASR để fine-tune.
+      - `asr`: dự phòng cho máy anh trai, đồng thời so T4 với laptop trên cùng công thức.
+    - Gói v3 có đủ file cho lượt `pho`: `asr/train_all_pho.jsonl` (5.036 dòng, không dòng rỗng), `asr/train_dev_random_pho.jsonl`, và lượt gốc `runs/sft_q17b_fit_random_asrpho`.
+    - Ô lệnh trong tài liệu giống hệt bản đã thử bằng script giả; trường hợp 3 lượt có `pho` đứng đầu đã nằm trong lần thử đó.
+    - Link GitHub trỏ vào `main`, nên nếu Anh đã gửi link cho leader thì leader sẽ thấy bản mới.
+
 ---
 
 ## 8. Việc tiếp theo

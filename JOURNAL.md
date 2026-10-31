@@ -51,6 +51,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud `q17b_random_up`, Anh đã bật 31/10).
 - **Đang chạy:** không có job. Lượt chạy thử đường train của bộ cloud trên laptop đã xong 10:21 (entry 32).
 - **Anh trai của Anh (làm ở Google) sẽ chạy gói v3** bằng lệnh một dòng; Anh báo đã hỏi và được cho phép (entry 33–34). Chờ 2 file kết quả gửi về.
+- **Dự phòng** nếu máy anh trai là TPU (entry 35, [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md)): 1.7B trên laptop (chờ Anh đồng ý) hoặc Kaggle T4; 4B chỉ trên GPU trả phí.
 - **Chờ Anh:**
   - Cùng leader làm mục 0 của [`HUMAN_TODO.md`](HUMAN_TODO.md) (0.1–0.8), trên máy leader.
   - Review PR #1 → #2 → #3 → #4 → #5 → #6.
@@ -893,6 +894,18 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - Claude đề nghị lưu lại bằng chứng cho phép (link forum hoặc ảnh chụp) ở HUMAN_TODO mục 4, phòng khi BTC hỏi lại.
     - Việc tiếp: Anh gửi gói v3 cùng lệnh một dòng (entry 33) cho anh trai. Anh trai gửi lại `~/cloud_results_*.tar.gz` và `~/zac_logs.tar.gz`, rồi xoá gói, thư mục `~/ZAIC_2026` và hai file đó.
     - Nếu anh trai chạy các lượt này thì máy cloud Anh thuê (nếu có) không cần chạy lại chúng; có thể chỉ dùng cho phần fine-tune ASR của leader.
+
+35. **Anh hỏi: dùng Colab free / Kaggle làm dự phòng cho máy của anh trai** (31/10, 13:25–13:40). Hướng dẫn: [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md).
+    - Anh muốn tận dụng Colab free của mình; leader đang cân nhắc Kaggle. Mục đích: không phụ thuộc máy Google của anh trai, phòng khi máy đó là TPU.
+    - **Claude kiểm:** code train và chấm dùng bf16. GPU miễn phí thường là T4, không có bf16 phần cứng, nên chạy được nhưng chậm. Ước tính thô, chưa đo: 1.7B mất 6–9 giờ mỗi epoch trên T4, so với 2,5 giờ trên laptop. 4B không thực tế trên T4.
+    - Giới hạn theo nguồn bên thứ ba: Kaggle khoảng 30 giờ GPU/tuần, mỗi phiên tối đa 12 giờ, có T4 x2, chạy nền được. Colab free tối đa khoảng 12 giờ, có thể bị ngắt khi không tương tác, không đảm bảo có GPU.
+    - **Khuyến nghị:**
+      - 1.7B: dự phòng bằng laptop (cùng GPU với mốc cũ, khoảng 3 giờ mỗi lượt).
+      - 4B: chỉ GPU trả phí từ 24 GB, nếu máy anh trai hỏng.
+      - Nếu dùng GPU miễn phí thì chọn Kaggle. Kaggle hợp hơn cho việc fine-tune ASR của leader (Whisper fp16 chạy tốt trên T4).
+    - **Ô lệnh notebook** dùng chung cho Kaggle và Colab: cài, đo tốc độ T4, chỉ train những lượt kịp xong trong phiên 12 giờ, luôn để lại file log. Tên lượt có đuôi `_t4` để không trùng lượt của máy anh trai. Đã thử logic ở 6 trường hợp bằng script giả; chưa chạy trên Kaggle hay Colab thật.
+    - Claude chưa chạy gì trên laptop. Chạy 2 lượt 1.7B trên laptop là train dài, nên cần Anh đồng ý.
+    - Laptop đã khởi động lại lúc 11:00 (giữa entry 34 và 35); thư mục tạm của Claude trong `/tmp` mất theo. Không mất gì cần giữ: code và tài liệu đã trên git, gói v3 ở `~` còn nguyên (sha256 khớp). Hai mốc giờ ghi nhầm 10:40 trong lần commit đầu của entry này đã sửa.
 
 ---
 

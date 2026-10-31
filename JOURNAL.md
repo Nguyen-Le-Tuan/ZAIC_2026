@@ -1002,6 +1002,12 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Lỗi của hướng dẫn:** bước 6 dặn chờ dòng `OK:` sau 2 phút, nhưng khi chạy bằng Save & Run All, Kaggle thường chỉ hiện đầu ra của ô lệnh khi ô chạy xong. Đã sửa bước 6–7 trong [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md): nhận biết qua trạng thái của bản (kết thúc sớm, kết thúc sau 30–60 phút, hay vẫn "Running").
     - Chưa xác minh được Kaggle có hiện đầu ra của `%%bash` trong lúc chạy hay không; kết luận trên dựa vào thời gian chạy. Lần sau có thể cho ô lệnh ghi tiến độ vào Output trong lúc chạy.
 
+44. **Anh bắt đầu phần Colab: theo `docs/ASR_FINETUNE_2026-10-31.md`, chạy `MODELS="turbo"`** (31/10, 15:24).
+    - Hai chỗ đã sửa trong hướng dẫn trước khi Anh chạy:
+      - Ô lệnh nhận cả bản sao Drive bị đổi tên (`-name "*$BUNDLE"`). Khi leader bấm "Tạo bản sao" từ file Anh chia sẻ, file mới tên "Bản sao của ...". Đã thử với đúng tên đó.
+      - Bước 5 thêm cách xem tiến độ khi ô lệnh chưa in gì: thanh Resources (GPU RAM), và log trong thư mục Files (`/root/zac/ZAIC_2026/...`). Lý do: rút kinh nghiệm từ Kaggle (entry 43).
+    - Leader chạy `MODELS="pho"` trên Colab của mình, nếu leader đồng ý.
+
 ---
 
 ## 8. Việc tiếp theo

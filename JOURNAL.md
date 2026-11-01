@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 20:22: các dòng về laptop và B-up theo entry 48–49; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -49,7 +49,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
   - B-up trên fit_random (laptop, xong 31/10 20:19, entry 49): dev_random 53,92 → 51,19 (−2,72), giảm quá 1 điểm nên **không giữ**. Agent mặc định vẫn là SFT thường.
-- **Laptop đã xong 2 lượt (13:48–20:19):** agent học trên chữ turbo không đáng dùng (entry 48); B-up không giữ (entry 49). GPU laptop rảnh, chờ transcript ASR fine-tune từ Colab để chấm. Kaggle xong mà không train vì T4 quá chậm; public lần đầu 25,93 (entry 46).
+- **Laptop đã xong 2 lượt (13:48–20:19):** agent học trên chữ turbo không đáng dùng (entry 48); B-up không giữ (entry 49). GPU laptop rảnh, chờ transcript ASR fine-tune từ Colab để chấm. Giới hạn 30 giây (tính cả ASR) và chốt chặn ID: [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9), chờ review (entry 50). Kaggle xong mà không train vì T4 quá chậm; public lần đầu 25,93 (entry 46).
 - **Anh trai của Anh (làm ở Google) sẽ chạy gói v3** bằng lệnh một dòng; Anh báo đã hỏi và được cho phép (entry 33–34). Chờ 2 file kết quả gửi về.
 - **Dự phòng** nếu máy anh trai là TPU (entry 35, [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md)): 1.7B trên laptop (chờ Anh đồng ý) hoặc Kaggle T4; 4B chỉ trên GPU trả phí.
 - **Chờ Anh:**
@@ -1084,6 +1084,42 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - GPU laptop rảnh từ 20:19. Chưa nhận `asr_results_*` từ Colab nên C3 chưa chạy. Lượt agent học trên chữ PhoWhisper vẫn chờ Anh quyết; Claude khuyến nghị không chạy.
     - Máy anh trai cũng có lượt `q17b_random_up` trong gói v3. Nếu chạy, đó là một lần lặp lại trên GPU khác, dùng để kiểm độ ổn định, không đổi quyết định.
 
+50. **C4: giới hạn 30 giây mỗi mẫu (tính cả ASR) và chốt chặn ID trong agent** (31/10, 20:25–21:08; Anh chọn "Làm C4 ngay"). Code ở [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9), xếp chồng lên #7, chờ review.
+    - **Sửa gì:**
+      - Mỗi mẫu có một hạn chót cứng: 25 giây trừ số giây ASR của mẫu.
+        - Backend HF dừng sinh đúng lúc hết giờ (`max_time`); client OpenAI dừng chờ.
+        - Không bắt đầu bước mới khi còn dưới 1 giây. Call đã viết xong trước lúc cắt vẫn chạy.
+      - Trần 512 token mỗi bước giữ nguyên, vì bước dài nhất trong dữ liệu train là 200 token, còn dư cho app chưa thấy. Thứ đảm bảo không vượt giới hạn là hạn chót.
+      - **Chốt chặn ID chạy ngay trong vòng lặp.** Quy tắc giữ như entry 27, nay nằm ở `lifemate/guard.py`, dùng chung với script phân tích (chạy lại cho đúng từng số cũ).
+        - Call bị chặn không chạy; model nhận lỗi giống lỗi schema.
+        - Tắt bằng `--no-id-guard`.
+      - **Giới hạn:** backend vLLM chạy trong tiến trình không dừng được giữa chừng. Docker hiện dùng backend HF.
+    - **Luật đặt trước** (ghi trong script trước khi chạy):
+      - nhận phần thời gian nếu dev_random giống hệt từng dòng;
+      - bật chốt chặn mặc định nếu dev_random và dev_lao đều không giảm.
+    - **Kết quả trên GPU laptop** (20:32–21:05, commit `3fed57d`):
+
+      | Lượt | Giống hệt từng dòng | Điểm cũ → mới | Call bị chặn |
+      |---|---:|---|---:|
+      | dev_random, chữ chuẩn | 233/233 | 53,92 → 53,92 | 0 |
+      | dev_random, chữ turbo (trừ thời gian ASR) | 233/233 | 31,69 → 31,69 | 0 |
+      | dev_lao, chữ chuẩn | 258/262 | 35,53 → 35,62 (+0,10 [0,00; +0,29]; tốt 1, kém 0) | 4 |
+      | `train_0830`, adapter B-up, ngân sách 15 giây | | dừng ở 15,01 giây (code cũ: 23,4) | 0 |
+
+    - **Đọc:**
+      - Phần thời gian không đổi kết quả nào trên dev, vì trên laptop không mẫu nào gần hạn. Nó chỉ có tác dụng ở ca xấu như `train_0830`.
+      - Chốt chặn chặn đúng 4 call sai mà phân tích CPU đã dự đoán.
+        - Ở `train_1093`, sau khi bị chặn, model tra danh bạ rồi làm lại: 0 → 0,25.
+        - Ba mẫu kia dừng luôn và vẫn 0 điểm, vì còn lỗi khác.
+        - Lợi ích nhỏ, đúng như entry 27: đây là lưới an toàn, không phải nguồn điểm.
+      - Trên train, chốt chặn chặn nhầm đúng 1 mẫu (`train_1696`, dữ liệu lệch). Vì vậy `check_sft` nay báo 1544/1545 thay cho 1545/1545.
+      - → Theo luật đặt trước: **nhận phần thời gian; chốt chặn bật mặc định.**
+    - **Chưa kiểm:**
+      - thời gian trên A30;
+      - cold start có tính vào giới hạn mỗi mẫu không (Q19);
+      - backend vLLM.
+    - Leader dựng Docker (L6) nên lấy từ nhánh `time-budget` để có giới hạn thời gian.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1114,7 +1150,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - **Dữ liệu SFT nhiều vế và điều kiện** (P1 trong báo cáo Codex), kiểm chứng bằng ToolEnv; nhắm vào lỗi "tự dừng khi chưa làm đủ" (entry 28).
   - **Ngày giờ:** thử quy ước sáng/tối và "tuần này / tuần sau" (nhãn tuần trong bảng ngày, hoặc chuẩn hoá giờ nói). Cần train lại để đo, nên làm sau giai đoạn 2.
   - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2. *(31/10: hạ ưu tiên. Trần chỉ 1,2–1,7 điểm trên dev_lao, entry 30.)*
-  - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker. *(31/10: thêm trần cho mỗi bước; một mẫu sinh lặp "000…" hai bước liền mất 23,4 giây, entry 49.)*
+  - [x] **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker. *(31/10: thêm trần cho mỗi bước; một mẫu sinh lặp "000…" hai bước liền mất 23,4 giây, entry 49.)* *(31/10 21:08: xong, [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9), kèm chốt chặn ID; entry 50.)*
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.

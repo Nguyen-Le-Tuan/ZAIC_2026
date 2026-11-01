@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-01 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -40,8 +40,10 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   | Chữ chuẩn `audio_text` | 53,92 | 35,53 |
   | **Whisper-turbo (chưa fine-tune; được chọn)** | **31,69** | **17,14** |
   | PhoWhisper-large (chưa fine-tune) | 27,90 | 15,58 |
+  | **Whisper-turbo fine-tune (01/11, entry 52; được chọn)** | **42,64** | **24,55** |
+  | PhoWhisper-large fine-tune (01/11, entry 52) | 43,04 | 24,85 |
 
-  - **Lỗi ASR là chỗ mất điểm lớn nhất hiện nay** (khoảng 20 điểm). ASR sai 26–31% số từ; người nói hiếm khi đọc lệch kịch bản.
+  - ~~**Lỗi ASR là chỗ mất điểm lớn nhất hiện nay** (khoảng 20 điểm). ASR sai 26–31% số từ; người nói hiếm khi đọc lệch kịch bản.~~ *(01/11, entry 52: sau fine-tune, ASR sai 11–14% số từ và chỉ còn làm mất 11 điểm gộp. Agent mất khoảng 56 điểm ngay cả trên chữ chuẩn, nên giờ là đòn bẩy lớn nhất.)*
   - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng). **Chưa nộp**; Anh tự nộp.
   - Thời gian trên laptop: trung bình 2,9 giây mỗi mẫu, chậm nhất 9,7 giây. Chưa có Docker offline, chưa đo trên A30.
   - Code: [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge.
@@ -1146,6 +1148,49 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Claude khuyến nghị:** sau khi chấm ASR fine-tune (C3, C5), đòn bẩy lớn tiếp theo là agent. Thứ tự: kết quả 4B (nếu có), rồi dữ liệu SFT nhiều vế. Chọn trên dev theo luật đặt trước, coi trọng dev_lao (mục F của HUMAN_TODO).
     - **Anh đồng ý** (21:21). Phiên sau: chấm ASR fine-tune (C3, C5) trước, rồi chuyển sang agent. Anh dừng phiên hôm nay, chờ kết quả Colab.
 
+52. **C3: chấm agent với chữ của hai ASR fine-tune; chọn Whisper-turbo fine-tune** (01/11, 00:00–01:05; Anh báo kết quả hai Colab đã về, máy anh trai vẫn chờ).
+    - **Fine-tune ASR** (Colab T4, LoRA r = 32, 3 epoch, khoảng 160 phút mỗi model, code PR #7):
+      - Train trên 1.033 mẫu train (3.092 wav), kiểm trên 54 mẫu giữ lại.
+      - Bỏ toàn bộ 458 mẫu của dev_random và dev_lao: sha256 của hai file id khớp bản trên máy; script chỉ đọc `train`, có assert chặn wav dev.
+
+      | Model | WER kiểm giữ lại (train) | WER lượt cuối dev_random | WER lượt cuối dev_lao | Giữ giờ (dev_random) | Giữ từ phủ định |
+      |---|---|---|---|---|---|
+      | Whisper-turbo | 33,7 → **9,0** | 31,2 → **11,2** | 31,2 → **14,4** | 61 → 97% | 80 → 96% |
+      | PhoWhisper-large | 23,7 → **7,7** | 25,9 → **9,2** | 26,9 → **12,9** | 75 → 97% | 86 → 98% |
+
+    - **Luật đặt trước** (ghi trong script trước khi chạy; luật từ kế hoạch đầu-cuối 30/10, có bổ sung):
+      - so điểm gộp 495 dòng, mỗi tập dev dùng adapter agent của nó;
+      - model nào cao hơn thì thắng; cách nhau dưới 1 điểm thì chọn Whisper-turbo;
+      - nếu người thắng kém hơn trên dev_lao quá 1 điểm thì không tự chọn mà báo đội;
+      - ASR fine-tune thay turbo nếu hơn ít nhất 1 điểm.
+    - **Kết quả** (GPU laptop, code `time-budget` `3519e21`, chốt chặn ID bật; agent giữ nguyên `q17b_fit_random` / `q17b_fit_lao`):
+
+      | Agent đọc | dev_random | dev_lao | Gộp 495 |
+      |---|---:|---:|---:|
+      | Chữ chuẩn `audio_text` | 53,92 | 35,62 | 44,23 |
+      | Whisper-turbo chưa fine-tune | 31,69 | 17,14 | 23,99 |
+      | **Whisper-turbo fine-tune (được chọn)** | **42,64** | **24,55** | **33,07** |
+      | PhoWhisper fine-tune | 43,04 | 24,85 | 33,41 |
+
+      | So sánh theo cặp (gộp 495) | Chênh | KTC 95% | Tốt / kém |
+      |---|---:|---|---|
+      | turbo-ft so với turbo | +9,08 | [+5,42; +12,84] | 93 / 36 |
+      | Pho-ft so với turbo | +9,42 | [+5,73; +13,25] | 93 / 36 |
+      | Pho-ft so với turbo-ft | +0,35 | [−2,89; +3,61] | 48 / 49 |
+      | turbo-ft so với chữ chuẩn | −11,17 | [−14,47; −7,87] | 22 / 93 |
+
+      - Lượt chữ turbo trên dev_lao được chạy lại bằng cùng code: vẫn 17,14 (chốt chặn chặn 4 call, không đổi điểm).
+      - Số liệu: `docs/baselines/c3_asr_ft_2026-11-01.json`.
+    - **Đọc:**
+      - **Fine-tune ASR thêm khoảng 9 điểm** trên cả hai tập dev; khoảng tin cậy nằm hẳn trên 0. Phần điểm ASR làm mất giảm từ 20 xuống 11.
+      - Tăng nhiều nhất ở execute: dev_random 28,3 → 39,4; dev_lao 16,5 → 25,1. Hỏi lại trên dev_random 24,4 → 40,2.
+      - **Hai model fine-tune gần như hoà:** cách 0,35 điểm, 48 mẫu tốt hơn và 49 mẫu kém hơn. PhoWhisper có WER thấp hơn 2 điểm, nhưng điểm agent không khác.
+      - → Theo luật: **chọn Whisper-turbo fine-tune.** Model nhỏ hơn (0,8B so với 1,55B) và nhanh hơn. Với agent 4B, tổng là 4,8B so với 5,6B, vẫn dưới trần 6B.
+      - Trên dev_lao, chốt chặn ID chặn 1 call (turbo-ft) và 7 call (Pho-ft). Cả 8 call đều mang ID bịa như `contact_01`, `scene_1001`, không có trong history hay kết quả tool.
+      - Agent mất trung bình 2,4 giây mỗi mẫu, chậm nhất 8,1 giây với turbo-ft (chưa tính ASR).
+    - **Việc tiếp (C5, đang chạy):** ghép adapter turbo-ft trên laptop, chạy lại ASR dev_random để so với file Colab, rồi làm file nộp public bằng `predict.sh` (ASR batch 1 để đo độ trễ thật; agent `q17b_fit_random` như lần nộp 25,93). Anh hoặc leader tự nộp.
+    - **Chưa kiểm:** độ trễ ASR fine-tune trên A30; ITN số (fine-tune đã học kiểu viết của `audio_text`, nên giữ giờ đã lên 97%).
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1168,7 +1213,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [x] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): xong 31/10 (entry 31). ASR làm mất khoảng 20 điểm.
 - [ ] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp).
-- [ ] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot.
+- [x] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot. *(01/11: hai Colab xong; gộp 23,99 → 33,07 với Whisper-turbo fine-tune, được chọn; entry 52.)*
 - [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; Anh bật 31/10, entry 32; bản 4B `q4b_random_asrtrain` chỉ chạy khi có ≥ 4 GPU). *(1.7B xong 31/10 17:00 trên laptop: không đáng dùng, entry 48. Bản 4B chờ máy anh trai.)*
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
   - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.

@@ -1,0 +1,369 @@
+{
+ "note": "Agent score by request shape on dev (01/11). Runs: clean = q17b_fit_random/q17b_fit_lao on audio_text; asrft = same adapters on Whisper-turbo fine-tuned text. score = mean per-sample score x100; short = samples with fewer write calls than gold; lost = points lost on the whole dev set.",
+ "buckets": {
+  "dev_random": {
+   "execute": {
+    "n": 183,
+    "score": {
+     "clean": 50.997208620159434,
+     "asrft": 39.39902538263194
+    },
+    "short": {
+     "clean": 11,
+     "asrft": 25
+    },
+    "lost": {
+     "clean": 38.48717091206362,
+     "asrft": 47.59647362651655
+    }
+   },
+   "execute, có history=có": {
+    "n": 119,
+    "score": {
+     "clean": 49.31172468987595,
+     "asrft": 36.89475790316127
+    },
+    "short": {
+     "clean": 6,
+     "asrft": 19
+    },
+    "lost": {
+     "clean": 25.888003269977517,
+     "asrft": 32.22971592070305
+    }
+   },
+   "execute, có history=không": {
+    "n": 64,
+    "score": {
+     "clean": 54.1311553030303,
+     "asrft": 44.05539772727273
+    },
+    "short": {
+     "clean": 5,
+     "asrft": 6
+    },
+    "lost": {
+     "clean": 12.599167642086096,
+     "asrft": 15.3667577058135
+    }
+   },
+   "execute, ghi=0": {
+    "n": 21,
+    "score": {
+     "clean": 47.61904761904762,
+     "asrft": 42.857142857142854
+    },
+    "short": {
+     "clean": 0,
+     "asrft": 0
+    },
+    "lost": {
+     "clean": 4.721030042918455,
+     "asrft": 5.150214592274678
+    }
+   },
+   "execute, ghi=1": {
+    "n": 94,
+    "score": {
+     "clean": 54.865754812563324,
+     "asrft": 47.018743667679836
+    },
+    "short": {
+     "clean": 3,
+     "asrft": 9
+    },
+    "lost": {
+     "clean": 18.208665440425097,
+     "asrft": 21.374412425914574
+    }
+   },
+   "execute, ghi=2": {
+    "n": 52,
+    "score": {
+     "clean": 48.12271062271063,
+     "asrft": 31.456043956043956
+    },
+    "short": {
+     "clean": 5,
+     "asrft": 11
+    },
+    "lost": {
+     "clean": 11.577764152871447,
+     "asrft": 15.297363580625385
+    }
+   },
+   "execute, ghi=3+": {
+    "n": 16,
+    "score": {
+     "clean": 42.04545454545455,
+     "asrft": 15.909090909090908
+    },
+    "short": {
+     "clean": 3,
+     "asrft": 5
+    },
+    "lost": {
+     "clean": 3.9797112758486155,
+     "asrft": 5.774483027701912
+    }
+   },
+   "execute, ghi≥2 hoặc điều kiện": {
+    "n": 80,
+    "score": {
+     "clean": 45.52218614718615,
+     "asrft": 26.628246753246753
+    },
+    "short": {
+     "clean": 9,
+     "asrft": 17
+    },
+    "lost": {
+     "clean": 18.7048287906657,
+     "asrft": 25.19201828214704
+    }
+   },
+   "execute, điều kiện=có": {
+    "n": 22,
+    "score": {
+     "clean": 38.25757575757576,
+     "asrft": 26.818181818181817
+    },
+    "short": {
+     "clean": 2,
+     "asrft": 3
+    },
+    "lost": {
+     "clean": 5.829756795422032,
+     "asrft": 6.909871244635194
+    }
+   },
+   "execute, điều kiện=không": {
+    "n": 161,
+    "score": {
+     "clean": 52.73802801753112,
+     "asrft": 41.11814686348848
+    },
+    "short": {
+     "clean": 9,
+     "asrft": 22
+    },
+    "lost": {
+     "clean": 32.65741411664158,
+     "asrft": 40.68660238188135
+    }
+   },
+   "ask_missing": {
+    "n": 33,
+    "score": {
+     "clean": 49.39393939393939,
+     "asrft": 40.15151515151515
+    },
+    "short": {
+     "clean": 3,
+     "asrft": 5
+    },
+    "lost": {
+     "clean": 7.167381974248927,
+     "asrft": 8.476394849785407
+    }
+   },
+   "out_of_scope": {
+    "n": 17,
+    "score": {
+     "clean": 94.11764705882354,
+     "asrft": 82.3529411764706
+    },
+    "short": {
+     "clean": 0,
+     "asrft": 0
+    },
+    "lost": {
+     "clean": 0.4291845493562232,
+     "asrft": 1.2875536480686696
+    }
+   }
+  },
+  "dev_lao": {
+   "execute": {
+    "n": 214,
+    "score": {
+     "clean": 39.845855079499934,
+     "asrft": 25.121778532993485
+    },
+    "short": {
+     "clean": 29,
+     "asrft": 43
+    },
+    "lost": {
+     "clean": 49.133538217507684,
+     "asrft": 61.16007402266945
+    }
+   },
+   "execute, có history=có": {
+    "n": 158,
+    "score": {
+     "clean": 40.544002411091014,
+     "asrft": 24.462025316455698
+    },
+    "short": {
+     "clean": 23,
+     "asrft": 34
+    },
+    "lost": {
+     "clean": 35.855143584151214,
+     "asrft": 45.55343511450382
+    }
+   },
+   "execute, có history=không": {
+    "n": 56,
+    "score": {
+     "clean": 37.87608225108225,
+     "asrft": 26.98322510822511
+    },
+    "short": {
+     "clean": 6,
+     "asrft": 9
+    },
+    "lost": {
+     "clean": 13.278394633356466,
+     "asrft": 15.606638908165626
+    }
+   },
+   "execute, ghi=0": {
+    "n": 22,
+    "score": {
+     "clean": 43.18181818181818,
+     "asrft": 31.06060606060606
+    },
+    "short": {
+     "clean": 0,
+     "asrft": 0
+    },
+    "lost": {
+     "clean": 4.770992366412214,
+     "asrft": 5.788804071246819
+    }
+   },
+   "execute, ghi=1": {
+    "n": 111,
+    "score": {
+     "clean": 44.17846417846418,
+     "asrft": 27.22222222222222
+    },
+    "short": {
+     "clean": 13,
+     "asrft": 21
+    },
+    "lost": {
+     "clean": 23.649581970192656,
+     "asrft": 30.833333333333332
+    }
+   },
+   "execute, ghi=2": {
+    "n": 69,
+    "score": {
+     "clean": 37.29280381454295,
+     "asrft": 24.21826965305226
+    },
+    "short": {
+     "clean": 11,
+     "asrft": 17
+    },
+    "lost": {
+     "clean": 16.514490598460064,
+     "asrft": 19.957783946333564
+    }
+   },
+   "execute, ghi=3+": {
+    "n": 12,
+    "score": {
+     "clean": 8.333333333333334,
+     "asrft": 0.0
+    },
+    "short": {
+     "clean": 5,
+     "asrft": 5
+    },
+    "lost": {
+     "clean": 4.198473282442748,
+     "asrft": 4.580152671755725
+    }
+   },
+   "execute, ghi≥2 hoặc điều kiện": {
+    "n": 103,
+    "score": {
+     "clean": 33.20262262009835,
+     "asrft": 21.207708149455723
+    },
+    "short": {
+     "clean": 20,
+     "asrft": 26
+    },
+    "lost": {
+     "clean": 26.260037672251414,
+     "asrft": 30.97559565116817
+    }
+   },
+   "execute, điều kiện=có": {
+    "n": 32,
+    "score": {
+     "clean": 37.552083333333336,
+     "asrft": 26.51041666666667
+    },
+    "short": {
+     "clean": 5,
+     "asrft": 7
+    },
+    "lost": {
+     "clean": 7.627226463104326,
+     "asrft": 8.975826972010177
+    }
+   },
+   "execute, điều kiện=không": {
+    "n": 182,
+    "score": {
+     "clean": 40.24915560629846,
+     "asrft": 24.877622377622373
+    },
+    "short": {
+     "clean": 24,
+     "asrft": 36
+    },
+    "lost": {
+     "clean": 41.50631175440336,
+     "asrft": 52.18424705065926
+    }
+   },
+   "ask_missing": {
+    "n": 41,
+    "score": {
+     "clean": 7.479674796747966,
+     "asrft": 11.13821138211382
+    },
+    "short": {
+     "clean": 8,
+     "asrft": 9
+    },
+    "lost": {
+     "clean": 14.478371501272264,
+     "asrft": 13.905852417302798
+    }
+   },
+   "out_of_scope": {
+    "n": 7,
+    "score": {
+     "clean": 71.42857142857143,
+     "asrft": 85.71428571428571
+    },
+    "short": {
+     "clean": 0,
+     "asrft": 0
+    },
+    "lost": {
+     "clean": 0.7633587786259542,
+     "asrft": 0.3816793893129771
+    }
+   }
+  }
+ }
+}

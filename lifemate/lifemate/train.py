@@ -25,6 +25,8 @@ import argparse  # noqa: E402
 import json  # noqa: E402
 import math  # noqa: E402
 import random  # noqa: E402
+import signal  # noqa: E402
+import sys  # noqa: E402
 import time  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -132,6 +134,11 @@ def main():
     ap.add_argument("--log-every", type=int, default=5)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--overwrite", action="store_true", help="allow writing into an --out that already has a checkpoint")
+    ap.add_argument("--state-every", type=int, default=0,
+                    help="optimizer steps between resumable snapshots in <out>/state.pt (LoRA weights, optimizer, "
+                         "scheduler, RNG); with N > 0, SIGTERM/SIGINT also snapshot after the current step and exit 75. "
+                         "0 (default) = old behaviour")
+    ap.add_argument("--resume", action="store_true", help="continue from <out>/state.pt (same arguments required)")
     a = ap.parse_args()
 
     from transformers import AutoTokenizer, get_cosine_schedule_with_warmup
@@ -140,7 +147,13 @@ def main():
     torch.manual_seed(a.seed)
     device = torch.device("cuda")
     out = Path(a.out)
-    runinfo.refuse_existing(out / "final", out / "log.jsonl", overwrite=a.overwrite)
+    state_path = out / "state.pt"
+    if a.resume:
+        if not state_path.exists():
+            raise SystemExit(f"--resume: no {state_path}")
+        runinfo.refuse_existing(out / "final", overwrite=a.overwrite)
+    else:
+        runinfo.refuse_existing(out / "final", out / "log.jsonl", overwrite=a.overwrite)
     out.mkdir(parents=True, exist_ok=True)
     (out / "train_args.json").write_text(json.dumps(vars(a), indent=1))
 
@@ -161,7 +174,8 @@ def main():
     model = build_model(a)
     base = model.get_base_model()
     model.print_trainable_parameters()
-    runinfo.write_json(out / "run_info.json", {
+    st = torch.load(state_path, map_location="cpu", weights_only=False) if a.resume else None
+    runinfo.write_json(out / (f"run_info_resume_{st['step']}.json" if st else "run_info.json"), {
         "kind": "train", "created": runinfo.now(), "args": vars(a), "git": runinfo.git_state(), "env": runinfo.env_info(),
         "data": {"path": a.data, "sha256": runinfo.sha256_file(a.data), "examples": len(data), "skipped_too_long": skipped},
         "eval": {"path": a.eval_data, "sha256": runinfo.sha256_file(a.eval_data) if a.eval_data else None,
@@ -186,11 +200,49 @@ def main():
         order += perm
     order = order[: total_steps * a.grad_accum]
 
+    # resumable snapshots: everything the loop needs to continue as if it had not stopped (example order is
+    # rebuilt from the seed above). A snapshot is written to a temp file and renamed, so a kill never leaves half a file.
+    spec_keys = ("model", "data", "eval_data", "eval_n", "load_4bit", "lora_r", "lora_alpha", "lora_dropout", "lr",
+                 "optim", "warmup", "epochs", "grad_accum", "max_len", "max_steps", "seed")
+    spec = {k: getattr(a, k) for k in spec_keys} | {"data_sha256": runinfo.sha256_file(a.data)}
+    named = {n: p for n, p in model.named_parameters() if p.requires_grad}
+    start, prev_el, seen_tok = 0, 0.0, 0
+    if st:
+        diff = {k: (st["spec"].get(k), v) for k, v in spec.items() if st["spec"].get(k) != v}
+        if diff:
+            raise SystemExit(f"--resume: arguments differ from the snapshot: {diff}")
+        for n, t in st["params"].items():
+            named[n].data.copy_(t.to(named[n].device, named[n].dtype))
+        opt.load_state_dict(st["opt"])
+        sched.load_state_dict(st["sched"])
+        torch.set_rng_state(st["rng_cpu"])
+        torch.cuda.set_rng_state(st["rng_cuda"])
+        start, prev_el, seen_tok = st["step"], st["elapsed"], st["seen_tok"]
+        print(f"resumed from {state_path} at step {start}/{total_steps}", flush=True)
+        del st
+
+    def save_state(step, el):
+        tmp = out / "state.pt.tmp"
+        torch.save({"spec": spec, "step": step, "elapsed": el, "seen_tok": seen_tok,
+                    "params": {n: p.detach().to("cpu").clone() for n, p in named.items()},
+                    "opt": opt.state_dict(), "sched": sched.state_dict(),
+                    "rng_cpu": torch.get_rng_state(), "rng_cuda": torch.cuda.get_rng_state()}, tmp)
+        os.replace(tmp, state_path)
+        print(json.dumps({"step": step, "state": str(state_path)}), flush=True)
+
+    stop = []
+    if a.state_every:
+        def on_signal(signum, _frame):
+            stop.append(signum)
+            print(f"signal {signum}: snapshot after the current step, then exit 75", flush=True)
+        signal.signal(signal.SIGTERM, on_signal)
+        signal.signal(signal.SIGINT, on_signal)
+
     model.train()
     torch.cuda.reset_peak_memory_stats()
-    t_start, seen_tok, log_loss, log_n = time.time(), 0, 0.0, 0
+    t_start, log_loss, log_n = time.time() - prev_el, 0.0, 0
     log_file = open(out / "log.jsonl", "a", encoding="utf-8")
-    for step in range(1, total_steps + 1):
+    for step in range(start + 1, total_steps + 1):
         window = [data[i] for i in order[(step - 1) * a.grad_accum: step * a.grad_accum]]
         n_loss = sum(sum(x != -100 for x in lab[1:]) for _, lab in window)
         for ids, labels in window:
@@ -219,8 +271,16 @@ def main():
             log_file.flush()
         if step % a.save_every == 0 and step != total_steps:
             model.save_pretrained(out / f"step_{step}")
+        if a.state_every and step != total_steps and (step % a.state_every == 0 or stop):
+            save_state(step, time.time() - t_start)
+        if stop:
+            log_file.close()
+            print(f"stopped by signal after step {step}/{total_steps}; continue with --resume", flush=True)
+            sys.exit(75)
     model.save_pretrained(out / "final")
     tok.save_pretrained(out / "final")
+    if state_path.exists():
+        state_path.unlink()
     print(f"saved {out / 'final'}", flush=True)
 
 

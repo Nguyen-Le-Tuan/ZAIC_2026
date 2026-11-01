@@ -1144,6 +1144,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - dữ liệu app tổng hợp cho app chưa thấy.
       - Bản 4B đang chờ máy anh trai.
     - **Claude khuyến nghị:** sau khi chấm ASR fine-tune (C3, C5), đòn bẩy lớn tiếp theo là agent. Thứ tự: kết quả 4B (nếu có), rồi dữ liệu SFT nhiều vế. Chọn trên dev theo luật đặt trước, coi trọng dev_lao (mục F của HUMAN_TODO).
+    - **Anh đồng ý** (21:21). Phiên sau: chấm ASR fine-tune (C3, C5) trước, rồi chuyển sang agent. Anh dừng phiên hôm nay, chờ kết quả Colab.
 
 ---
 

@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 08:11 ngày 01/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 08:25 ngày 01/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **08:25 ngày 01/11:** **Bắt đầu phần agent.** Đo lại trên dev: mẫu nhiều vế **không phải chỗ mất điểm chính**. Model làm thiếu lệnh ghi ở 11/183 (dev_random) và 29/214 (dev_lao) mẫu execute; còn mẫu chỉ có 1 lệnh ghi cũng sai gần một nửa (JOURNAL entry 54). Claude đề xuất thử **4B 4-bit ngay trên laptop** trước: **cần Anh đồng ý tải Qwen3-4B (khoảng 8 GB), mục B9.**
 > - **08:11 ngày 01/11:** **Điểm public lần 2: 35,24** (Anh nộp `lifemate/runs/e2e_public_turboft.jsonl`; B8 xong). Tăng 9,31 so với 25,93, gần đúng mức tăng trên dev gộp (+9,08). Cả hai lần, public cao hơn dev gộp khoảng 2 điểm (25,93 so với 23,99; 35,24 so với 33,07), nên tiếp tục chọn trên dev được (mục F). Việc lớn tiếp theo là agent: ASR giờ chỉ làm mất 11 điểm, agent mất khoảng 56 ngay trên chữ chuẩn.
 > - **01:35 ngày 01/11:** **File nộp public mới đã sẵn sàng (B8: Anh hoặc leader nộp):** `lifemate/runs/e2e_public_turboft.jsonl` (634 dòng, 0 lỗi định dạng, sha256 bắt đầu `f87c8e1fc863`). Whisper-turbo fine-tune và agent `q17b_fit_random`, đúng agent của lần nộp 25,93, nên chỉ ASR thay đổi. Trên laptop: ASR 0,48 giây và cả mẫu 3,0 giây trung bình, chậm nhất 11,7 giây; không mẫu nào quá 25 giây. Trên dev, đổi ASR này tăng điểm gộp 23,99 → 33,07, nên public có thể lên quanh 33–35 (ước lượng thô từ lần 25,93). Ghép adapter trên laptop khớp bản Colab 768/784 câu (khác 24/11.084 từ, sai số fp16 giữa hai GPU). **GPU laptop rảnh từ 01:29.**
 > - **01:05 ngày 01/11:** **C3 xong: fine-tune ASR thêm khoảng 9 điểm.** Điểm gộp 495 dòng (dev_random + dev_lao): Whisper-turbo fine-tune **33,07**, PhoWhisper fine-tune **33,41**, turbo chưa fine-tune 23,99, chữ chuẩn 44,23. dev_random 31,69 → 42,64 (turbo-ft) / 43,04 (Pho-ft); dev_lao 17,14 → 24,55 / 24,85. Hai model fine-tune cách nhau 0,35 điểm [−2,89; +3,61], dưới 1 điểm, nên theo luật đặt trước **chọn Whisper-turbo fine-tune** (0,8B, nhanh hơn, chừa chỗ cho agent 4B). ASR giờ chỉ còn làm mất 11 điểm, so với 20 điểm trước đây (JOURNAL entry 52). **GPU laptop đang làm file nộp public mới bằng ASR này (C5, từ 00:54, khoảng 45 phút).** Anh hoặc leader tự nộp khi file xong.
@@ -68,6 +69,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] **B8.** (5 phút) **Nộp public** `lifemate/runs/e2e_public_turboft.jsonl`, tự nộp hoặc gửi leader nộp. Claude không nộp.
   - File: 634 dòng, khoảng 195 KB, đã qua `zaic_tools --validate` (0 lỗi). Chỉ khác lần nộp 25,93 ở ASR (Whisper-turbo fine-tune).
   - ***Xong (Anh báo lúc 08:11 ngày 01/11): 35,24.*** Lần trước 25,93, tức tăng 9,31; dev gộp dự đoán tăng 9,08 (JOURNAL entry 53).
+- [ ] **B9. ← MỚI (08:25 ngày 01/11).** (1 phút) **Quyết: tải Qwen3-4B-Instruct-2507 về laptop để thử train 4B 4-bit?** Khoảng 8 GB, licence Apache-2.0, từ Hugging Face (`Qwen/Qwen3-4B-Instruct-2507`). Claude đề xuất có (JOURNAL entry 54).
+  - Nếu có: Claude chạy thử 15 phút để đo VRAM và tốc độ. Nếu một epoch dưới khoảng 8 giờ, train fit_lao → dev_lao qua đêm; khi đó cắm sạc và không gập máy.
+  - Nếu không: GPU laptop chạy thí nghiệm A (1.7B, 2 epoch, khoảng 5,5 giờ) trước.
 - [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
 **Leader:**
@@ -111,6 +115,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 00:02–00:53 ngày 01/11 | Claude chạy C3 trên GPU laptop (5 lượt): chọn Whisper-turbo fine-tune |
 | 00:54–01:29 ngày 01/11 | Claude làm file nộp public mới (C5); Anh hoặc leader nộp (B8) |
 | 08:11 ngày 01/11 | Anh báo điểm public lần 2: 35,24 (B8 xong) |
+| 08:25 ngày 01/11 | Bắt đầu phần agent: đo lại chỗ mất điểm; chờ Anh quyết tải 4B (B9) |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần

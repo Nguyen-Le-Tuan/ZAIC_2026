@@ -44,7 +44,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   | PhoWhisper-large fine-tune (01/11, entry 52) | 43,04 | 24,85 |
 
   - ~~**Lỗi ASR là chỗ mất điểm lớn nhất hiện nay** (khoảng 20 điểm). ASR sai 26–31% số từ; người nói hiếm khi đọc lệch kịch bản.~~ *(01/11, entry 52: sau fine-tune, ASR sai 11–14% số từ và chỉ còn làm mất 11 điểm gộp. Agent mất khoảng 56 điểm ngay cả trên chữ chuẩn, nên giờ là đòn bẩy lớn nhất.)*
-  - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng). **Chưa nộp**; Anh tự nộp.
+  - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng), đã nộp: **25,93** (entry 46). **File mới với ASR fine-tune:** `lifemate/runs/e2e_public_turboft.jsonl` (01/11, entry 52), chờ Anh hoặc leader nộp.
   - Thời gian trên laptop: trung bình 2,9 giây mỗi mẫu, chậm nhất 9,7 giây. Chưa có Docker offline, chưa đo trên A30.
   - Code: [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge.
 - **Kế hoạch hôm nay (31/10):** [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md). Ưu tiên: fine-tune ASR (leader), train agent trên chữ ASR và 4B (Anh chạy cloud), Docker (leader).
@@ -1188,7 +1188,12 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - → Theo luật: **chọn Whisper-turbo fine-tune.** Model nhỏ hơn (0,8B so với 1,55B) và nhanh hơn. Với agent 4B, tổng là 4,8B so với 5,6B, vẫn dưới trần 6B.
       - Trên dev_lao, chốt chặn ID chặn 1 call (turbo-ft) và 7 call (Pho-ft). Cả 8 call đều mang ID bịa như `contact_01`, `scene_1001`, không có trong history hay kết quả tool.
       - Agent mất trung bình 2,4 giây mỗi mẫu, chậm nhất 8,1 giây với turbo-ft (chưa tính ASR).
-    - **Việc tiếp (C5, đang chạy):** ghép adapter turbo-ft trên laptop, chạy lại ASR dev_random để so với file Colab, rồi làm file nộp public bằng `predict.sh` (ASR batch 1 để đo độ trễ thật; agent `q17b_fit_random` như lần nộp 25,93). Anh hoặc leader tự nộp.
+    - **File nộp public mới (C5, 00:54–01:29):**
+      - Ghép adapter turbo-ft trên laptop (cùng phiên bản peft, transformers, torch như Colab). Chạy lại ASR dev_random: khớp bản Colab 768/784 câu; khác 24 trên 11.084 từ, do sai số fp16 giữa T4 và RTX 4070.
+      - `predict.sh` trên public_test: `lifemate/runs/e2e_public_turboft.jsonl`, 634 dòng, `zaic_tools --validate` 0 lỗi, sha256 bắt đầu `f87c8e1fc863`. Agent `q17b_fit_random` như lần nộp 25,93, nên chỉ ASR thay đổi.
+      - So với file 25,93: 162/634 dòng giống hệt; số dòng không có call 106 → 54; tổng số call 1.198 → 1.368.
+      - Thời gian trên laptop (model đã nạp): ASR 0,48 giây mỗi mẫu (chậm nhất 1,92, bằng bản turbo gốc); cả mẫu 3,04 giây (p95 5,89, chậm nhất 11,74). Không mẫu nào quá 25 giây. Chốt chặn chặn 7 call.
+      - Ước lượng thô: dev gộp tăng 9 điểm, nên public có thể quanh 33–35. Anh hoặc leader tự nộp (B8).
     - **Chưa kiểm:** độ trễ ASR fine-tune trên A30; ITN số (fine-tune đã học kiểu viết của `audio_text`, nên giữ giờ đã lên 97%).
 
 ---

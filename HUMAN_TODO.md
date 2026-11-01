@@ -13,7 +13,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 21:08). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 21:19). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
 > - **21:08:** **C4 xong: [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9)**, chờ review. Mỗi mẫu có hạn chót cứng, tính cả thời gian ASR; chốt chặn ID chạy trong agent. Chạy lại: dev_random và chữ turbo giống hệt từng dòng (53,92 và 31,69); dev_lao 35,53 → 35,62 (4 call sai bị chặn, 1 mẫu tốt hơn, 0 mẫu kém); mẫu `train_0830` dừng đúng 15,0 giây khi cho ngân sách 15 giây. Theo luật đặt trước: nhận cả hai, chốt chặn bật mặc định (JOURNAL entry 50). **GPU laptop rảnh từ 21:05**, chờ Colab cho C3. Leader dựng Docker (L6) nên lấy từ nhánh `time-budget`.
@@ -137,6 +137,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - lượt agent học trên chữ PhoWhisper: Kaggle không kịp; laptop đã rảnh từ 20:19, chạy mất khoảng 3 giờ. **Claude khuyến nghị không chạy** (lượt cùng hướng vừa không đáng dùng, JOURNAL entry 48); Anh quyết.
   - nộp public (L1);
   - merge PR #8 (B6);
+  - **sau ASR, bước lớn tiếp theo là agent** (JOURNAL entry 51): ASR hoàn hảo chỉ đưa điểm gộp lên khoảng 44, vì agent đọc chữ chuẩn vẫn mất khoảng 56 điểm. Claude đề xuất: kết quả 4B, rồi dữ liệu SFT nhiều vế và điều kiện. Anh quyết khi bắt đầu phiên sau;
   - có thuê GPU từ 24 GB cho 2 lượt 4B không, nếu máy anh trai không train được (B4). Gói v3 và [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md) đã sẵn.
 
 ### F. Nguyên tắc chọn mô hình (Anh nêu 31/10, sau điểm public 25,93)

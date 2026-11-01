@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-01 09:30: laptop đang train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-01 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1253,6 +1253,16 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Kém hơn mức đó → giữ 1.7B. Ngoại lệ: chữ chuẩn hơn từ 3 điểm trở lên thì báo để đội quyết.
       - Báo thêm: chênh lệch trên chữ chuẩn (so với `sft_c4_fit_lao`, 35,62), số giây mỗi mẫu, số mẫu quá 25 giây.
     - **Giới hạn:** train và chấm đều 4-bit. Điểm trên A30 có thể khác nếu ở đó chạy bf16; chạy đúng bản 4-bit trên A30 thì khớp hơn. Tốc độ trên A30 chưa đo.
+
+56. **Lượt 4B tạm dừng vì laptop phải mang đi học; thêm lưu và chạy tiếp** (01/11, 10:12–10:40; Anh hỏi lượt train có lưu checkpoint không, vì 11:00 phải mang máy đi học).
+    - **Trả lời:** không. Code cũ chỉ lưu adapter ở bước 100 (khoảng 11:30), không lưu trạng thái optimizer, nên không chạy tiếp được. Lượt còn chặn máy ngủ, nên phải dừng trước khi bỏ máy vào cặp.
+    - Claude dừng lượt lúc 10:13, ở bước 35/254 (loss 0,09, 694 token/giây). Phần đã chạy không dùng lại được; log giữ ở `runs/q4b4_fit_lao_2026-11-01_aborted.log`.
+    - **Thêm vào `train.py`** (PR #10, commit `9de4e1a`):
+      - `--state-every N` (mặc định 0, tức như cũ): cứ N bước ghi `state.pt` (trọng số LoRA, optimizer, scheduler, RNG). SIGTERM làm vòng lặp lưu sau bước đang chạy rồi thoát với mã 75.
+      - `--resume`: chạy tiếp từ `state.pt`; từ chối nếu tham số hoặc dữ liệu khác.
+    - **Thử trên GPU** (4B 4-bit, 4 bước trên 32 mẫu ngắn): lượt bị dừng giữa bước 2 lưu được, chạy tiếp từ bước 3 với đúng learning rate. Loss sau khi chạy tiếp cùng mức với lượt chạy liền (bước 4: 0,223 so với 0,228). Không khớp từng bit, vì GPU đã lệch nhẹ ngay ở bước 1, trước khi dừng.
+    - **Bài học bộ nhớ:** trần RAM 5 GB của unit quá thấp. Bộ nhớ đệm khi đọc file model 8 GB cũng tính vào trần, nên bài thử chạy chậm. Lượt chính dùng trần 7/9 GB như trước.
+    - **Lượt chính** chưa bắt đầu lại (chỉ còn khoảng 15 phút trước 11:00). Script `~/zac-c3/run_q4b_lao.sh` giờ lưu mỗi 10 bước và tự chạy tiếp; bật bằng `bash ~/zac-c3/start_q4b.sh` (HUMAN_TODO B10). Luật chọn ở entry 55 giữ nguyên.
 
 ---
 

@@ -1120,6 +1120,31 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - backend vLLM.
     - Leader dựng Docker (L6) nên lấy từ nhánh `time-budget` để có giới hạn thời gian.
 
+51. **Anh hỏi: vấn đề lớn nhất có phải ASR, và có phải đội mới chỉ tối ưu ASR** (31/10, 21:19; Anh dừng phiên hôm nay, chờ kết quả Colab).
+    - **Điểm mất ở đâu** (gộp dev_random + dev_lao, 495 mẫu):
+
+      | Agent đọc | dev_random | dev_lao | Gộp |
+      |---|---:|---:|---:|
+      | Chữ chuẩn `audio_text` (ASR hoàn hảo) | 53,92 | 35,53 | 44,2 |
+      | Chữ Whisper-turbo chưa fine-tune | 31,69 | 17,14 | 24,0 |
+
+      - ASR làm mất khoảng 20 điểm. Đây là chỗ tụt lớn nhất giữa hai khâu, và là đòn bẩy rẻ nhất lúc này: một model ASR tốt hơn nâng mọi mẫu.
+      - Nhưng phần agent (gọi tool) mất khoảng 56 điểm ngay cả khi chữ đúng hoàn toàn. ASR hoàn hảo cũng chỉ đưa điểm gộp lên khoảng 44.
+      - Lượt laptop (1) (entry 48) cho thấy agent không bù được lỗi ASR, nên lỗi ASR phải sửa tận gốc.
+    - **Đội không chỉ tối ưu ASR.**
+      - 28–30/10 gần như toàn bộ là phần agent: pipeline và SFT (9,9 → 53,92), thí nghiệm B (app chưa thấy, 35,53), thí nghiệm D (bị loại), phân tích lỗi (entry 27–28).
+      - ASR chỉ thành ưu tiên số 1 từ sáng 31/10, sau khi baseline đầu-cuối đo ra 20 điểm (entry 31).
+    - **Điểm yếu đã đo của agent** (trên chữ chuẩn, entry 28 và 30):
+      - Không làm đủ: model tự dừng khi yêu cầu nhiều vế hoặc có điều kiện. Sửa hết thì +6,2 (dev_random), +8,4 (dev_lao).
+      - Sai giá trị tham số: sửa hết cùng lúc thì +14–16. Trong đó chọn nhầm ID +4–5, ngày giờ +2–4.
+      - Hỏi lại ở app chưa thấy: 7,48 điểm trên dev_lao.
+    - **Phần agent chưa bắt đầu:**
+      - dữ liệu SFT nhiều vế và điều kiện, kiểm chứng bằng ToolEnv;
+      - quy ước ngày giờ (sáng/tối, "tuần sau");
+      - dữ liệu app tổng hợp cho app chưa thấy.
+      - Bản 4B đang chờ máy anh trai.
+    - **Claude khuyến nghị:** sau khi chấm ASR fine-tune (C3, C5), đòn bẩy lớn tiếp theo là agent. Thứ tự: kết quả 4B (nếu có), rồi dữ liệu SFT nhiều vế. Chọn trên dev theo luật đặt trước, coi trọng dev_lao (mục F của HUMAN_TODO).
+
 ---
 
 ## 8. Việc tiếp theo

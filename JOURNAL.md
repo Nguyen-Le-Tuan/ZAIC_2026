@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-01 08:25: bắt đầu phần agent, đề xuất thử 4B 4-bit trên laptop (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-01 09:30: laptop đang train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1235,6 +1235,24 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       3. Dữ liệu nhiều vế làm sau, nếu hai việc trên còn để lại chỗ.
       - Chọn theo luật đặt trước trên dev, coi trọng dev_lao (HUMAN_TODO mục F).
     - **Giới hạn của 4B trên laptop:** QLoRA train trên trọng số 4-bit, và chấm local cũng phải 4-bit (4B bf16 không vừa 8 GB). Trên A30 có thể chạy đúng bản 4-bit để khớp với số đo local. Máy anh trai (4B bf16) vẫn chưa trả lời.
+
+55. **Train Qwen3-4B bản 4-bit ngay trên laptop (QLoRA); luật chọn đặt trước** (01/11, 08:50–09:30; Anh chọn "Có, tải 4B").
+    - **Tải:** `Qwen/Qwen3-4B-Instruct-2507`, revision `cdbee75f` (cùng bản tokenizer đã có trên máy), Apache-2.0, 8,06 GB, tải mất 64 giây.
+    - **Chạy thử trên laptop** (màn hình và trình duyệt giữ khoảng 1,35 GB VRAM):
+      - Train 4 bước trên `sft/fit_lao.jsonl`: 704 token/giây, đỉnh 5,39 GB. Một epoch (12,8M token) khoảng 5–5,5 giờ.
+      - Chấm 4-bit 12 mẫu dev_lao (adapter mới 4 bước): trung bình 10,9 giây mỗi mẫu, so với 2,4 giây của 1.7B bf16. Giải mã 4-bit trên laptop chậm.
+      - 32 mẫu dài nhất (5,3K–6,6K token) **tràn VRAM ở bước 2**, lúc trạng thái AdamW fp32 được cấp phát. Mẫu tới 5.632 token chạy được nhưng chỉ dư khoảng 0,15 GB.
+      - Thêm `--optim adamw8bit` (AdamW 8-bit của bitsandbytes) vào `train.py`: cùng 32 mẫu dài nhất đỉnh 5,64 GB, không tràn. Code: [PR #10](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/10), xếp chồng lên #9; mặc định không đổi.
+    - **Lượt `q4b4_fit_lao`** (từ 09:27, unit `lifemate-q4b-lao`, worktree `~/zac-c3` ở commit `cfd9c85`):
+      - Đúng công thức B0 (`q17b_fit_lao`: LoRA r32/α64, lr 2e-4, 1 epoch, grad-accum 16, cùng `sft/fit_lao.jsonl`). Chỉ khác: base Qwen3-4B nạp 4-bit, AdamW 8-bit, `--max-len 6144` (bỏ 1/4.051 mẫu, dài 6.644 token).
+      - Chấm dev_lao, nạp 4-bit, code `time-budget` (chốt chặn ID bật), giới hạn 60 giây để laptop chậm không cắt mẫu nào. Trước hết trên chữ Whisper-turbo fine-tune, rồi trên chữ chuẩn.
+      - Dự kiến: train khoảng 6 giờ, chấm khoảng 1,2 giờ, xong khoảng 16:30–17:00.
+    - **Luật đặt trước** (ghi trong script trước khi chạy):
+      - Số chính: chênh lệch theo cặp trên dev_lao chữ ASR fine-tune (262 mẫu), so với `sft_c3_fit_lao_asrturboft` (24,55).
+      - Hơn ít nhất 1,0 điểm → 4B thắng vòng này; lượt laptop tiếp theo là 4B trên fit_random / dev_random, rồi quyết bằng điểm gộp 495 dòng như C3.
+      - Kém hơn mức đó → giữ 1.7B. Ngoại lệ: chữ chuẩn hơn từ 3 điểm trở lên thì báo để đội quyết.
+      - Báo thêm: chênh lệch trên chữ chuẩn (so với `sft_c4_fit_lao`, 35,62), số giây mỗi mẫu, số mẫu quá 25 giây.
+    - **Giới hạn:** train và chấm đều 4-bit. Điểm trên A30 có thể khác nếu ở đó chạy bf16; chạy đúng bản 4-bit trên A30 thì khớp hơn. Tốc độ trên A30 chưa đo.
 
 ---
 

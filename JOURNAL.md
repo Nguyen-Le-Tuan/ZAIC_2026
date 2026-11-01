@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-10-31 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-10-31 20:22: các dòng về laptop và B-up theo entry 48–49; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -48,8 +48,8 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 - **Kế hoạch hôm nay (31/10):** [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md). Ưu tiên: fine-tune ASR (leader), train agent trên chữ ASR và 4B (Anh chạy cloud), Docker (leader).
 - **Điểm yếu lớn nhất đã đo:** hỏi lại, nhất là với app chưa thấy (0/23 mẫu ở dev_lao), và thiếu lệnh ghi do làm thiếu vế (entry 28).
   - **Thí nghiệm D bị loại** (entry 30, [`docs/D_PHASE2_2026-10-31.md`](docs/D_PHASE2_2026-10-31.md)): thua lượt đối chứng B-up, chỉ nhân bản mẫu hỏi lại thật. B-up: hỏi lại 7,5 → 30,0, tổng 35,53 → 36,94 (chưa chắc).
-  - Bước tiếp: thử công thức B-up trên fit_random (lượt cloud `q17b_random_up`, Anh đã bật 31/10).
-- **Đang chạy (laptop, từ 13:48):** `q17b_random_asrtrain` (xong khoảng 16:45) rồi `q17b_random_up` (khoảng 19:40), entry 37. Leader chạy dự phòng trên Kaggle theo [`docs/KAGGLE_LEADER_2026-10-31.md`](docs/KAGGLE_LEADER_2026-10-31.md).
+  - B-up trên fit_random (laptop, xong 31/10 20:19, entry 49): dev_random 53,92 → 51,19 (−2,72), giảm quá 1 điểm nên **không giữ**. Agent mặc định vẫn là SFT thường.
+- **Laptop đã xong 2 lượt (13:48–20:19):** agent học trên chữ turbo không đáng dùng (entry 48); B-up không giữ (entry 49). GPU laptop rảnh, chờ transcript ASR fine-tune từ Colab để chấm. Kaggle xong mà không train vì T4 quá chậm; public lần đầu 25,93 (entry 46).
 - **Anh trai của Anh (làm ở Google) sẽ chạy gói v3** bằng lệnh một dòng; Anh báo đã hỏi và được cho phép (entry 33–34). Chờ 2 file kết quả gửi về.
 - **Dự phòng** nếu máy anh trai là TPU (entry 35, [`docs/FREE_GPU_2026-10-31.md`](docs/FREE_GPU_2026-10-31.md)): 1.7B trên laptop (chờ Anh đồng ý) hoặc Kaggle T4; 4B chỉ trên GPU trả phí.
 - **Chờ Anh:**
@@ -1066,6 +1066,24 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Lượt agent học trên chữ PhoWhisper** (chưa ai chạy): Claude nay khuyến nghị không chạy trên laptop. Cùng hướng với lượt vừa rồi, nên khó thắng; GPU laptop sau lượt (2) nên dành cho việc chấm transcript ASR fine-tune (C3).
     - Lượt (2) `q17b_random_up` bắt đầu 17:00, dự kiến xong khoảng 20:00, trễ 10 phút so với ước tính cũ vì bước chấm lâu hơn.
 
+49. **Lượt laptop (2) xong: không giữ B-up trên fit_random** (31/10, 17:00–20:19; Claude đọc lúc 20:22).
+    - `q17b_random_up`: công thức `q17b_fit_random` cộng 829 dòng từ 263 mẫu hỏi lại thật nhân bản (`gen/up_real_asks_random.jsonl`), 260 bước. Chấm trên dev_random (233 mẫu):
+
+      | Đọc chữ gì khi chấm | Mốc `q17b_fit_random` | B-up | Chênh [khoảng tin cậy 95%] | Hỏi lại / Execute / Ngoài phạm vi (B-up) |
+      |---|---:|---:|---|---|
+      | Chữ chuẩn | 53,92 | 51,19 | −2,72 [−8,08; +2,52], tốt 22 / kém 30 | 69,1 / 44,0 / 94,1 (mốc 49,4 / 51,0 / 94,1) |
+      | Chữ turbo | 31,69 | 29,06 | −2,64 [−6,58; +1,35], tốt 11 / kém 20 | 30,3 / 23,9 / 82,4 (mốc 24,4 / 28,3 / 82,4) |
+
+    - **Luật đặt trước** (entry 30): dev_random không giảm quá 1 điểm thì dùng B-up làm mặc định. Giảm 2,72 → **không giữ**. Công thức agent mặc định vẫn là SFT thường (`q17b_fit_random`, `q17b_fit_lao`).
+    - **Vì sao giảm:** B-up dạy model hỏi lại nhiều hơn.
+      - Mẫu cần hỏi lại (33): hỏi đúng 23 mẫu, mốc 17.
+      - Mẫu cần làm (183): hỏi thừa 22 mẫu, mốc 14. Cộng theo mẫu, execute mất 12,9 trong khi hỏi lại được 6,5, nên tổng giảm.
+      - Giống điều đã thấy ở thí nghiệm D: tăng hỏi lại kéo theo hỏi thừa. Trên fit_lao (entry 30), mốc hỏi lại gần 0 nên B-up có lợi; trên fit_random, mốc đã 49 nên phần hỏi thừa trội hơn.
+    - **Không dò tiếp tỉ lệ nhân bản trên dev_random**, theo mục F của HUMAN_TODO: chọn trên dev bằng luật đặt trước, không dò nhiều lần trên cùng tập dev. Nếu muốn cân lại sau này, dò trên tập tách từ fit, như mục "ngưỡng hỏi lại" ở mục 8.
+    - **Phát hiện phụ cho C4:** mẫu `train_0830` sinh lặp "000…" trong tham số `content` hai bước liền, mỗi bước tới trần 512 token (Qwen tách mỗi chữ số thành một token), tổng 23,4 giây. Mốc chậm nhất chỉ 7,3 giây. Một mẫu như vậy cộng thời gian ASR là sát giới hạn 30 giây. Phần sửa `agent.py:150` (C4) cần có trần thời gian và trần token cho mỗi bước.
+    - GPU laptop rảnh từ 20:19. Chưa nhận `asr_results_*` từ Colab nên C3 chưa chạy. Lượt agent học trên chữ PhoWhisper vẫn chờ Anh quyết; Claude khuyến nghị không chạy.
+    - Máy anh trai cũng có lượt `q17b_random_up` trong gói v3. Nếu chạy, đó là một lần lặp lại trên GPU khác, dùng để kiểm độ ổn định, không đổi quyết định.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1084,19 +1102,19 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] D giai đoạn 1 (D v1, 77 mẫu) và giai đoạn 1b (bộ lọc v2, D-train 77 mẫu) (30/10, `docs/D_PHASE1_2026-10-30.md`, `docs/D_PHASE1B_2026-10-30.md`).
 - [x] Anh quyết: giai đoạn 2 ngay với D-train 77 mẫu (khuyến nghị), hay giai đoạn 3 (nới luật) trước. *Anh chọn giai đoạn 2 (30/10).*
 - [x] Giai đoạn 2 của D: xong 31/10 03:09. **D bị loại**, B-up thắng; xem `docs/D_PHASE2_2026-10-31.md` (entry 30).
-- [ ] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud; Anh bật 31/10, entry 32): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định.
+- [x] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud; Anh bật 31/10, entry 32): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định. *(31/10 20:19, laptop: giảm 2,72, không giữ; entry 49.)*
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [x] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): xong 31/10 (entry 31). ASR làm mất khoảng 20 điểm.
 - [ ] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp).
 - [ ] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot.
-- [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; Anh bật 31/10, entry 32; bản 4B `q4b_random_asrtrain` chỉ chạy khi có ≥ 4 GPU).
+- [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; Anh bật 31/10, entry 32; bản 4B `q4b_random_asrtrain` chỉ chạy khi có ≥ 4 GPU). *(1.7B xong 31/10 17:00 trên laptop: không đáng dùng, entry 48. Bản 4B chờ máy anh trai.)*
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
   - [x] **Chốt chặn ID: đã đo** (entry 27). Gần như không thêm điểm (0 / 0 / +0,26), nên hạ xuống lưới an toàn: viết cùng phần sửa `agent.py:150`, không cần lượt GPU riêng.
   - [x] **Tách lệnh ghi sai theo nguyên nhân** (entry 28): mất nhiều nhất là thiếu lệnh ghi và ghi sai tool, rồi tới chọn nhầm ID và ngày giờ.
   - **Dữ liệu SFT nhiều vế và điều kiện** (P1 trong báo cáo Codex), kiểm chứng bằng ToolEnv; nhắm vào lỗi "tự dừng khi chưa làm đủ" (entry 28).
   - **Ngày giờ:** thử quy ước sáng/tối và "tuần này / tuần sau" (nhãn tuần trong bảng ngày, hoặc chuẩn hoá giờ nói). Cần train lại để đo, nên làm sau giai đoạn 2.
   - **Ngưỡng hỏi lại:** chỉnh ngưỡng xác suất chọn `ask_missing_info` lúc suy luận. Ngưỡng chỉnh trên tập dò từ fit, không chỉnh trên dev. Cần GPU, nên làm sau giai đoạn 2. *(31/10: hạ ưu tiên. Trần chỉ 1,2–1,7 điểm trên dev_lao, entry 30.)*
-  - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker.
+  - **Sửa `agent.py:150`:** xem thời gian còn lại trước khi sinh mỗi bước, để bước cuối không vượt 30 giây. Làm trước khi đóng Docker. *(31/10: thêm trần cho mỗi bước; một mẫu sinh lặp "000…" hai bước liền mất 23,4 giây, entry 49.)*
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.

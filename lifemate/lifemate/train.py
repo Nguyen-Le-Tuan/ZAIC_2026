@@ -5,6 +5,10 @@ Memory savers (8GB laptop GPU):
     2-4GB, while only ~76 tokens per example are trained on
   * gradient checkpointing, batch size 1 + gradient accumulation, bf16 weights, fp32 LoRA params
   * --load-4bit: QLoRA (NF4) for bigger models, e.g. Qwen3-4B on 8GB
+  * --optim adamw8bit: 8-bit AdamW states (bitsandbytes). For LoRA r32 on Qwen3-4B that is ~0.4GB less than fp32
+    states. Measured 01/11 on the 4070 next to a desktop session (~1.35GB of VRAM): with fp32 states, the longest
+    fit_lao examples (5.9K-6.6K tokens) run out of memory at the second step, and examples up to 5,632 tokens peak
+    at 5.71GB, only ~0.15GB below the limit
 
 Examples:
   python -m lifemate.train --data sft/fit_random.jsonl --eval-data sft/dev_random.jsonl --out ckpt/q17b_fit_random
@@ -117,6 +121,8 @@ def main():
     ap.add_argument("--lora-alpha", type=int, default=64)
     ap.add_argument("--lora-dropout", type=float, default=0.05)
     ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--optim", choices=["adamw", "adamw8bit"], default="adamw",
+                    help="adamw8bit: bitsandbytes 8-bit AdamW states, for QLoRA 4B on an 8GB GPU")
     ap.add_argument("--warmup", type=float, default=0.03)
     ap.add_argument("--epochs", type=float, default=1.0)
     ap.add_argument("--grad-accum", type=int, default=16)
@@ -161,7 +167,11 @@ def main():
         "eval": {"path": a.eval_data, "sha256": runinfo.sha256_file(a.eval_data) if a.eval_data else None,
                  "examples": len(dev), "skipped_too_long": dev_skipped, "ids": runinfo.ids_digest(dev_ids)}})
     params = [p for p in model.parameters() if p.requires_grad]
-    opt = torch.optim.AdamW(params, lr=a.lr, weight_decay=0.0, betas=(0.9, 0.999))
+    if a.optim == "adamw8bit":
+        import bitsandbytes as bnb
+        opt = bnb.optim.AdamW8bit(params, lr=a.lr, weight_decay=0.0, betas=(0.9, 0.999))
+    else:
+        opt = torch.optim.AdamW(params, lr=a.lr, weight_decay=0.0, betas=(0.9, 0.999))
     total_steps = math.ceil(len(data) * a.epochs / a.grad_accum)
     if a.max_steps:
         total_steps = min(total_steps, a.max_steps)

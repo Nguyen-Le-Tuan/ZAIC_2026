@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-01 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-01 08:25: bắt đầu phần agent, đề xuất thử 4B 4-bit trên laptop (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1210,6 +1210,31 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Cả hai lần, public cao hơn dev gộp khoảng 2 điểm (+1,94 và +2,17) và nằm giữa dev_random và dev_lao. → Dev gộp vẫn là thước đo đáng tin; giữ cách chọn trên dev theo nguyên tắc ở entry 46 (HUMAN_TODO mục F).
       - Mới có hai điểm public, và cả hai lần chỉ khác nhau ở ASR. Thay đổi ở agent có thể chuyển sang public khác đi; tập private có thể có thêm app mới.
     - **Việc tiếp:** agent là đòn bẩy lớn nhất. ASR giờ chỉ làm mất 11 điểm gộp, còn agent mất khoảng 56 điểm ngay trên chữ chuẩn (entry 51–52). Thứ tự đã thống nhất: kết quả 4B của anh trai (chưa về), rồi dữ liệu SFT nhiều vế và có điều kiện, kiểm bằng ToolEnv.
+
+54. **Bắt đầu phần agent: mẫu nhiều vế không phải chỗ mất điểm chính; đề xuất thử 4B 4-bit trên laptop** (01/11, 08:12–08:25; Anh chọn "Có, sang agent").
+    - **Đo lại trên hai tập dev** (chỉ CPU, dữ liệu train; agent `q17b_fit_random` / `q17b_fit_lao`, đọc chữ chuẩn và chữ Whisper-turbo fine-tune):
+      - Tập fit đã có nhiều mẫu nhiều vế: 36% mẫu có từ 2 lệnh ghi trở lên (477/1.312 ở fit_random), 9% có câu điều kiện.
+      - Điểm theo số lệnh ghi trong đáp án (chỉ mẫu execute; chữ chuẩn / chữ ASR fine-tune; "thiếu" = số mẫu model làm ít lệnh ghi hơn đáp án):
+
+        | Nhóm | dev_random: n, điểm, thiếu | dev_lao: n, điểm, thiếu |
+        |---|---|---|
+        | 1 lệnh ghi | 94; 54,9 / 47,0; 3 / 9 | 111; 44,2 / 27,2; 13 / 21 |
+        | 2 lệnh ghi | 52; 48,1 / 31,5; 5 / 11 | 69; 37,3 / 24,2; 11 / 17 |
+        | 3 lệnh ghi trở lên | 16; 42,0 / 15,9; 3 / 5 | 12; 8,3 / 0,0; 5 / 5 |
+        | Có câu điều kiện | 22; 38,3 / 26,8; 2 / 3 | 32; 37,6 / 26,5; 5 / 7 |
+        | Mọi mẫu execute | 183; 51,0 / 39,4; 11 / 25 | 214; 39,8 / 25,1; 29 / 43 |
+
+      - Mẫu chỉ có 1 lệnh ghi cũng sai gần một nửa. Phần lớn điểm mất là làm sai một lệnh (chọn nhầm đối tượng, sai giá trị, sai tool), không phải làm thiếu vế. Nhiều vế và chữ ASR cộng dồn: 3 lệnh ghi trở lên trên chữ ASR gần như 0 điểm.
+      - Mẫu ghi đúng (hash đúng) nhưng danh sách call vẫn lệch đáp án mất 9–13 điểm. Lỗi rải đều: thiếu hay thừa call đọc, tham số call đọc, thiếu hỏi lại. Không có quy ước nào sửa rẻ được.
+      - Số liệu: `docs/baselines/agent_buckets_2026-11-01.json` (chỉ số, không id).
+    - **Hệ quả:** dữ liệu nhiều vế chỉ nhắm vào phần nhỏ (trần +6 / +8 điểm theo entry 28). Đòn bẩy rộng hơn là model lớn hơn (4B) và ngân sách train. Thí nghiệm A (2 epoch) vẫn mở; model 1 epoch mới đạt 80,22 trên chính các mẫu đã train (entry 28).
+    - **4B trên laptop:** code đã có QLoRA (`--load-4bit`, chỉ tính logits ở vị trí có loss) nhưng chưa từng đo. Chạy thử lúc 08:22 dừng ngay, vì máy chỉ có tokenizer của Qwen3-4B-Instruct-2507, chưa có trọng số (khoảng 8 GB). Cần Anh đồng ý tải (HUMAN_TODO B9).
+    - **Claude đề xuất thứ tự:**
+      1. Tải 4B, chạy thử 15 phút để đo VRAM và tốc độ. Nếu một epoch dưới khoảng 8 giờ, train fit_lao → dev_lao qua đêm.
+      2. Thí nghiệm A: 1.7B, 2 epoch.
+      3. Dữ liệu nhiều vế làm sau, nếu hai việc trên còn để lại chỗ.
+      - Chọn theo luật đặt trước trên dev, coi trọng dev_lao (HUMAN_TODO mục F).
+    - **Giới hạn của 4B trên laptop:** QLoRA train trên trọng số 4-bit, và chấm local cũng phải 4-bit (4B bf16 không vừa 8 GB). Trên A30 có thể chạy đúng bản 4-bit để khớp với số đo local. Máy anh trai (4B bf16) vẫn chưa trả lời.
 
 ---
 

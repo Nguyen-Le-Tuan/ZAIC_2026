@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:22). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:33). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **20:33:** Anh chọn "Làm C4 ngay". Code xong trên nhánh `time-budget` (15 test CPU đạt). **GPU laptop chạy 4 lượt kiểm C4 từ 20:32 tới khoảng 21:15.** Nếu kết quả Colab về trong lúc đó, C3 chạy ngay sau.
 > - **20:22:** Laptop xong lượt (2) B-up lúc 20:19. Đọc chữ chuẩn 51,19 so với 53,92 (−2,72 [−8,08; +2,52]); đọc chữ turbo 29,06 so với 31,69 (−2,64). Giảm quá 1 điểm nên theo luật đặt trước **không giữ B-up**; công thức agent mặc định vẫn là SFT thường `q17b_fit_random` (JOURNAL entry 49). B-up hỏi lại đúng hơn (49 → 69) nhưng hỏi thừa ở mẫu cần làm (14 → 22 mẫu). **GPU laptop đã rảnh**; C3 chạy ngay khi `asr_results_*` từ Colab về. Một mẫu sinh lặp "000…" mất 23,4 giây, nên C4 thêm trần cho mỗi bước.
 > - **17:01:** Laptop xong lượt (1) lúc 17:00. Agent học trên chữ turbo: đọc chữ turbo 33,22 so với 31,69 (+1,5, chưa chắc), nhưng đọc chữ chuẩn 48,55 so với 53,92 (−5,4, kém thật). → Giữ agent học trên `audio_text`, dồn sức cho fine-tune ASR (JOURNAL entry 48). Lượt (2) chạy tới khoảng 20:00. Khuyến nghị không chạy lượt agent học trên chữ PhoWhisper.
 > - **16:12:** Anh đã gửi gói và lệnh cho anh trai (B4 xong), đang chờ phản hồi. **Colab vẫn làm ngay** (B2 cho Anh, L3 cho leader). Việc fine-tune ASR không gửi cho anh trai: anh trai chỉ chạy một lần, lần đó dành cho các lượt agent (nhất là 4B), và máy chưa rõ GPU gì. Đã chốt chuyện dữ liệu: BTC cho phép.
@@ -26,7 +27,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | **Xong cả hai lượt, GPU đang rảnh.** **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | **Đang chạy 4 lượt kiểm C4 (20:32 tới khoảng 21:15).** Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Kiểm C4: khoảng 21:15 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
@@ -77,8 +78,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - ***Xong 17:01:*** đọc chữ turbo 33,22 so với 31,69 (+1,52 [−3,58; +6,62]); đọc chữ chuẩn 48,55 so với 53,92 (**−5,37 [−10,75; −0,05]**). → Không dùng công thức này; giữ agent học trên `audio_text`, ưu tiên fine-tune ASR (JOURNAL entry 48).
 - [x] **C2.** Khoảng 20:00: đọc lượt (2) B-up. Luật đặt trước: dev_random không giảm quá 1 điểm thì giữ công thức B-up.
   - ***Xong 20:22:*** đọc chữ chuẩn 51,19 so với 53,92 (**−2,72** [−8,08; +2,52]); đọc chữ turbo 29,06 so với 31,69 (−2,64 [−6,58; +1,35]). Giảm quá 1 điểm → **không giữ B-up**. Hỏi lại tăng 49,4 → 69,1 nhưng execute giảm 51,0 → 44,0, vì hỏi thừa ở 22 mẫu cần làm (mốc: 14). Không dò thêm tỉ lệ nhân bản trên dev_random (mục F) (JOURNAL entry 49).
-- [ ] **C3.** Khi `asr_results_*` về (GPU laptop đã rảnh từ 20:19): chấm agent bằng transcript ASR mới trên laptop, so thẳng với 31,69 và 17,14. Khoảng 10 phút cho mỗi model trên mỗi tập dev.
-- [ ] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. Thêm trần thời gian và trần token cho mỗi bước: lượt B-up có mẫu `train_0830` sinh lặp "000…" hai bước liền, mỗi bước tới trần 512 token, mất 23,4 giây. *Chưa bắt đầu.*
+- [ ] **C3.** Khi `asr_results_*` về (GPU laptop rảnh sau khoảng 21:15): chấm agent bằng transcript ASR mới trên laptop, so thẳng với 31,69 và 17,14. Khoảng 10 phút cho mỗi model trên mỗi tập dev.
+- [ ] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. Thêm trần thời gian và trần token cho mỗi bước: lượt B-up có mẫu `train_0830` sinh lặp "000…" hai bước liền, mỗi bước tới trần 512 token, mất 23,4 giây. *Đang làm (20:33): code trên nhánh `time-budget`; đang chạy lại dev_random, dev_lao, chữ turbo và mẫu `train_0830` để chứng minh điểm không đổi. Luật đặt trước: phần thời gian được nhận nếu dev_random giống hệt từng dòng; chốt chặn ID bật mặc định nếu dev_random và dev_lao đều không giảm.*
 - [ ] **C5.** Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
 
 ### C. Mốc giờ (ước tính)

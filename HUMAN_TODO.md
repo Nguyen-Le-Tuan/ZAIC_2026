@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 01:35 ngày 01/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 08:11 ngày 01/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **08:11 ngày 01/11:** **Điểm public lần 2: 35,24** (Anh nộp `lifemate/runs/e2e_public_turboft.jsonl`; B8 xong). Tăng 9,31 so với 25,93, gần đúng mức tăng trên dev gộp (+9,08). Cả hai lần, public cao hơn dev gộp khoảng 2 điểm (25,93 so với 23,99; 35,24 so với 33,07), nên tiếp tục chọn trên dev được (mục F). Việc lớn tiếp theo là agent: ASR giờ chỉ làm mất 11 điểm, agent mất khoảng 56 ngay trên chữ chuẩn.
 > - **01:35 ngày 01/11:** **File nộp public mới đã sẵn sàng (B8: Anh hoặc leader nộp):** `lifemate/runs/e2e_public_turboft.jsonl` (634 dòng, 0 lỗi định dạng, sha256 bắt đầu `f87c8e1fc863`). Whisper-turbo fine-tune và agent `q17b_fit_random`, đúng agent của lần nộp 25,93, nên chỉ ASR thay đổi. Trên laptop: ASR 0,48 giây và cả mẫu 3,0 giây trung bình, chậm nhất 11,7 giây; không mẫu nào quá 25 giây. Trên dev, đổi ASR này tăng điểm gộp 23,99 → 33,07, nên public có thể lên quanh 33–35 (ước lượng thô từ lần 25,93). Ghép adapter trên laptop khớp bản Colab 768/784 câu (khác 24/11.084 từ, sai số fp16 giữa hai GPU). **GPU laptop rảnh từ 01:29.**
 > - **01:05 ngày 01/11:** **C3 xong: fine-tune ASR thêm khoảng 9 điểm.** Điểm gộp 495 dòng (dev_random + dev_lao): Whisper-turbo fine-tune **33,07**, PhoWhisper fine-tune **33,41**, turbo chưa fine-tune 23,99, chữ chuẩn 44,23. dev_random 31,69 → 42,64 (turbo-ft) / 43,04 (Pho-ft); dev_lao 17,14 → 24,55 / 24,85. Hai model fine-tune cách nhau 0,35 điểm [−2,89; +3,61], dưới 1 điểm, nên theo luật đặt trước **chọn Whisper-turbo fine-tune** (0,8B, nhanh hơn, chừa chỗ cho agent 4B). ASR giờ chỉ còn làm mất 11 điểm, so với 20 điểm trước đây (JOURNAL entry 52). **GPU laptop đang làm file nộp public mới bằng ASR này (C5, từ 00:54, khoảng 45 phút).** Anh hoặc leader tự nộp khi file xong.
 > - **00:05 ngày 01/11:** **Kết quả hai Colab đã về** (B2, L3 xong; máy anh trai vẫn chờ). WER lượt cuối trên dev_random: Whisper-turbo 31,2 → **11,2** sau fine-tune; PhoWhisper 25,9 → **9,2**. Không lẫn dev: train chỉ đọc `train`, bỏ toàn bộ 458 mẫu của hai tập dev. **Claude đang chấm agent trên GPU laptop (C3, 5 lượt, 00:02 tới khoảng 01:00)**: luật chọn ASR đã ghi trước khi chạy. Anh và leader: xoá gói dữ liệu và thư mục `zac_out` trên Drive (mục D).
@@ -64,9 +65,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Nếu máy có GPU mạnh và anh trai sẵn lòng chạy thêm một lần: Claude làm gói fine-tune ASR riêng cho máy đó (trên A100 chưa tới 1 giờ).
 - [ ] **B5.** (45–60 phút, trong lúc Colab chạy) Nghe 18 câu Whisper-turbo nghe sai nhiều nhất, cùng leader nếu được. Danh sách id ở mục "Mất điểm ở đâu" của [`docs/E2E_BASELINE_2026-10-31.md`](docs/E2E_BASELINE_2026-10-31.md). Ghi lại tiếng ồn, giọng, tốc độ nói, từ lạ.
 - [ ] **B6.** Review [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) cùng leader rồi merge. Sau đó đổi nhánh đích của #4 sang `main`. Từ đó merge từ dưới lên (#4 → #5 → #6 → #7 → #9), mỗi lần đổi đích PR kế tiếp sang `main` trước khi merge.
-- [ ] **B8. ← MỚI (01:35 ngày 01/11).** (5 phút) **Nộp public** `lifemate/runs/e2e_public_turboft.jsonl`, tự nộp hoặc gửi leader nộp. Claude không nộp.
+- [x] **B8.** (5 phút) **Nộp public** `lifemate/runs/e2e_public_turboft.jsonl`, tự nộp hoặc gửi leader nộp. Claude không nộp.
   - File: 634 dòng, khoảng 195 KB, đã qua `zaic_tools --validate` (0 lỗi). Chỉ khác lần nộp 25,93 ở ASR (Whisper-turbo fine-tune).
-  - Ghi điểm và giờ nộp vào đây: …
+  - ***Xong (Anh báo lúc 08:11 ngày 01/11): 35,24.*** Lần trước 25,93, tức tăng 9,31; dev gộp dự đoán tăng 9,08 (JOURNAL entry 53).
 - [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
 **Leader:**
@@ -93,7 +94,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - ***Xong 01:05 ngày 01/11:*** Điểm gộp 495 dòng (dev_random + dev_lao): Whisper-turbo fine-tune **33,07**, PhoWhisper fine-tune **33,41**, turbo chưa fine-tune 23,99, chữ chuẩn 44,23. So với turbo chưa fine-tune: turbo-ft +9,08 [+5,42; +12,84], Pho-ft +9,42 [+5,73; +13,25]. Pho-ft so với turbo-ft: +0,35 [−2,89; +3,61] (dev_random +0,40, dev_lao +0,30). → **Chọn Whisper-turbo fine-tune.** Chốt chặn ID chặn 1 call (turbo-ft) và 7 call (Pho-ft) trên dev_lao, đều là ID bịa (JOURNAL entry 52).
 - [x] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. Thêm trần thời gian và trần token cho mỗi bước: lượt B-up có mẫu `train_0830` sinh lặp "000…" hai bước liền, mỗi bước tới trần 512 token, mất 23,4 giây. *Đang làm (20:33).*
   - ***Xong 21:08:*** [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9) (xếp chồng lên #7), chờ review. dev_random giống hệt 233/233 dòng (53,92); chữ turbo giống hệt 233/233 (31,69); dev_lao 35,62 so với 35,53 (+0,10 [0,00; +0,29]; 4 call sai bị chặn, tốt 1, kém 0); `train_0830` với ngân sách 15 giây dừng ở 15,01 giây (code cũ: 23,4). Luật đặt trước: nhận phần thời gian, **chốt chặn bật mặc định** (JOURNAL entry 50).
-- [ ] **C5.** *(Phần file nộp public xong 01:35 ngày 01/11: `lifemate/runs/e2e_public_turboft.jsonl`, chờ nộp ở B8. Phần gộp kết quả máy anh trai chờ tới khi có.)* Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
+- [ ] **C5.** *(Phần file nộp public xong 01:35 ngày 01/11: `lifemate/runs/e2e_public_turboft.jsonl`, Anh đã nộp ở B8: 35,24. Phần gộp kết quả máy anh trai chờ tới khi có.)* Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
 
 ### C. Mốc giờ (ước tính)
 
@@ -109,6 +110,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | Khi Colab gửi về | Claude chấm agent với transcript ASR mới (C3), khoảng 10 phút mỗi model trên mỗi tập dev |
 | 00:02–00:53 ngày 01/11 | Claude chạy C3 trên GPU laptop (5 lượt): chọn Whisper-turbo fine-tune |
 | 00:54–01:29 ngày 01/11 | Claude làm file nộp public mới (C5); Anh hoặc leader nộp (B8) |
+| 08:11 ngày 01/11 | Anh báo điểm public lần 2: 35,24 (B8 xong) |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần
@@ -143,12 +145,13 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] Viết script fine-tune ASR (Anh, khoảng 14:40): [PR #7](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/7), hướng dẫn Colab, gói có audio.
 - [x] PR #1 merge vào `main` (Anh, 14:47). PR #2 và #3 được merge vào nhánh nền (leader, 14:47–14:48), nên Claude mở [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) để đưa chúng vào `main`.
 - [x] Leader nộp public: **25,9300** (file `e2e_public_turbo.jsonl`).
+- [x] Anh nộp public lần 2: **35,24** (file `e2e_public_turboft.jsonl`, ASR fine-tune; 08:11 ngày 01/11).
 - [x] Anh gửi gói v3 và lệnh có kiểm GPU cho anh trai (16:12). Fine-tune ASR vẫn chạy trên Colab, không gửi anh trai.
 - [x] Dữ liệu: Anh đã hỏi BTC, được phép nhờ anh trai chạy. Không cần nhắc lại.
 - [x] B-up trên fit_random: **không giữ**, theo luật đặt trước (Claude áp luật lúc 20:22; JOURNAL entry 49). Agent mặc định vẫn là SFT thường.
 - [ ] **Còn mở:**
   - lượt agent học trên chữ PhoWhisper: Kaggle không kịp; laptop đã rảnh từ 20:19, chạy mất khoảng 3 giờ. **Claude khuyến nghị không chạy** (lượt cùng hướng vừa không đáng dùng, JOURNAL entry 48); Anh quyết.
-  - nộp public (L1);
+  - ~~nộp public (L1)~~ xong: 25,93, rồi 35,24 với ASR fine-tune;
   - merge PR #8 (B6);
   - **sau ASR, bước lớn tiếp theo là agent** (JOURNAL entry 51): ASR hoàn hảo chỉ đưa điểm gộp lên khoảng 44, vì agent đọc chữ chuẩn vẫn mất khoảng 56 điểm. Claude đề xuất: kết quả 4B, rồi dữ liệu SFT nhiều vế và điều kiện. **Anh đồng ý (21:21).**
   - có thuê GPU từ 24 GB cho 2 lượt 4B không, nếu máy anh trai không train được (B4). Gói v3 và [`docs/CLOUD_TRAIN_2026-10-31.md`](docs/CLOUD_TRAIN_2026-10-31.md) đã sẵn.
@@ -161,6 +164,7 @@ Không đổi tổng quát hoá lấy điểm public. Cụ thể:
 3. **Public chỉ để kiểm,** không để chỉnh. Mỗi lần nộp phải là một mốc có lý do: bộ máy mới, ASR mới, model mới. Không thử nhiều biến thể để chọn bản có điểm public cao nhất.
 4. **Không train trên public, không pseudo-label public hay private,** không nghe để gán nhãn.
 5. **Mỗi lần nộp ghi lại:** file, model, ASR, điểm dev dự đoán, điểm public. Hôm nay: `e2e_public_turbo.jsonl`, dev dự đoán 17–32 (gộp 23,99), public 25,93.
+   - 01/11: `e2e_public_turboft.jsonl` (Whisper-turbo fine-tune, agent `q17b_fit_random`), dev dự đoán 25–43 (gộp 33,07), public 35,24.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

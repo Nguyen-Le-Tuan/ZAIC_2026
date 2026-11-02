@@ -182,6 +182,13 @@ def test_contributor_tier_refused():
     raise AssertionError("contributor tier accepted")
 
 
+def test_near_duplicate():
+    from lifemate.synth import near_duplicate
+    seen = ["Ừ, tìm giùm em cuốn Nhà Giả Kim rồi đặt giữ luôn nha."]
+    assert near_duplicate("ừ tìm giùm em cuốn nhà giả kim rồi đặt giữ luôn nhé", seen)
+    assert near_duplicate("Thư viện còn sách nào của Tô Hoài không, cho chị coi với", seen) is None
+
+
 def test_solver_agreement():
     from lifemate.synth import solver_agrees
     zt, tools, cat = _env()

@@ -14,7 +14,7 @@ Commands (outputs go to gen/, which is git-ignored; the API key is read from MOD
   python -m lifemate.synth sft   --tag t20 --out sft/synth_t20.jsonl
   python -m lifemate.synth show  --tag t20          # accepted and rejected samples as text, for reading
 Every API call is logged in gen/synth_<tag>_usage.jsonl; a call is refused once the tag reached --max-usd or all
-tags together reached --total-usd (default 10: Anh's limit for all synthetic data, 02/11; more only after asking).
+tags together reached --total-usd (default 30: Anh's limit for all synthetic data, raised from 10 on 02/11; more only after asking).
 
 Checks (check): every gold call is run in the split's zaic_tools simulator on the generated state.
   schema       the call passes zaic_tools' schema check and its tool is installed
@@ -26,6 +26,7 @@ Checks (check): every gold call is run in the split's zaic_tools simulator on th
   bad_ask      an ask_missing sample does not end with sys.ask_missing_info naming required parameters of an
                installed tool, or calls the tool it asks about (writes for other parts of the request are fine,
                as in gold)
+  duplicate    the request nearly repeats an accepted request of the same app (difflib ratio >= 0.8)
   solver       an independent LLM call, given the request, the context and the state (as the results the tools would
                return), predicts the calls; the sample is kept only if the predicted calls reach the same final state
                and make the same write/ask calls by name
@@ -34,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import difflib
 import inspect
 import json
 import os
@@ -80,10 +82,10 @@ def total_spent(gen_dir: Path = GEN_DIR) -> float:
 
 class Client:
     """Chat Completions over urllib (no extra package). Every call is appended to the tag's usage ledger. A call is
-    refused once the tag reached max_usd, or once all tags together reached total_usd (Anh's limit: about 10 USD for
+    refused once the tag reached max_usd, or once all tags together reached total_usd (Anh's limit: 30 USD for
     all synthetic data, more only after asking him)."""
 
-    def __init__(self, model: str, base_url: str, ledger: Path, max_usd: float, total_usd: float = 10.0,
+    def __init__(self, model: str, base_url: str, ledger: Path, max_usd: float, total_usd: float = 30.0,
                  timeout: float = 300):
         if "contributor" in model:
             raise SystemExit("contributor-tier models may train on prompts; prompts here carry competition files")
@@ -222,7 +224,7 @@ Hãy viết {n} mẫu MỚI, khác nhau, đều dùng app `{app}` ({name_vi}: {d
 
 Yêu cầu với từng mẫu:
 1. `state_json`: chuỗi JSON của trạng thái ban đầu, dạng {{"<app id>": {{...}}}}, viết đúng cấu trúc mà code bộ giả lập bên dưới đọc (tên collection, tên trường, kiểu dữ liệu). Có 3-8 bản ghi hợp lý, có cả bản ghi gây nhiễu. ID theo kiểu ngắn như code dùng (ví dụ book_01). Nếu đáp án gọi tool của app khác (ví dụ contacts), thêm state cho app đó và app đó phải có trong context.
-2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp", "giùm", "cho", "với", hoặc không dùng), có câu dài nhiều ý, có câu tự sửa giữa chừng ("à không..."), có câu điều kiện ("nếu ... thì ..."), có giọng miền. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
+2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp", "giùm", "cho", "với", hoặc không dùng), khoảng 2/5 số câu có từ hai việc trở lên, có giọng miền; câu tự sửa giữa chừng ("à không...") và câu điều kiện ("nếu ... thì ...") mỗi loại chỉ khoảng 1/10 số câu như dữ liệu thật. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
 3. `calls`: danh sách lời gọi tool đúng theo thứ tự; mỗi lời gọi có `name` và `arguments_json` (chuỗi JSON của tham số). ID phải lấy từ kết quả của lời gọi đọc trước đó (trợ lý không thấy state). Thời gian đầy đủ ISO-8601 có giây và +07:00, tính từ thời điểm của context.
 4. Chạy thử trong đầu từng lời gọi trên state bằng code bộ giả lập: không được có lời gọi trả về done=false hoặc lỗi.
 5. `scenario`: một câu mô tả ngắn mẫu này kiểm tra điều gì.
@@ -409,6 +411,19 @@ def ask_key(calls: list[dict]):
     return (a[-1]["arguments"].get("tool_name"), sorted(a[-1]["arguments"].get("params") or [])) if a else None
 
 
+def _norm_text(t: str) -> str:
+    return " ".join(re.sub(r"[^\w\s]", " ", t.lower()).split())
+
+
+def near_duplicate(text: str, seen: list[str], threshold: float = 0.8) -> str | None:
+    """An earlier accepted request (same app) that this one nearly repeats."""
+    t = _norm_text(text)
+    for s in seen:
+        if difflib.SequenceMatcher(None, t, _norm_text(s)).ratio() >= threshold:
+            return s
+    return None
+
+
 def solver_agrees(zt, g: dict, solved: list[dict], tools: dict, catalog: dict) -> str | None:
     """None when the independent calls reach the same final state with the same write/ask calls."""
     _, sim_gold = simulate(zt, g["context"], g["state"], g["calls"], catalog)
@@ -432,10 +447,12 @@ def to_train_sample(g: dict, results: list) -> dict:
 
 # ---------------------------------------------------------------- commands
 
-def _paths(tag: str) -> dict:
-    return {"raw": GEN_DIR / f"synth_{tag}_raw.jsonl", "ok": GEN_DIR / f"synth_{tag}.jsonl",
-            "rej": GEN_DIR / f"synth_{tag}_rejected.jsonl", "usage": GEN_DIR / f"synth_{tag}_usage.jsonl",
-            "report": GEN_DIR / f"synth_{tag}.report.json"}
+def _paths(tag: str, no_solver: bool = False) -> dict:
+    """A check without the solver writes its own files, so it never replaces a full check's result."""
+    out = f"synth_{tag}_nosolver" if no_solver else f"synth_{tag}"
+    return {"raw": GEN_DIR / f"synth_{tag}_raw.jsonl", "ok": GEN_DIR / f"{out}.jsonl",
+            "rej": GEN_DIR / f"{out}_rejected.jsonl", "usage": GEN_DIR / f"synth_{tag}_usage.jsonl",
+            "report": GEN_DIR / f"{out}.report.json", "solver": GEN_DIR / f"synth_{tag}_solver.jsonl"}
 
 
 def cmd_gen(a):
@@ -489,7 +506,7 @@ def cmd_gen(a):
 
 
 def cmd_check(a):
-    P = _paths(a.tag)
+    P = _paths(a.tag, a.no_solver)
     rng = random.Random(a.seed + 1)
     zt = zaic_tools(a.split, a.root)
     catalog = load_catalog(a.split, a.root)
@@ -498,6 +515,8 @@ def cmd_check(a):
     examples = "\n".join(example_text(s) for s in pick_examples(fit_samples(a.root, a.fit, drop), rng))
     client = None if a.no_solver else Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
     ok, rej, reasons = [], [], Counter()
+    cache = {x["id"]: x["calls"] for x in load_jsonl(P["solver"])} if P["solver"].exists() else {}
+    seen_by_app: dict[str, list[str]] = {}
     for r in load_jsonl(P["raw"]):
         g = {**r}
         try:
@@ -509,7 +528,11 @@ def cmd_check(a):
             reason, results = f"parse: {e}", []
         else:
             reason, results = check_sample(zt, g, tools, catalog)
-        if reason is None and client is not None:
+        if reason is None:
+            dup = near_duplicate(g["request"], seen_by_app.get(g["app"], []))
+            if dup:
+                reason = f"duplicate: {dup[:60]}"
+        if reason is None and (client is not None or g["id"] in cache):
             names = [t for v in g["context"]["installed_apps"].values() for t in v["tools"]] + [ASK]
             p = g["context"].get("user_profile", {})
             prompt = SOLVE_TASK.format(
@@ -517,8 +540,14 @@ def cmd_check(a):
                 profile=f"{p.get('name')}, {p.get('city')}, nhà {p.get('home_address')}, chỗ làm {p.get('work_address')}",
                 tools=tools_json(names, tools), state=json.dumps(g["state"], ensure_ascii=False), request=g["request"])
             try:
-                solved = parse_calls(client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls", a.solver_effort,
-                                                 f"solve {g['id']}")["calls"])
+                if g["id"] in cache:  # paid for already: reuse
+                    raw_calls = cache[g["id"]]
+                else:
+                    raw_calls = client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls", a.solver_effort,
+                                            f"solve {g['id']}")["calls"]
+                    with open(P["solver"], "a", encoding="utf-8") as f:
+                        f.write(json.dumps({"id": g["id"], "calls": raw_calls}, ensure_ascii=False) + "\n")
+                solved = parse_calls(raw_calls)
                 g["solver_calls"] = solved
                 reason = solver_agrees(zt, g, solved, tools, catalog)
             except BudgetExceeded as e:
@@ -529,6 +558,8 @@ def cmd_check(a):
         reasons[(reason or "ok").split(":")[0]] += 1
         row = {**g, "results": results, "reason": reason}
         (rej if reason else ok).append(row)
+        if reason is None:
+            seen_by_app.setdefault(g["app"], []).append(g["request"])
     write_jsonl(P["ok"], [to_train_sample(r, r["results"]) | {"_scenario": r.get("scenario"), "_category": r.get("category")}
                          for r in ok])
     write_jsonl(P["rej"], rej)
@@ -592,7 +623,7 @@ def main():
             p.add_argument("--base-url", default=DEFAULT_BASE_URL)
             p.add_argument("--effort", default="medium", choices=["minimal", "low", "medium", "high", "xhigh"])
             p.add_argument("--max-usd", type=float, help="hard cap on the tag's usage ledger (needed for any API call)")
-            p.add_argument("--total-usd", type=float, default=10.0,
+            p.add_argument("--total-usd", type=float, default=30.0,
                            help="hard cap on all tags together (Anh's limit; raise only after asking him)")
 
     p = sub.add_parser("gen")

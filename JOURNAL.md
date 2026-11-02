@@ -1410,6 +1410,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Pilot đang chạy** (unit `lifemate-synth-w1`, từ 13:38, `~/zac-synth/run_synth_lao_w1.sh`): 6 app của dev_lao × 64 mẫu thô, trần lượt 12 USD, ước khoảng 9 USD, xong khoảng 14:55.
     - **Script train + chấm pilot** (`~/zac-synth/run_q4b_lao_synth.sh`, bật bằng `start_q4b_lao_synth.sh`, unit `lifemate-q4b-synth`): đúng công thức `q4b4_fit_lao`, dữ liệu `sft/fit_lao.jsonl` + dòng SFT của mẫu đạt (train.py tự xáo, seed 0). Chấm dev_lao chữ ASR fine-tune và chữ chuẩn, so với `sft_q4b4_fit_lao` (39,20 / 53,40), kèm lát cắt app bị giấu (183 mẫu) và app đã thấy (79). Luật đặt trước: giữ nếu chữ ASR tăng ít nhất 2,0 điểm. Chờ GPU rảnh sau B11.
     - **Dự tính chi:** pilot khoảng 9 USD; 11 app public cùng cỡ khoảng 16,5 USD; tổng khoảng 26,5 USD, dưới trần 30. **Đã chi tới 13:40: 0,9 USD.**
+    - **13:47:** Anh chọn "Tự bật khi xong". Claude cài lệnh chờ: khi `lifemate-public-q4b` và `lifemate-synth-w1` đều xong, và có ít nhất 100 mẫu đạt, chạy `start_q4b_lao_synth.sh`. Giá thật của `muse-wonder-1.0` trong pilot khoảng 0,095 USD mỗi lần sinh (19 lần đầu, 1,80 USD), cao hơn ước tính 0,078. Pilot vì vậy khoảng 10–11 USD; phần 11 app public phải giảm số mẫu mỗi app, hoặc hỏi Anh nếu tổng sẽ vượt 30 USD.
 
 ---
 

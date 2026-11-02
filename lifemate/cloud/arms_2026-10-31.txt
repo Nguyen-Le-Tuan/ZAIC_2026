@@ -1,0 +1,47 @@
+# Cloud arms for 31/10/2026 (docs/CLOUD_TRAIN_2026-10-31.md). Run: bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-10-31.txt
+# Arms are spread round-robin over the GPUs (line 1 -> GPU 0, line 2 -> GPU 1, ...); each GPU runs its arms in order.
+
+# 1. Parity: re-evaluate the local 1.7B adapters on this machine. Identical rows to the local runs (53.92 / 35.53)
+#    mean cloud and local numbers compare directly; otherwise compare cloud arms only with these two runs.
+eval  TAG=q17b_fit_random_cloud ADAPTER=ckpt/q17b_fit_random/final DEV=dev_random REF=runs/sft_q17b_fit_random
+eval  TAG=q17b_fit_lao_cloud    ADAPTER=ckpt/q17b_fit_lao/final    DEV=dev_lao    REF=runs/sft_q17b_fit_lao
+
+# 2. Qwen3-4B-Instruct-2507 with the exact 1.7B recipe (LoRA r32, lr 2e-4, 1 epoch, seed 0, same SFT files):
+#    the only change is the base model, so the paired difference is the effect of model size.
+#    Also rolled out on Whisper-turbo text of dev (ASR_DEV -> runs/sft_<TAG>_asr), compared with the 1.7B on the same
+#    text (31.69 / 17.14, docs/E2E_BASELINE_2026-10-31.md).
+train TAG=q4b_fit_random MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random REF=runs/sft_q17b_fit_random ASR_DEV=asr/train_dev_random_turbo.jsonl REF_ASR=runs/sft_q17b_fit_random_asrturbo
+train TAG=q4b_fit_lao    MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao    DEV=dev_lao    REF=runs/sft_q17b_fit_lao    ASR_DEV=asr/train_dev_lao_turbo.jsonl    REF_ASR=runs/sft_q17b_fit_lao_asrturbo
+
+# Optional arms. Anh chose the recommended set on 31/10 around 10:00 (docs/PLAN_2026-10-31.md section 4): the three
+# lines below are on. Keep their order: lines go round-robin over the GPUs after the four above, and in this order the
+# 4B ASR-text arm (line 7) lands on the GPU of q4b_fit_random (line 3) with 2 or 4 GPUs, so its REF runs exist when it
+# is compared. With 5+ GPUs it may start earlier; a comparison whose REF/REF_ASR run is not finished yet is reported
+# "FAILED" (only that comparison); rerun lifemate.compare by hand afterwards.
+
+# 3. Agent trained on ASR text (docs/E2E_BASELINE_2026-10-31.md: reading turbo text costs -22.2 on dev_random,
+#    -18.4 on dev_lao). The q17b_fit_random recipe; only the user turns of the SFT rows come from off-the-shelf ASR
+#    of the train wavs (asr/train_all_<asr>.jsonl, in the bundle) instead of audio_text. Scored on oracle text
+#    (runs/sft_<TAG> vs REF, 53.92) and on ASR text (runs/sft_<TAG>_asr vs REF_ASR, the audio_text-trained 1.7B on
+#    the same ASR text: 31.69 turbo, 27.90 PhoWhisper).
+train TAG=q17b_random_asrtrain FIT=fit_random DEV=dev_random ASR_FIT=asr/train_all_turbo.jsonl ASR_DEV=asr/train_dev_random_turbo.jsonl REF=runs/sft_q17b_fit_random REF_ASR=runs/sft_q17b_fit_random_asrturbo
+
+# 5. Rebalance towards asking on seen apps too: the B-up recipe on fit_random (copies of the 127 real B/C asks,
+#    263 rows from gen/up_real_asks_random.jsonl, built by scripts/make_upsample.py --ratio 2.0714; in the bundle).
+#    260 steps = the step count of q17b_fit_random. Phase 2 on dev_lao: B-up 36.94 vs B0 35.53, ask 30.0 vs 7.5,
+#    but over-asks 15 -> 30; this arm shows whether the trade is worth it on seen apps. Keep it if dev_random (oracle
+#    text, vs 53.92) does not drop by more than 1 point (the phase-2 rule); the turbo-text score is extra information.
+train TAG=q17b_random_up FIT=fit_random DEV=dev_random EXTRA_SAMPLES=gen/up_real_asks_random.jsonl TRAIN_ARGS=--max-steps,260 ASR_DEV=asr/train_dev_random_turbo.jsonl REF=runs/sft_q17b_fit_random REF_ASR=runs/sft_q17b_fit_random_asrturbo
+
+# 3b. Qwen3-4B trained on turbo text: only when the arms get 4 GPUs (MIN_GPUS=4); with fewer it would add a whole 4B
+#     arm to the longest GPU queue. Compared with the 4B trained on audio_text (q4b_fit_random) on both texts.
+train TAG=q4b_random_asrtrain MIN_GPUS=4 MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random ASR_FIT=asr/train_all_turbo.jsonl ASR_DEV=asr/train_dev_random_turbo.jsonl REF=runs/sft_q4b_fit_random REF_ASR=runs/sft_q4b_fit_random_asr
+
+# Still off (not in the recommended set). Uncomment only after a new decision; append below the lines above so the
+# placement above does not change.
+# - 1.7B trained on PhoWhisper text: does PhoWhisper win once the agent is used to its style (no capitals, no digits)?
+# train TAG=q17b_random_asrtrain_pho FIT=fit_random DEV=dev_random ASR_FIT=asr/train_all_pho.jsonl ASR_DEV=asr/train_dev_random_pho.jsonl REF=runs/sft_q17b_fit_random REF_ASR=runs/sft_q17b_fit_random_asrpho
+# - 4B with the B-up data (after q17b_random_up passes). 254 / 260 steps = the step counts of B0 / q17b_fit_random.
+#   Experiment D is over (docs/D_PHASE2_2026-10-31.md); the D arm (q4b_lao_d3) is not needed any more.
+# train TAG=q4b_lao_up MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao EXTRA_SAMPLES=gen/up_real_asks_232.jsonl TRAIN_ARGS=--max-steps,254 ASR_DEV=asr/train_dev_lao_turbo.jsonl REF=runs/sft_q4b_fit_lao REF_ASR=runs/sft_q4b_fit_lao_asr
+# train TAG=q4b_random_up MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random EXTRA_SAMPLES=gen/up_real_asks_random.jsonl TRAIN_ARGS=--max-steps,260 ASR_DEV=asr/train_dev_random_turbo.jsonl REF=runs/sft_q4b_fit_random REF_ASR=runs/sft_q4b_fit_random_asr

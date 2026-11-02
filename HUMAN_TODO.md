@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 14:54 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:47 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **15:47 ngày 02/11:** **Điểm public lần 3: 45,39** (Anh nộp `e2e_public_q4b.jsonl`, agent 4B; B11 xong). Tăng 10,15 so với 35,24; dev gộp dự đoán tăng 13,11, khoảng tin cậy +8,94 đến +17,32, nên vẫn khớp. Lần này public thấp hơn dev gộp 0,78 điểm (hai lần trước cao hơn khoảng 2 điểm); một lần như vậy vẫn là nhiễu. Train pilot vẫn đang chạy, xong khoảng 23:00 (JOURNAL entry 62).
 > - **14:54 ngày 02/11:** **File nộp public 4B xong (B11): Anh nộp được rồi.** `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl`: 634 dòng, kiểm định dạng đạt (0 lỗi), sha256 `2fc287ffa729…`. Trên laptop mỗi mẫu trung bình 9,1 giây, p95 17,9 giây; 2 mẫu quá 30 giây vì chạy hết 8 bước, nên bản Docker phải đặt hạn dưới 30 giây. **Pilot sinh xong: 280/384 mẫu đạt, 11,55 USD.** Giọng văn gần câu thật ("giùm" 10% so với 12%, dài 20,6 so với 22,5 từ). **Tổng đã chi: 12,57 / 30 USD.** **Train pilot tự bật lúc 14:52**, xong khoảng 22:30–23:00; cắm sạc, không gập máy. Luật: giữ nếu dev_lao chữ ASR tăng ít nhất 2,0 điểm so với 39,20 (JOURNAL entry 61).
 > - **13:48 ngày 02/11:** **Anh chọn "Tự bật khi xong":** Claude cài lệnh chờ. Khi file nộp public (B11) và pilot sinh đều xong, train pilot tự bật (nếu có ít nhất 100 mẫu đạt), khoảng 7,5 giờ, tức xong khoảng 22:30–23:00 nếu bật lúc 15:00. Dừng giữa chừng: `systemctl --user stop lifemate-q4b-synth`. Giá thật của `muse-wonder-1.0` khoảng 0,095 USD mỗi lần sinh (ước 0,078), nên pilot khoảng 10–11 USD; phần 11 app public sẽ cần ít mẫu hơn mỗi app, hoặc hỏi Anh nếu vượt 30 USD.
 > - **13:40 ngày 02/11:** **Anh nâng trần chi tiêu lên 30 USD** "để thoải mái và tăng chất lượng". **Anh đang chạy file nộp public (B11) từ 13:10**, xong khoảng 14:45–15:00; GPU bận tới lúc đó. Claude thử model mạnh hơn `muse-wonder-1.0` trên 8 mẫu: câu và kịch bản phong phú hơn (có câu nhiều việc, làm phần đủ thông tin rồi mới hỏi phần thiếu), giá gấp 2,3 lần; 8/8 đạt. → **Pilot sinh bằng `muse-wonder-1.0`, đang chạy** (6 app × 64 mẫu, khoảng 9 USD, xong khoảng 14:55). Script train + chấm pilot đã sẵn: `bash ~/zac-synth/start_q4b_lao_synth.sh` (khoảng 7,5 giờ GPU). Dự tính: pilot khoảng 9 USD + 11 app public khoảng 16,5 USD, tổng khoảng 26,5 USD. **Tổng đã chi: 0,9 USD** (JOURNAL entry 60).
@@ -90,7 +91,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Cần khoảng 7,5 giờ GPU (train 6,2 giờ, chấm 1,3 giờ), chia nhiều buổi được: lưu mỗi 10 bước (khoảng 12 phút).
   - ***Xong (20:47, Anh bấm "Chạy tiếp 4B"):*** lượt chạy lại từ đầu, đang train (C6).
   - Dừng bất cứ lúc nào: `systemctl --user stop lifemate-q4b-lao`. Lệnh chờ bước đang chạy xong rồi lưu, mất 1–3 phút; đợi xong mới gập máy. Chạy lại `bash ~/zac-c3/start_q4b.sh` là tiếp từ chỗ dừng.
-- [ ] **B11.** *(12:10 ngày 02/11, Anh chọn tự chạy sau. **14:42: chạy xong, kiểm định dạng đạt; còn bước nộp.**)* **Chạy file nộp public bằng 4B trên laptop, rồi nộp.** Agent 4B `q4b4_fit_random` nạp 4-bit, dùng lại chữ Whisper-turbo fine-tune của lần nộp 35,24, nên chỉ agent thay đổi. Khoảng 1,5–2 giờ GPU; cắm sạc, không gập máy trong lúc chạy. Anh hoặc leader tự nộp; Claude không nộp. Dev gộp tăng 33,07 → 46,17; hai lần trước public cao hơn dev gộp khoảng 2 điểm, nhưng đó chỉ là ước lượng thô.
+- [x] **B11.** *(12:10 ngày 02/11, Anh chọn tự chạy sau. 14:42: chạy xong, kiểm định dạng đạt. ***Xong (15:47): Anh nộp, được 45,39.***)* **Chạy file nộp public bằng 4B trên laptop, rồi nộp.** Agent 4B `q4b4_fit_random` nạp 4-bit, dùng lại chữ Whisper-turbo fine-tune của lần nộp 35,24, nên chỉ agent thay đổi. Khoảng 1,5–2 giờ GPU; cắm sạc, không gập máy trong lúc chạy. Anh hoặc leader tự nộp; Claude không nộp. Dev gộp tăng 33,07 → 46,17; hai lần trước public cao hơn dev gộp khoảng 2 điểm, nhưng đó chỉ là ước lượng thô.
   - Chạy: `bash ~/zac-c3/start_public_q4b.sh`. Lệnh chạy nền, đóng terminal được; cắm sạc, không gập máy tới khi xong.
   - Xem tiến độ: `tail -f ~/zac-c3/lifemate/runs/e2e_public_q4b_2026-11-02.log`. Xong khi log có dòng `done: 634 lines, ok=True`.
   - Dừng: `systemctl --user stop lifemate-public-q4b`. Chạy lại thì làm lại từ mẫu đầu.
@@ -174,6 +175,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 20:47 ngày 01/11 – 03:28 ngày 02/11 | Laptop train và chấm 4B 4-bit (C6): 4B thắng rõ trên dev_lao |
 | 03:30–10:13 ngày 02/11 | Laptop train và chấm 4B trên fit_random / dev_random (C7): chốt 4B |
 | 13:10–14:51 ngày 02/11 | Laptop làm file nộp public bằng 4B (B11); Anh hoặc leader nộp |
+| 15:47 ngày 02/11 | Anh báo điểm public lần 3: 45,39 (B11 xong) |
 | 13:38–14:45 ngày 02/11 | Pilot sinh 280 mẫu đạt bằng API Meta (11,55 USD) |
 | 14:52 – khoảng 23:00 ngày 02/11 | Laptop train 4B pilot trên fit_lao + mẫu sinh, rồi chấm dev_lao |
 | Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
@@ -212,6 +214,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] PR #1 merge vào `main` (Anh, 14:47). PR #2 và #3 được merge vào nhánh nền (leader, 14:47–14:48), nên Claude mở [PR #8](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/8) để đưa chúng vào `main`.
 - [x] Leader nộp public: **25,9300** (file `e2e_public_turbo.jsonl`).
 - [x] Anh nộp public lần 2: **35,24** (file `e2e_public_turboft.jsonl`, ASR fine-tune; 08:11 ngày 01/11).
+- [x] Anh nộp public lần 3: **45,39** (file `e2e_public_q4b.jsonl`, agent 4B 4-bit; 15:47 ngày 02/11).
 - [x] Anh gửi gói v3 và lệnh có kiểm GPU cho anh trai (16:12). Fine-tune ASR vẫn chạy trên Colab, không gửi anh trai.
 - [x] Dữ liệu: Anh đã hỏi BTC, được phép nhờ anh trai chạy. Không cần nhắc lại.
 - [x] B-up trên fit_random: **không giữ**, theo luật đặt trước (Claude áp luật lúc 20:22; JOURNAL entry 49). Agent mặc định vẫn là SFT thường.
@@ -231,6 +234,7 @@ Không đổi tổng quát hoá lấy điểm public. Cụ thể:
 4. **Không train trên public, không pseudo-label public hay private,** không nghe để gán nhãn.
 5. **Mỗi lần nộp ghi lại:** file, model, ASR, điểm dev dự đoán, điểm public. Hôm nay: `e2e_public_turbo.jsonl`, dev dự đoán 17–32 (gộp 23,99), public 25,93.
    - 01/11: `e2e_public_turboft.jsonl` (Whisper-turbo fine-tune, agent `q17b_fit_random`), dev dự đoán 25–43 (gộp 33,07), public 35,24.
+   - 02/11: `e2e_public_q4b.jsonl` (Whisper-turbo fine-tune, agent `q4b4_fit_random` nạp 4-bit), dev 39–54 (gộp 46,17), public 45,39.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-02 12:35: viết xong bộ sinh dữ liệu (PR #11), bài thử 20 mẫu chờ key Meta (entry 60). Trước đó 12:20: credit Claude chưa dùng được, pilot có thể dùng model chữ của Meta (entry 59). Trước đó 12:15: Anh tự chạy file nộp public bằng 4B; đánh giá ý tưởng sinh dữ liệu bằng Claude API, đề xuất pilot (entry 59). Trước đó 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-02 13:12: bài thử 20 mẫu đang chạy; trần 10 USD; đánh giá VieNeu (entry 60). Trước đó 12:35: viết xong bộ sinh dữ liệu (PR #11), bài thử 20 mẫu chờ key Meta (entry 60). Trước đó 12:20: credit Claude chưa dùng được, pilot có thể dùng model chữ của Meta (entry 59). Trước đó 12:15: Anh tự chạy file nộp public bằng 4B; đánh giá ý tưởng sinh dữ liệu bằng Claude API, đề xuất pilot (entry 59). Trước đó 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1365,6 +1365,19 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Bài thử 20 mẫu** (`~/zac-synth/run_synth_t20.sh`): library, loyalty, medication, video_meeting, home_security × 4 mẫu, trần 3 USD; ước tốn dưới 1 USD. robot_vacuum để dành cho pilot vì tool của nó không có tham số bắt buộc, không có mẫu hỏi lại.
     - **Luật đặt trước để sang pilot:** ít nhất 8/20 mẫu qua mọi bước kiểm, và Anh thấy ít nhất 4/5 câu được nhận là tự nhiên. Pilot: 300–600 mẫu, train 4B trên fit_lao + mẫu sinh, giữ nếu dev_lao chữ ASR fine-tune tăng ít nhất 2,0 điểm so với 39,20. Không đạt thì sửa prompt một lần (hoặc dùng `muse-wonder-1.0`) và thử lại; vẫn không đạt thì dừng.
     - **Chờ:** key Meta trong `~/.zac_meta_env` (HUMAN_TODO B13). Claude cài lệnh chờ: file có là bài thử tự chạy.
+    - **13:10:** Anh lưu key; bài thử tự chạy. Anh đặt **trần chi tiêu: tổng dưới khoảng 10 USD cho việc sinh dữ liệu bằng API, vượt mức phải hỏi Anh.**
+    - **Anh hỏi: dùng VieNeu (local) để sinh tiếng Việt train thêm, hay tập trung vào Meta / Anthropic?**
+      - VieNeu là model TTS tiếng Việt chạy trên máy (có nhân bản giọng, bản v3 Turbo 48 kHz, gói `vieneu` trên PyPI). Nó đọc chữ thành audio; không tự viết câu yêu cầu và đáp án. Nên nó **không thay được** bước sinh bằng Meta, mà dùng **sau** bước đó: đọc các câu đã sinh thành audio để train ASR.
+      - Số đo trên dev_lao (chữ Whisper-turbo fine-tune, cùng các lượt ở entry 57):
+
+        | Mẫu dev_lao | n | 4B chữ chuẩn | 4B chữ ASR | ASR làm mất | 1.7B mất |
+        |---|---:|---:|---:|---:|---:|
+        | Dùng app bị giấu | 183 | 51,9 | 34,8 | **17,1** | 13,8 |
+        | Chỉ dùng app đã thấy | 79 | 56,9 | 49,3 | 7,6 | 4,7 |
+
+        WER lượt cuối: 15,1% ở mẫu dùng app bị giấu, 12,6% ở mẫu còn lại. ASR sai nhiều hơn một chút, nhưng agent mất điểm nhiều hơn hẳn khi gặp app lạ và chữ sai cùng lúc.
+      - **Kết luận:** làm Meta trước, vì agent mất khoảng 48 điểm ngay trên chữ chuẩn ở app chưa thấy. VieNeu đáng thử sau, dùng chính các câu đã sinh: trộn một phần audio TTS với audio thật để fine-tune lại ASR, đo WER và điểm agent trên dev_lao.
+      - Trước khi dùng VieNeu phải kiểm licence: nguồn tìm được không khớp nhau (một bản sao ghi Apache-2.0, vài repo dùng checkpoint 1000h/140h ghi CC-BY-NC-4.0). Luật thi đòi licence cho phép. Ngoài ra audio TTS sạch và ít giọng hơn audio thật, nên chỉ nên là phần nhỏ.
 
 ---
 

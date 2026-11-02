@@ -13,13 +13,16 @@ Commands (outputs go to gen/, which is git-ignored; the API key is read from MOD
   python -m lifemate.synth check --tag t20          # simulator checks + an independent re-derivation of the calls
   python -m lifemate.synth sft   --tag t20 --out sft/synth_t20.jsonl
   python -m lifemate.synth show  --tag t20          # accepted and rejected samples as text, for reading
+Every API call is logged in gen/synth_<tag>_usage.jsonl; a call is refused once the tag reached --max-usd or all
+tags together reached --total-usd (default 10: Anh's limit for all synthetic data, 02/11; more only after asking).
 
 Checks (check): every gold call is run in the split's zaic_tools simulator on the generated state.
   schema       the call passes zaic_tools' schema check and its tool is installed
   noop         a call returned ok=false or done=false (unknown ID, not enough balance...)
   invented_id  an x-ref argument (an ID) that no earlier result returned
   id_in_text   the request says an ID out loud (users never do)
-  no_write     an execute sample changes nothing
+  no_write     an execute sample changes nothing (read-only questions are the `lookup` category)
+  bad_lookup   a lookup sample writes or asks
   bad_ask      an ask_missing sample does not end with sys.ask_missing_info naming required parameters of an
                installed tool, or calls the tool it asks about (writes for other parts of the request are fine,
                as in gold)
@@ -66,30 +69,42 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
-class Client:
-    """Chat Completions over urllib (no extra package). Every call is appended to a usage ledger; a call is refused
-    when the ledger already reached max_usd."""
+def ledger_usd(path: Path) -> float:
+    return sum(r["usd"] for r in load_jsonl(path)) if path.exists() else 0.0
 
-    def __init__(self, model: str, base_url: str, ledger: Path, max_usd: float, timeout: float = 300):
+
+def total_spent(gen_dir: Path = GEN_DIR) -> float:
+    """Every tag's ledger together: what the API has cost so far, all runs included."""
+    return sum(ledger_usd(p) for p in sorted(gen_dir.glob("synth_*_usage.jsonl")))
+
+
+class Client:
+    """Chat Completions over urllib (no extra package). Every call is appended to the tag's usage ledger. A call is
+    refused once the tag reached max_usd, or once all tags together reached total_usd (Anh's limit: about 10 USD for
+    all synthetic data, more only after asking him)."""
+
+    def __init__(self, model: str, base_url: str, ledger: Path, max_usd: float, total_usd: float = 10.0,
+                 timeout: float = 300):
         if "contributor" in model:
             raise SystemExit("contributor-tier models may train on prompts; prompts here carry competition files")
         key = os.environ.get("MODEL_API_KEY") or os.environ.get("META_API_KEY")
         if not key:
             raise SystemExit("no API key: put `export META_API_KEY=...` in ~/.zac_meta_env and `source` it")
         self.key, self.model, self.url = key, model, base_url.rstrip("/") + "/chat/completions"
-        self.ledger, self.max_usd, self.timeout = ledger, max_usd, timeout
+        self.ledger, self.max_usd, self.total_usd, self.timeout = ledger, max_usd, total_usd, timeout
         self.price = PRICES.get(model)
         if self.price is None:
             raise SystemExit(f"no price for {model!r}; add it to PRICES first (the budget cap needs it)")
 
     def spent(self) -> float:
-        if not self.ledger.exists():
-            return 0.0
-        return sum(r["usd"] for r in load_jsonl(self.ledger))
+        return ledger_usd(self.ledger)
 
     def chat(self, messages: list[dict], schema: dict, name: str, effort: str = "medium", purpose: str = "") -> dict:
         if self.spent() >= self.max_usd:
-            raise BudgetExceeded(f"spent {self.spent():.3f} USD >= cap {self.max_usd}")
+            raise BudgetExceeded(f"tag spent {self.spent():.3f} USD >= cap {self.max_usd}")
+        total = total_spent(self.ledger.parent)
+        if total >= self.total_usd:
+            raise BudgetExceeded(f"all tags spent {total:.3f} USD >= total cap {self.total_usd}")
         body = {"model": self.model, "messages": messages, "reasoning_effort": effort,
                 "response_format": {"type": "json_schema", "json_schema": {"name": name, "schema": schema, "strict": True}}}
         req = urllib.request.Request(self.url, json.dumps(body).encode(), {
@@ -189,7 +204,7 @@ GEN_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["sam
                                "required": ["context_index", "category", "scenario", "state_json", "request", "calls"],
                                "properties": {
                                    "context_index": {"type": "integer"},
-                                   "category": {"type": "string", "enum": ["execute", "ask_missing"]},
+                                   "category": {"type": "string", "enum": ["execute", "lookup", "ask_missing"]},
                                    "scenario": {"type": "string"},
                                    "state_json": {"type": "string"},
                                    "request": {"type": "string"},
@@ -200,13 +215,14 @@ SOLVE_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["c
 GEN_TASK = """Bạn tạo dữ liệu huấn luyện cho một trợ lý giọng nói tiếng Việt. Trợ lý nhận câu nói của người dùng và gọi tool của các app đã cài trên điện thoại. Điểm được chấm bằng cách so các lời gọi tool và trạng thái cuối của app với đáp án, nên đáp án phải đúng tuyệt đối.
 
 Hãy viết {n} mẫu MỚI, khác nhau, đều dùng app `{app}` ({name_vi}: {desc}). Mỗi mẫu dùng đúng context có số thứ tự `context_index` tương ứng trong danh sách context bên dưới (mẫu thứ i dùng context i).
-- {n_ask} mẫu loại `ask_missing`, còn lại loại `execute`.
+- {n_ask} mẫu loại `ask_missing`, {n_lookup} mẫu loại `lookup`, còn lại loại `execute`.
 - `execute`: người dùng nói đủ thông tin; đáp án là chuỗi lời gọi tool làm xong việc, thường đọc trước (tìm/liệt kê để lấy ID) rồi mới ghi.
+- `lookup`: người dùng chỉ hỏi thông tin (xem, kiểm tra, còn bao nhiêu...); đáp án chỉ gồm lời gọi đọc, không ghi gì.
 - `ask_missing`: người dùng thiếu một tham số bắt buộc không suy ra được (hoặc có nhiều đối tượng khớp mà không biết chọn cái nào); đáp án có thể đọc trước, rồi kết thúc bằng sys.ask_missing_info với tool_name và params còn thiếu (đúng tên trong schema). Không gọi chính tool đang thiếu tham số. Nếu câu có nhiều việc, làm xong các việc đủ thông tin trước rồi mới hỏi phần thiếu.
 
 Yêu cầu với từng mẫu:
 1. `state_json`: chuỗi JSON của trạng thái ban đầu, dạng {{"<app id>": {{...}}}}, viết đúng cấu trúc mà code bộ giả lập bên dưới đọc (tên collection, tên trường, kiểu dữ liệu). Có 3-8 bản ghi hợp lý, có cả bản ghi gây nhiễu. ID theo kiểu ngắn như code dùng (ví dụ book_01). Nếu đáp án gọi tool của app khác (ví dụ contacts), thêm state cho app đó và app đó phải có trong context.
-2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật (có thể "nha", "giùm", "ơi", nói tắt, giọng miền), 5-35 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối").
+2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp", "giùm", "cho", "với", hoặc không dùng), có câu dài nhiều ý, có câu tự sửa giữa chừng ("à không..."), có câu điều kiện ("nếu ... thì ..."), có giọng miền. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
 3. `calls`: danh sách lời gọi tool đúng theo thứ tự; mỗi lời gọi có `name` và `arguments_json` (chuỗi JSON của tham số). ID phải lấy từ kết quả của lời gọi đọc trước đó (trợ lý không thấy state). Thời gian đầy đủ ISO-8601 có giây và +07:00, tính từ thời điểm của context.
 4. Chạy thử trong đầu từng lời gọi trên state bằng code bộ giả lập: không được có lời gọi trả về done=false hoặc lỗi.
 5. `scenario`: một câu mô tả ngắn mẫu này kiểm tra điều gì.
@@ -216,6 +232,9 @@ Quy tắc của trợ lý (đáp án phải theo đúng các quy tắc này):
 
 Ví dụ đáp án đúng từ dữ liệu thật (app khác, chỉ để học quy ước):
 {examples}
+
+Các câu người dùng thật nói (chỉ để học cách nói):
+{styles}
 
 Các tool của app `{app}` (JSON schema; `required` là tham số bắt buộc; `x-ref` là ID lấy từ kết quả tool khác):
 {tools}
@@ -272,14 +291,22 @@ def context_text(i: int, ctx: dict) -> str:
 
 # ---------------------------------------------------------------- checks
 
+def parse_args(text: str) -> dict:
+    """The JSON object in arguments_json. Stray closing braces after it (`{}}`, seen from the model) are ignored;
+    any other trailing text is an error."""
+    text = (text or "").strip()
+    if not text:
+        return {}
+    obj, end = json.JSONDecoder().raw_decode(text)
+    if text[end:].strip(" \n\t}"):
+        raise ValueError(f"extra text after arguments: {text[end:][:40]!r}")
+    if not isinstance(obj, dict):
+        raise ValueError("arguments are not an object")
+    return obj
+
+
 def parse_calls(raw: list[dict]) -> list[dict]:
-    out = []
-    for c in raw:
-        args = json.loads(c["arguments_json"]) if c.get("arguments_json", "").strip() else {}
-        if not isinstance(args, dict):
-            raise ValueError(f"arguments of {c['name']} not an object")
-        out.append({"name": c["name"], "arguments": args})
-    return out
+    return [{"name": c["name"], "arguments": parse_args(c.get("arguments_json", ""))} for c in raw]
 
 
 def _strings(x, out: set) -> set:
@@ -347,12 +374,15 @@ def check_sample(zt, g: dict, tools: dict, catalog: dict) -> tuple[str | None, l
                 return f"invented_id: {c['name']}.{k}={v}", results
         _strings(r, seen)
     kinds = [tools.get(c["name"], {}).get("kind") for c in calls]
+    if g["category"] in ("execute", "lookup") and calls[-1]["name"] == ASK:
+        return f"bad_{g['category']}: ends with ask", results
     if g["category"] == "execute":
-        if calls[-1]["name"] == ASK:
-            return "bad_execute: ends with ask", results
         initial = {a: state.get(a, {}) for a in ctx["installed_apps"]}
         if "write" not in kinds or sim.states == initial:
             return "no_write", results
+    elif g["category"] == "lookup":
+        if any(k != "read" for k in kinds):
+            return "bad_lookup: not read-only", results
     elif g["category"] == "ask_missing":
         last = calls[-1]
         if last["name"] != ASK:
@@ -417,7 +447,7 @@ def cmd_gen(a):
     drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
     fits = fit_samples(a.root, a.fit, drop)
     examples = "\n".join(example_text(s) for s in pick_examples(fits, rng))
-    client = Client(a.model, a.base_url, P["usage"], a.max_usd)
+    client = Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
     done = Counter(r["app"] for r in load_jsonl(P["raw"])) if P["raw"].exists() else Counter()
     n_out = sum(done.values())
     for app in a.apps.split(","):
@@ -426,10 +456,12 @@ def cmd_gen(a):
         while done[app] < a.per_app:
             n = min(a.batch, a.per_app - done[app])
             n_ask = max(0, round(n * a.ask_frac + rng.random() - 0.5))
+            n_lookup = min(max(0, round(n * a.lookup_frac + rng.random() - 0.5)), max(0, n - 1 - n_ask))
+            styles = "\n".join(f'- "{s["audio_text"]}"' for s in rng.sample(fits, 12))  # new real requests every call
             ctxs = [make_context(rng.choice(fits), app, apps_by_id, drop, rng) for _ in range(n)]
             prompt = GEN_TASK.format(
                 n=n, app=app, name_vi=apps_by_id[app].get("name_vi", ""), desc=apps_by_id[app].get("description", ""),
-                n_ask=n_ask, rules=SYSTEM_RULES, examples=examples,
+                n_ask=n_ask, n_lookup=n_lookup, rules=SYSTEM_RULES, examples=examples, styles=styles,
                 tools=tools_json([t["name"] for t in apps_by_id[app]["tools"]], tools), ask_tool=tools_json([ASK], tools),
                 app_src=app_source(zt, app), base_src=base_source(zt),
                 contexts="\n".join(context_text(i, c) for i, c in enumerate(ctxs)))
@@ -452,7 +484,8 @@ def cmd_gen(a):
                 for r in rows:
                     f.write(json.dumps(r, ensure_ascii=False) + "\n")
             done[app] += n
-            print(json.dumps({"app": app, "got": len(rows), "spent_usd": round(client.spent(), 4)}))
+            print(json.dumps({"app": app, "got": len(rows), "spent_usd": round(client.spent(), 4),
+                              "all_tags_usd": round(total_spent(P["usage"].parent), 4)}))
 
 
 def cmd_check(a):
@@ -463,7 +496,7 @@ def cmd_check(a):
     tools = catalog_tools(catalog)
     drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
     examples = "\n".join(example_text(s) for s in pick_examples(fit_samples(a.root, a.fit, drop), rng))
-    client = None if a.no_solver else Client(a.model, a.base_url, P["usage"], a.max_usd)
+    client = None if a.no_solver else Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
     ok, rej, reasons = [], [], Counter()
     for r in load_jsonl(P["raw"]):
         g = {**r}
@@ -484,7 +517,7 @@ def cmd_check(a):
                 profile=f"{p.get('name')}, {p.get('city')}, nhà {p.get('home_address')}, chỗ làm {p.get('work_address')}",
                 tools=tools_json(names, tools), state=json.dumps(g["state"], ensure_ascii=False), request=g["request"])
             try:
-                solved = parse_calls(client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls", a.effort,
+                solved = parse_calls(client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls", a.solver_effort,
                                                  f"solve {g['id']}")["calls"])
                 g["solver_calls"] = solved
                 reason = solver_agrees(zt, g, solved, tools, catalog)
@@ -559,18 +592,23 @@ def main():
             p.add_argument("--base-url", default=DEFAULT_BASE_URL)
             p.add_argument("--effort", default="medium", choices=["minimal", "low", "medium", "high", "xhigh"])
             p.add_argument("--max-usd", type=float, help="hard cap on the tag's usage ledger (needed for any API call)")
+            p.add_argument("--total-usd", type=float, default=10.0,
+                           help="hard cap on all tags together (Anh's limit; raise only after asking him)")
 
     p = sub.add_parser("gen")
     common(p)
     p.add_argument("--apps", required=True, help="comma-separated app ids")
     p.add_argument("--per-app", type=int, default=4)
     p.add_argument("--batch", type=int, default=4, help="samples per LLM call")
-    p.add_argument("--ask-frac", type=float, default=0.25)
+    p.add_argument("--ask-frac", type=float, default=0.2)
+    p.add_argument("--lookup-frac", type=float, default=0.1, help="read-only requests (8%% of fit_lao)")
     p.set_defaults(func=cmd_gen)
 
     p = sub.add_parser("check")
     common(p)
     p.add_argument("--no-solver", action="store_true", help="simulator checks only (no API call)")
+    p.add_argument("--solver-effort", default="low", choices=["minimal", "low", "medium", "high", "xhigh"],
+                   help="reasoning effort of the re-derivation (its reasoning tokens were half the t20 cost)")
     p.set_defaults(func=cmd_check)
 
     p = sub.add_parser("sft")

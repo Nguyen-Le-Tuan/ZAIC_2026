@@ -114,6 +114,74 @@ def test_state_for_app_not_installed_rejected():
     assert reason and reason.startswith("state_not_installed"), reason
 
 
+def test_lookup_read_only_passes():
+    reason, _ = _check(_g([{"name": "library.search", "arguments": {"query": "Tô Hoài"}}], "lookup",
+                          "Thư viện còn sách nào của Tô Hoài không em"))
+    assert reason is None, reason
+
+
+def test_lookup_with_write_rejected():
+    reason, _ = _check(_g([SEARCH, RESERVE1], "lookup"))
+    assert reason and reason.startswith("bad_lookup"), reason
+
+
+def test_parse_args_tolerates_stray_braces_only():
+    from lifemate.synth import parse_args
+    assert parse_args('{"query": "Tô Hoài"}}') == {"query": "Tô Hoài"}
+    assert parse_args("{} }") == {}
+    assert parse_args("  ") == {}
+    for bad in ('{"a": 1} {"b": 2}', '[1, 2]', '{"a": 1} trailing'):
+        try:
+            parse_args(bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"accepted {bad!r}")
+
+
+def test_budget_caps_refuse_before_any_request():
+    import json
+    import os
+    import tempfile
+    from lifemate.synth import BudgetExceeded, Client
+    old = os.environ.get("META_API_KEY")
+    os.environ["META_API_KEY"] = "test-key-not-real"
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            (d / "synth_a_usage.jsonl").write_text(json.dumps({"usd": 0.6}) + "\n")
+            (d / "synth_b_usage.jsonl").write_text(json.dumps({"usd": 0.5}) + "\n")
+            # the tag is under its own cap, but all tags together reached the total cap
+            c = Client("muse-spark-1.3", "http://127.0.0.1:9/v1", d / "synth_new_usage.jsonl", max_usd=5, total_usd=1.0)
+            try:
+                c.chat([{"role": "user", "content": "x"}], {"type": "object"}, "x")
+                raise AssertionError("no BudgetExceeded")
+            except BudgetExceeded as e:
+                assert "all tags" in str(e)
+            c = Client("muse-spark-1.3", "http://127.0.0.1:9/v1", d / "synth_a_usage.jsonl", max_usd=0.5, total_usd=10)
+            try:
+                c.chat([{"role": "user", "content": "x"}], {"type": "object"}, "x")
+                raise AssertionError("no BudgetExceeded")
+            except BudgetExceeded as e:
+                assert "tag spent" in str(e)
+    finally:
+        if old is None:
+            os.environ.pop("META_API_KEY", None)
+        else:
+            os.environ["META_API_KEY"] = old
+
+
+def test_contributor_tier_refused():
+    import os
+    from lifemate.synth import Client
+    os.environ.setdefault("META_API_KEY", "test-key-not-real")
+    try:
+        Client("muse-spark-1.3-contributor", "http://127.0.0.1:9/v1", Path("/nonexistent/x.jsonl"), 1)
+    except SystemExit as e:
+        assert "contributor" in str(e)
+        return
+    raise AssertionError("contributor tier accepted")
+
+
 def test_solver_agreement():
     from lifemate.synth import solver_agrees
     zt, tools, cat = _env()

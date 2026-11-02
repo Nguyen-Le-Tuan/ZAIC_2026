@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Pack everything a cloud GPU machine needs to train and evaluate, as ONE private tarball:
 #   ZAIC_2026/                     code at REF (git archive, so exactly the reviewed commit)
-#   ZAIC_2026/data/train+public_test/   licensed competition data (audio only with WITH_AUDIO=1)
+#   ZAIC_2026/data/train+public_test/   licensed competition data (audio: WITH_AUDIO=1 all, WITH_AUDIO=train train only);
+#                                  .DS_Store and __pycache__ files are left out
 #   ZAIC_2026/lifemate/gen/        D-experiment data (train-derived, never in git)
 #   ZAIC_2026/lifemate/asr/train_* ASR transcripts of train wavs (train-derived, never in git); public ASR is not packed
 #   ZAIC_2026/lifemate/ckpt/<tag>/final   LoRA adapters to re-evaluate on the cloud (parity check)
@@ -13,7 +14,7 @@
 #   bash lifemate/scripts/make_cloud_bundle.sh                       # from a checkout that has this script
 #   SRC=~/"Zalo AI Challenge" REF=origin/cloud-train WITH_AUDIO=1 bash .../make_cloud_bundle.sh
 # Env: SRC (folder with data/ and lifemate/{gen,ckpt,runs}; default: this checkout), REF (git ref, default HEAD),
-#      ADAPTERS (ckpt tags), RUNS (run prefixes), WITH_AUDIO=1, OUT (tarball path).
+#      ADAPTERS (ckpt tags), RUNS (run prefixes), WITH_AUDIO=1|train, OUT (tarball path).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC=${SRC:-$HERE}
@@ -35,11 +36,13 @@ git -C "$HERE" archive "$COMMIT" | tar -x -C "$B"
 [ -f "$B/lifemate/scripts/cloud_setup.sh" ] || { echo "$REF has no lifemate/scripts/cloud_setup.sh" >&2; exit 1; }
 
 mkdir -p "$B/data"
-if [ "$WITH_AUDIO" = 1 ]; then
-  cp -a "$DATA" "$B/data/"
-else
-  (cd "$SRC/data" && tar -c --exclude='train+public_test/*/audio' train+public_test) | tar -x -C "$B/data"
-fi
+case $WITH_AUDIO in
+  1) skip=() ;;
+  train) skip=(--exclude='train+public_test/public_test/audio') ;;  # fine-tuning ASR needs the train wavs only
+  0) skip=(--exclude='train+public_test/*/audio') ;;
+  *) echo "WITH_AUDIO must be 0, 1 or train" >&2; exit 1 ;;
+esac
+(cd "$SRC/data" && tar -c "${skip[@]}" --exclude='.DS_Store' --exclude='__pycache__' train+public_test) | tar -x -C "$B/data"
 cp -a "$SRC/lifemate/gen" "$B/lifemate/gen"
 mkdir -p "$B/lifemate/asr"
 for f in "$SRC"/lifemate/asr/train_*; do
@@ -60,7 +63,7 @@ done
 python3 - "$B" "$COMMIT" "$REF" "$WITH_AUDIO" "$SRC/lifemate/sft" <<'PY'
 import hashlib, json, sys, time
 from pathlib import Path
-b, commit, ref, audio = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+b, commit, ref, audio = Path(sys.argv[1]), sys.argv[2], sys.argv[3], {"1": True, "0": False}.get(sys.argv[4], sys.argv[4])
 files = {}
 for p in sorted(b.rglob("*")):
     rel = p.relative_to(b).as_posix()

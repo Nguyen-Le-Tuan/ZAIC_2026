@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-01 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1263,6 +1263,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Thử trên GPU** (4B 4-bit, 4 bước trên 32 mẫu ngắn): lượt bị dừng giữa bước 2 lưu được, chạy tiếp từ bước 3 với đúng learning rate. Loss sau khi chạy tiếp cùng mức với lượt chạy liền (bước 4: 0,223 so với 0,228). Không khớp từng bit, vì GPU đã lệch nhẹ ngay ở bước 1, trước khi dừng.
     - **Bài học bộ nhớ:** trần RAM 5 GB của unit quá thấp. Bộ nhớ đệm khi đọc file model 8 GB cũng tính vào trần, nên bài thử chạy chậm. Lượt chính dùng trần 7/9 GB như trước.
     - **Lượt chính** chưa bắt đầu lại (chỉ còn khoảng 15 phút trước 11:00). Script `~/zac-c3/run_q4b_lao.sh` giờ lưu mỗi 10 bước và tự chạy tiếp; bật bằng `bash ~/zac-c3/start_q4b.sh` (HUMAN_TODO B10). Luật chọn ở entry 55 giữ nguyên.
+    - **20:47:** Anh về, bấm "Chạy tiếp 4B"; máy cắm sạc. Lượt chạy lại từ đầu bằng code `9de4e1a`, unit `lifemate-q4b-lao` (trần RAM 7/9 GB, chờ dừng tối đa 10 phút). Bước 5: 711 token/giây, đỉnh 4,99 GB. Dự kiến train xong khoảng 01:30, chấm xong khoảng 03:00 ngày 02/11.
 
 ---
 

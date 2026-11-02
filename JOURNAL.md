@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-02 14:54: file nộp public 4B xong (634 dòng, kiểm định dạng đạt), chờ Anh nộp; pilot sinh 280/384 mẫu đạt, 11,55 USD (tổng đã chi 12,57 USD); train pilot tự bật 14:52, xong khoảng 22:30–23:00 (entry 61). Trước đó 13:40: trần 30 USD; pilot sinh bằng muse-wonder-1.0 đang chạy; script train pilot sẵn (entry 60). Trước đó 13:20: bài thử sinh dữ liệu đạt điều kiện đầu (t20 14/20, t12 9/12), chờ Anh chấm độ tự nhiên (entry 60). Trước đó 13:12: bài thử 20 mẫu đang chạy; trần 10 USD; đánh giá VieNeu (entry 60). Trước đó 12:35: viết xong bộ sinh dữ liệu (PR #11), bài thử 20 mẫu chờ key Meta (entry 60). Trước đó 12:20: credit Claude chưa dùng được, pilot có thể dùng model chữ của Meta (entry 59). Trước đó 12:15: Anh tự chạy file nộp public bằng 4B; đánh giá ý tưởng sinh dữ liệu bằng Claude API, đề xuất pilot (entry 59). Trước đó 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-02 15:47: điểm public lần 3: **45,39** với agent 4B (lần 2: 35,24; dev gộp 46,17; entry 62). Trước đó 14:54: file nộp public 4B xong (634 dòng, kiểm định dạng đạt), chờ Anh nộp; pilot sinh 280/384 mẫu đạt, 11,55 USD (tổng đã chi 12,57 USD); train pilot tự bật 14:52, xong khoảng 22:30–23:00 (entry 61). Trước đó 13:40: trần 30 USD; pilot sinh bằng muse-wonder-1.0 đang chạy; script train pilot sẵn (entry 60). Trước đó 13:20: bài thử sinh dữ liệu đạt điều kiện đầu (t20 14/20, t12 9/12), chờ Anh chấm độ tự nhiên (entry 60). Trước đó 13:12: bài thử 20 mẫu đang chạy; trần 10 USD; đánh giá VieNeu (entry 60). Trước đó 12:35: viết xong bộ sinh dữ liệu (PR #11), bài thử 20 mẫu chờ key Meta (entry 60). Trước đó 12:20: credit Claude chưa dùng được, pilot có thể dùng model chữ của Meta (entry 59). Trước đó 12:15: Anh tự chạy file nộp public bằng 4B; đánh giá ý tưởng sinh dữ liệu bằng Claude API, đề xuất pilot (entry 59). Trước đó 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -46,7 +46,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   | PhoWhisper-large fine-tune (01/11, entry 52) | 43,04 | 24,85 |
 
   - ~~**Lỗi ASR là chỗ mất điểm lớn nhất hiện nay** (khoảng 20 điểm). ASR sai 26–31% số từ; người nói hiếm khi đọc lệch kịch bản.~~ *(01/11, entry 52: sau fine-tune, ASR sai 11–14% số từ và chỉ còn làm mất 11 điểm gộp. Agent mất khoảng 56 điểm ngay cả trên chữ chuẩn, nên giờ là đòn bẩy lớn nhất.)*
-  - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng), đã nộp: **25,93** (entry 46). **File mới với ASR fine-tune:** `lifemate/runs/e2e_public_turboft.jsonl` (01/11, entry 52), Anh đã nộp: **35,24** (entry 53).
+  - **File nộp public đã kiểm:** `lifemate/runs/e2e_public_turbo.jsonl` (634 dòng), đã nộp: **25,93** (entry 46). **File mới với ASR fine-tune:** `lifemate/runs/e2e_public_turboft.jsonl` (01/11, entry 52), Anh đã nộp: **35,24** (entry 53). **File 4B** `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl` (02/11, entry 61), Anh đã nộp: **45,39** (entry 62).
   - Thời gian trên laptop: trung bình 2,9 giây mỗi mẫu, chậm nhất 9,7 giây. Chưa có Docker offline, chưa đo trên A30.
   - Code: [PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4), chưa merge.
 - **Kế hoạch hôm nay (31/10):** [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md). Ưu tiên: fine-tune ASR (leader), train agent trên chữ ASR và 4B (Anh chạy cloud), Docker (leader).
@@ -1428,6 +1428,22 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Luật đặt trước (giữ nguyên):** giữ mẫu sinh nếu dev_lao chữ ASR fine-tune tăng ít nhất 2,0 điểm so với 39,20. Kèm số chữ chuẩn (mốc 53,40) và hai lát cắt app bị giấu (183 mẫu) / app đã thấy (79).
     - **Phần 11 app public sau pilot (nếu giữ):** còn 17,43 USD. Với 0,041 USD mỗi mẫu đạt, khoảng 30 mẫu đạt mỗi app tốn khoảng 13,5 USD; muốn nhiều hơn thì hỏi Anh.
 
+62. **Điểm public lần 3: 45,39 với agent 4B** (02/11, Anh báo lúc 15:47). B11 xong.
+    - Anh nộp `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl` (entry 61): agent `q4b4_fit_random` nạp 4-bit, cùng chữ Whisper-turbo fine-tune với lần 2, nên chỉ agent thay đổi.
+
+      | Lần nộp | ASR | Agent | dev_random | dev_lao | Dev gộp 495 | Public |
+      |---|---|---|---:|---:|---:|---:|
+      | 1 (31/10, leader) | Whisper-turbo | 1.7B | 31,69 | 17,14 | 23,99 | 25,93 |
+      | 2 (01/11, Anh) | Whisper-turbo fine-tune | 1.7B | 42,64 | 24,55 | 33,07 | 35,24 |
+      | 3 (02/11, Anh) | Whisper-turbo fine-tune | **4B 4-bit** | 54,01 | 39,20 | 46,17 | **45,39** |
+      | Chênh lần 3 so với lần 2 | | | +11,37 | +14,65 | +13,11 | +10,15 |
+
+    - **Đọc:**
+      - Public tăng 10,15, ít hơn mức tăng trên dev gộp (+13,11) nhưng vẫn trong khoảng tin cậy 95% của nó (+8,94 đến +17,32). Dev gộp vẫn dự đoán đúng hướng và gần đúng cỡ.
+      - Lần này public thấp hơn dev gộp 0,78 điểm; hai lần trước cao hơn khoảng 2 điểm. Một lần đổi chiều như vậy vẫn nằm trong mức nhiễu, chưa đủ để kết luận.
+      - Một giả thuyết, chưa kiểm: 410/634 mẫu public có cài ít nhất một trong 11 app không có trong train. Các app này lạ hơn các app bị giấu của dev_lao, vì chúng không có trong catalog train. Nếu đúng, dữ liệu sinh cho 11 app này (sau pilot) là chỗ đáng làm. Không được nhìn đáp án public, nên chỉ kiểm được gián tiếp qua lần nộp sau.
+      - Đây là lần đầu thay đổi ở agent; hai lần trước chỉ khác ASR.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1449,7 +1465,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] **Cân lại tỉ trọng hỏi lại trên fit_random** (`q17b_random_up`, cloud; Anh bật 31/10, entry 32): dev_random không giảm quá 1 điểm thì dùng công thức B-up làm mặc định. *(31/10 20:19, laptop: giảm 2,72, không giữ; entry 49.)*
 - [x] Anh quyết ưu tiên sau D: **baseline đầu-cuối** (30/10, entry 21).
 - [x] **Baseline đầu-cuối** ([PR #4](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/4)): xong 31/10 (entry 31). ASR làm mất khoảng 20 điểm.
-- [x] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp). *(Leader nộp 31/10: 25,93, entry 46. Lần 2 với ASR fine-tune: 35,24, entry 53.)*
+- [x] Anh quyết có nộp `lifemate/runs/e2e_public_turbo.jsonl` lên public không (Anh tự nộp). *(Leader nộp 31/10: 25,93, entry 46. Lần 2 với ASR fine-tune: 35,24, entry 53. Lần 3 với agent 4B: 45,39, entry 62.)*
 - [x] **Fine-tune ASR** trên wav của fit (leader, cloud); đánh giá bằng điểm agent và độ đúng slot. *(01/11: hai Colab xong; gộp 23,99 → 33,07 với Whisper-turbo fine-tune, được chọn; entry 52.)*
 - [ ] **Train agent trên chữ ASR** (`q17b_random_asrtrain`, cloud; Anh bật 31/10, entry 32; bản 4B `q4b_random_asrtrain` chỉ chạy khi có ≥ 4 GPU). *(1.7B xong 31/10 17:00 trên laptop: không đáng dùng, entry 48. Bản 4B chờ máy anh trai.)*
 - [ ] **Từ báo cáo Codex (entry 24), chưa làm:**
@@ -1465,7 +1481,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [x] **4B 4-bit trên laptop, vòng dev_lao** (C6): +14,65 trên chữ ASR fine-tune, 4B thắng vòng này (02/11, entry 57).
 - [x] **4B: quyết bằng điểm gộp 495 dòng** (C7): gộp 33,07 → 46,17, **chốt 4B** (02/11 10:13, entry 58).
 - [ ] **Pilot dữ liệu tổng hợp** cho app chưa thấy: code xong ([PR #11](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/11)); bài thử 20 mẫu chờ key Meta (HUMAN_TODO B13, entry 59–60). *(14:52 ngày 02/11: sinh xong 280 mẫu đạt, 11,55 USD; train + chấm dev_lao đang chạy, xong khoảng 22:30–23:00; entry 61.)*
-- [ ] **Sau khi chốt 4B:** file nộp public bằng 4B (HUMAN_TODO B11, Anh tự chạy; *file xong 14:42 ngày 02/11, chờ nộp, entry 61*); đo trên A30, kiểm nạp 4-bit hay bf16; thêm cờ 4-bit và bước khởi động vào `eval_ckpt.sh`, `train_local.sh`, `predict.sh` (entry 58).
+- [ ] **Sau khi chốt 4B:** file nộp public bằng 4B (HUMAN_TODO B11, Anh tự chạy; *Anh nộp 02/11: **45,39**, entry 62*); đo trên A30, kiểm nạp 4-bit hay bf16; thêm cờ 4-bit và bước khởi động vào `eval_ckpt.sh`, `train_local.sh`, `predict.sh` (entry 58).
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.
 - [ ] **Thí nghiệm D:** thiết kế dữ liệu phản thực tế từ fit cho điều kiện và ranh giới hỏi lại; mọi nhãn phải qua kiểm tra thực thi.

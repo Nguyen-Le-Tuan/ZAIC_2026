@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:55 ngày 01/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 03:40 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **03:40 ngày 02/11:** **4B thắng rõ trên dev_lao (C6 xong).** Chữ ASR fine-tune: 1.7B 24,55 → 4B **39,20**, +14,65 [+8,79; +20,49] (tốt hơn ở 78 mẫu, kém hơn ở 30). Chữ chuẩn: 35,62 → **53,40**, +17,78 [+11,74; +23,61]. Tăng ở cả mẫu cần làm (execute) lẫn mẫu hỏi lại. Hai bên chạy cùng code suy luận, cùng 262 mẫu; chỉ khác model. Laptop 4-bit: trung bình 7,8 giây mỗi mẫu, chậm nhất 27,9 giây (1 mẫu quá 25 giây, mẫu đó vốn 0 điểm). Theo luật đặt trước, **laptop đang chạy lượt kế tiếp: 4B trên fit_random → dev_random (C7, từ 03:30, dự kiến xong khoảng 10:00)**, rồi quyết bằng điểm gộp 495 dòng. Phải mang máy đi trước khi xong thì dừng bằng `systemctl --user stop lifemate-q4b-random` (đợi 1–3 phút cho lưu xong rồi gập); về chạy `bash ~/zac-c3/start_q4b_random.sh` là tiếp từ chỗ dừng. **Leader (L6):** nếu C7 chốt 4B, Docker sẽ chạy 4B (khoảng 8 GB ở bf16) cùng Whisper-turbo; thời gian trên A30 chưa đo (JOURNAL entry 57).
 > - **20:55 ngày 01/11:** **Lượt 4B chạy lại từ 20:47** (B10 xong: Anh bấm "Chạy tiếp 4B"). 711 token/giây, như lúc sáng. **Dự kiến train xong khoảng 01:30, chấm xong khoảng 03:00 sáng 02/11.** Để máy cắm sạc, không gập, tránh app nặng GPU. Cần mang máy đi thì dừng bằng `systemctl --user stop lifemate-q4b-lao`, đợi 1–3 phút cho lưu xong rồi gập; chạy lại `bash ~/zac-c3/start_q4b.sh` là tiếp từ chỗ dừng.
 > - **10:40 ngày 01/11:** **Lượt 4B tạm dừng; GPU laptop rảnh, gập máy được.** Anh phải mang máy đi học lúc 11:00, mà code cũ không lưu được giữa chừng, nên Claude dừng lượt lúc 10:13 (bước 35/254, phải chạy lại từ đầu). Đã thêm **lưu trạng thái mỗi 10 bước và khi dừng, rồi chạy tiếp** (PR #10, đã thử trên GPU). **Khi về và cắm sạc (B10):** chạy `bash ~/zac-c3/start_q4b.sh` hoặc nhắn Claude. Cần khoảng 7,5 giờ GPU, chia nhiều buổi được; dừng bất cứ lúc nào bằng `systemctl --user stop lifemate-q4b-lao` (mất 1–3 phút để lưu).
 > - **09:30 ngày 01/11:** **Laptop đang train Qwen3-4B bản 4-bit** (B9 xong: Anh đồng ý tải; tải 8 GB mất 64 giây). Cùng công thức với mốc 1.7B trên fit_lao, chấm trên dev_lao bằng chữ ASR fine-tune và chữ chuẩn. **Từ 09:27, dự kiến xong khoảng 16:30–17:00.** **Cắm sạc, không gập máy, tránh video, game hay app nặng GPU** (VRAM chỉ dư khoảng 0,4 GB). Luật đặt trước: 4B thắng nếu hơn 1.7B ít nhất 1 điểm trên dev_lao chữ ASR fine-tune (mốc 24,55). Code thêm optimizer 8-bit: [PR #10](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/10) (JOURNAL entry 55).
@@ -37,11 +38,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | **Đang train 4B 4-bit trên fit_lao (C6, từ 20:47; lưu mỗi 10 bước).** Lượt sáng 09:27–10:13 đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | C6: khoảng 03:00 ngày 02/11 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | **Đang train 4B 4-bit trên fit_random (C7, từ 03:30 ngày 02/11; lưu mỗi 10 bước).** C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | C7: khoảng 10:00 ngày 02/11 | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
-- **Laptop:** đang chạy lượt 4B (từ 20:47, tới khoảng 03:00 ngày 02/11): cắm sạc, không gập máy, tránh video, game hay app nặng GPU (VRAM chỉ dư khoảng 0,4 GB). Lượt chặn máy ngủ, nên trước khi bỏ máy vào cặp phải dừng bằng `systemctl --user stop lifemate-q4b-lao`.
+- **Laptop:** đang chạy lượt 4B trên fit_random (C7, từ 03:30, tới khoảng 10:00 ngày 02/11): cắm sạc, không gập máy, tránh video, game hay app nặng GPU (VRAM chỉ dư khoảng 0,4 GB). Lượt chặn máy ngủ, nên trước khi bỏ máy vào cặp phải dừng bằng `systemctl --user stop lifemate-q4b-random`; về chạy `bash ~/zac-c3/start_q4b_random.sh` là tiếp từ chỗ dừng.
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -107,9 +108,16 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [x] **C4.** Trong lúc chờ (chỉ dùng CPU): PR sửa `agent.py:150` cho giới hạn 30 giây mỗi mẫu (tính cả thời gian ASR), kèm chốt chặn ID làm lưới an toàn. Thêm trần thời gian và trần token cho mỗi bước: lượt B-up có mẫu `train_0830` sinh lặp "000…" hai bước liền, mỗi bước tới trần 512 token, mất 23,4 giây. *Đang làm (20:33).*
   - ***Xong 21:08:*** [PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9) (xếp chồng lên #7), chờ review. dev_random giống hệt 233/233 dòng (53,92); chữ turbo giống hệt 233/233 (31,69); dev_lao 35,62 so với 35,53 (+0,10 [0,00; +0,29]; 4 call sai bị chặn, tốt 1, kém 0); `train_0830` với ngân sách 15 giây dừng ở 15,01 giây (code cũ: 23,4). Luật đặt trước: nhận phần thời gian, **chốt chặn bật mặc định** (JOURNAL entry 50).
 - [ ] **C5.** *(Phần file nộp public xong 01:35 ngày 01/11: `lifemate/runs/e2e_public_turboft.jsonl`, Anh đã nộp ở B8: 35,24. Phần gộp kết quả máy anh trai chờ tới khi có.)* Khi kết quả từ các máy đã về: viết **`docs/RESULTS_2026-10-31.md`** gộp tất cả (laptop, Kaggle, Colab, anh trai). Từ đó chọn ASR, chọn công thức agent cho vòng sau, và chuẩn bị file nộp public mới bằng ASR đã fine-tune.
-- [ ] **C6.** *(Đang chạy từ 20:47 ngày 01/11, dự kiến xong khoảng 03:00 ngày 02/11. Lượt đầu 09:27–10:13 đã bỏ vì máy phải mang đi học.)* Train Qwen3-4B 4-bit trên fit_lao bằng laptop, rồi chấm dev_lao (chữ ASR fine-tune, rồi chữ chuẩn). Khoảng 16:30–17:00: áp luật đặt trước (JOURNAL entry 55) và báo trong chat.
+- [x] **C6.** *(Chạy 20:47 ngày 01/11 – 03:28 ngày 02/11. Lượt đầu 09:27–10:13 đã bỏ vì máy phải mang đi học.)* Train Qwen3-4B 4-bit trên fit_lao bằng laptop, rồi chấm dev_lao (chữ ASR fine-tune, rồi chữ chuẩn). Khoảng 16:30–17:00: áp luật đặt trước (JOURNAL entry 55) và báo trong chat.
   - 4B hơn ít nhất 1 điểm trên dev_lao chữ ASR fine-tune → lượt tiếp trên laptop: 4B trên fit_random / dev_random, rồi quyết bằng điểm gộp 495 dòng như C3.
   - Kém hơn mức đó → giữ 1.7B. Nếu riêng chữ chuẩn hơn từ 3 điểm trở lên thì báo để đội quyết.
+  - ***Xong 03:28 ngày 02/11:*** chữ ASR fine-tune 24,55 → **39,20** (+14,65 [+8,79; +20,49]; tốt 78, kém 30, giống 154). Chữ chuẩn 35,62 → **53,40** (+17,78 [+11,74; +23,61]). → **4B thắng vòng này**, chạy C7. Hỏi lại 11,1 → 39,4; execute 25,1 → 38,6; ngoài phạm vi 85,7 → 57,1 (chỉ 7 mẫu, kém ở 2). Laptop 4-bit: trung bình 7,8 giây, p95 14,1, chậm nhất 27,9; 1 mẫu quá 25 giây, mẫu đó vốn 0 điểm nên hạn 25 giây cũng không đổi điểm (JOURNAL entry 57).
+- [ ] **C7.** *(Đang chạy từ 03:30 ngày 02/11, dự kiến train xong khoảng 08:50, chấm xong khoảng 10:00.)* Train 4B 4-bit trên fit_random (cùng công thức), chấm dev_random bằng chữ ASR fine-tune rồi chữ chuẩn, rồi tính điểm gộp 495 dòng. **Luật đặt trước** (ghi trong `~/zac-c3/run_q4b_random.sh` trước khi chạy):
+  - Số chính: điểm gộp 495 dòng trên chữ ASR fine-tune, 4B so với 1.7B (gộp 33,07).
+  - Hơn ít nhất 1,0 điểm → 4B thành model agent. Việc tiếp: đo trên A30, kiểm nạp 4-bit hay bf16, rồi làm file nộp public.
+  - Kém hơn mức đó → giữ 1.7B (nhỏ và nhanh hơn).
+  - Riêng dev_random mà 4B kém 1.7B quá 1 điểm thì không tự chọn, báo đội quyết.
+  - Báo thêm: chữ chuẩn trên dev_random (so với 53,92) và gộp, số giây mỗi mẫu, số mẫu quá 25 giây.
 
 ### C. Mốc giờ (ước tính)
 
@@ -128,7 +136,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 08:11 ngày 01/11 | Anh báo điểm public lần 2: 35,24 (B8 xong) |
 | 08:25 ngày 01/11 | Bắt đầu phần agent: đo lại chỗ mất điểm; chờ Anh quyết tải 4B (B9) |
 | ~~09:27–khoảng 17:00~~ 09:27–10:13 ngày 01/11 | Laptop train 4B 4-bit (C6): dừng vì máy mang đi học; chạy lại khi Anh về (B10) |
-| 20:47 ngày 01/11 – khoảng 03:00 ngày 02/11 | Laptop train và chấm 4B 4-bit (C6), lưu mỗi 10 bước |
+| 20:47 ngày 01/11 – 03:28 ngày 02/11 | Laptop train và chấm 4B 4-bit (C6): 4B thắng rõ trên dev_lao |
+| 03:30 – khoảng 10:00 ngày 02/11 | Laptop train và chấm 4B trên fit_random / dev_random (C7), rồi quyết bằng điểm gộp 495 dòng |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần

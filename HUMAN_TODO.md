@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 13:12 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 13:20 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **13:20 ngày 02/11:** **Bài thử sinh dữ liệu đạt điều kiện đầu.** Lượt t20: 14/20 mẫu qua mọi bước kiểm (0,37 USD). Claude sửa bộ kiểm (loại nhầm câu chỉ hỏi thông tin; hỏng vì dấu `}` thừa) và giọng văn (95% câu có "giùm", câu thật chỉ 12%), thêm trần tổng 10 USD vào code. Lượt t12 trên code đã sửa: 9/12 đạt (0,19 USD), câu đa dạng hơn hẳn. **Tổng đã chi: 0,55 USD.** **Anh chấm B14:** đọc `lifemate/gen/synth_review_t12_t20.md` (23 câu), đánh T/K từng câu (JOURNAL entry 60).
 > - **13:12 ngày 02/11:** **Bài thử 20 mẫu đang chạy** (B13 xong: Anh lưu key; tự chạy từ 13:10). **Trần chi tiêu Anh đặt: tổng dưới khoảng 10 USD cho việc sinh dữ liệu; vượt mức phải hỏi Anh.** Về VieNeu (TTS tiếng Việt chạy local): nó đọc chữ thành audio, không tự viết câu và đáp án, nên **không thay được Meta mà bổ sung cho ASR**. Đáng thử sau: trên dev_lao, lỗi ASR làm 4B mất 17,1 điểm ở mẫu dùng app chưa thấy, so với 7,6 ở mẫu dùng app đã thấy. Cần kiểm licence của checkpoint VieNeu trước (JOURNAL entry 60).
 > - **12:35 ngày 02/11:** **Bộ sinh dữ liệu đã viết xong ([PR #11](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/11), 14 test CPU đạt); bài thử 20 mẫu chờ key Meta (B13).** Anh chọn "Viết và thử 20 mẫu". Model `muse-spark-1.3` của Meta (gói Standard, Meta không dùng nội dung để train), trần 3 USD. Claude đã cài lệnh chờ: **Anh tạo file key là bài thử tự chạy**, khoảng 10–20 phút, rồi Claude báo tỉ lệ mẫu đạt và gửi file mẫu để Anh đọc (JOURNAL entry 60).
 > - **12:20 ngày 02/11:** **Credit Claude API chưa dùng được** (tài khoản chưa đủ 7 ngày), nên pilot B12 có thể **dùng model chữ của Meta thay thế**. Meta Model API có model chữ (Muse Spark, Muse Wonder), không chỉ model chuyển giọng nói thành chữ; nguồn tin nói credit tính cho cả nền tảng. Anh cần kiểm trên trang Meta là 100 USD dùng được cho Muse Spark hoặc Muse Wonder, và đọc điều khoản về việc dùng đầu ra để train model khác (JOURNAL entry 59).
@@ -104,6 +105,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - `printf 'export META_API_KEY=%s\n' 'DÁN_KEY_VÀO_ĐÂY' > ~/.zac_meta_env && chmod 600 ~/.zac_meta_env`
   - Không dán key vào chat. Tạo xong file là bài thử tự chạy (lệnh chờ của Claude), trần 3 USD.
   - Sau đó đọc file `~/zac-synth/lifemate/gen/synth_t20_show.txt` và chấm: trong 5 câu được nhận, mấy câu nghe tự nhiên như người Việt nói thật.
+- [ ] **B14. ← MỚI (13:20 ngày 02/11).** (10 phút) **Chấm độ tự nhiên của câu sinh** (điều kiện thứ hai để sang pilot): mở `lifemate/gen/synth_review_t12_t20.md`, đánh **T** (tự nhiên) hoặc **K** (không) cho từng câu, ghi chú nếu đáp án sai ý câu nói. Chú ý nhất 9 câu đầu (bản t12 đang dùng). Đạt khi ít nhất 4/5 câu là T. Báo Claude số T/K.
+  - Nếu đạt: pilot khoảng 380 mẫu đạt cho 6 app của dev_lao, khoảng 8 USD (tổng vẫn dưới 10 USD), rồi train 4B trên fit_lao + mẫu sinh trên laptop (khoảng 7 giờ) và chấm dev_lao (khoảng 1,2 giờ).
+  - Sinh cho 11 app của public sau pilot sẽ làm tổng vượt 10 USD; khi đó Claude hỏi Anh trước.
 - [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
 **Leader:**

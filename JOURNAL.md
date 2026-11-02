@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-02 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -30,6 +30,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
   | Zero-shot Qwen3-1.7B | – → dev_random / dev_lao | 9,90 / 10,88 |
   | **SFT Qwen3-1.7B LoRA, 1 epoch (mốc chính)** | fit_random → dev_random (233 mẫu) | **53,92** (chạy lại giống hệt 233/233 mẫu) |
   | **B0** (đo trên app chưa thấy) | fit_lao → dev_lao (262 mẫu) | **35,53**: hỏi lại 7,48; execute 39,73; ngoài phạm vi 71,43 |
+  | **Qwen3-4B 4-bit QLoRA** (02/11, entry 57; cùng công thức B0) | fit_lao → dev_lao | **53,40** (chữ Whisper-turbo fine-tune: 39,20, so với 24,55 của 1.7B) |
 
   - Chi tiết: [`docs/EVAL_2026-10-29.md`](docs/EVAL_2026-10-29.md).
   - Code ở [PR #1](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/1) → [#2](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/2) → [#3](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/3), chưa merge.
@@ -1265,6 +1266,38 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Lượt chính** chưa bắt đầu lại (chỉ còn khoảng 15 phút trước 11:00). Script `~/zac-c3/run_q4b_lao.sh` giờ lưu mỗi 10 bước và tự chạy tiếp; bật bằng `bash ~/zac-c3/start_q4b.sh` (HUMAN_TODO B10). Luật chọn ở entry 55 giữ nguyên.
     - **20:47:** Anh về, bấm "Chạy tiếp 4B"; máy cắm sạc. Lượt chạy lại từ đầu bằng code `9de4e1a`, unit `lifemate-q4b-lao` (trần RAM 7/9 GB, chờ dừng tối đa 10 phút). Bước 5: 711 token/giây, đỉnh 4,99 GB. Dự kiến train xong khoảng 01:30, chấm xong khoảng 03:00 ngày 02/11.
 
+57. **4B 4-bit thắng rõ trên dev_lao; chạy tiếp 4B trên fit_random để quyết bằng điểm gộp** (02/11, 03:28–03:40; lượt C6 chạy 20:47 ngày 01/11 – 03:28 ngày 02/11).
+    - **Train** (`q4b4_fit_lao`, 254 bước, 318 phút, 672–711 token/giây, đỉnh 5,55 GB, không bị dừng giữa chừng): dev loss 0,1216 (bước 50) → 0,1074 (cuối).
+    - **Kết quả** trên dev_lao (262 mẫu). Hai bên dùng cùng code suy luận (`code_sha256` giống nhau), cùng file ASR, cùng danh sách id, cùng máy:
+
+      | Agent đọc | 1.7B (mốc) | 4B 4-bit | Chênh lệch theo cặp [95%] | tốt / kém / giống |
+      |---|---:|---:|---|---|
+      | Chữ Whisper-turbo fine-tune | 24,55 | **39,20** | **+14,65** [+8,79; +20,49] | 78 / 30 / 154 |
+      | Chữ chuẩn | 35,62 | **53,40** | **+17,78** [+11,74; +23,61] | 89 / 30 / 143 |
+
+    - **Tăng ở đâu** (chữ ASR fine-tune; số trong ngoặc là phần đóng góp vào điểm tổng):
+      - execute (214 mẫu): 25,1 → 38,6 (+11,0);
+      - hỏi lại (41 mẫu): 11,1 → 39,4 (+4,4);
+      - ngoài phạm vi (7 mẫu): 85,7 → 57,1 (−0,8).
+      - Chữ chuẩn tương tự: execute +12,6, hỏi lại 7,5 → 43,2 (+5,6). Mẫu đủ điểm: 44 → 74 (chữ ASR), 70 → 108 (chữ chuẩn).
+    - **Thời gian trên laptop** (4-bit, backend HF): chữ ASR trung bình 7,8 giây, p95 14,1, chậm nhất 27,9; chữ chuẩn 8,0 / 13,8 / 26,9. 1.7B bf16: 2,4–2,7 giây.
+      - Mỗi lượt có đúng 1 mẫu quá 25 giây (`train_0304`, `train_1677`). Cả hai vốn 0 điểm, nên nếu dùng hạn 25 giây như lượt mốc thì điểm cũng không đổi.
+      - Ngoài model, hai bên chỉ khác hạn giờ (25 so với 60 giây). Không mẫu nào của 1.7B chạm 25 giây (chậm nhất 12 giây).
+    - **Luật đặt trước (entry 55):** +14,65 ≥ +1,0 → **4B thắng vòng này.** Không cần tới ngoại lệ chữ chuẩn.
+    - **Lượt tiếp (C7, từ 03:30, unit `lifemate-q4b-random`):**
+      - Script `~/zac-c3/run_q4b_random.sh`, cùng công thức trên `sft/fit_random.jsonl`: 4.150 mẫu, 13,3M token, không mẫu nào quá 6.144 token.
+      - Chấm dev_random bằng chữ ASR fine-tune rồi chữ chuẩn, rồi tính điểm gộp 495 dòng như C3.
+      - 37 mẫu có trong cả hai tập dev được tính hai lần, mỗi lần với adapter của tập đó. Bước gộp chạy thử trên các lượt 1.7B ra đúng 33,07 và 44,23 của C3.
+      - Dự kiến train xong khoảng 08:50, chấm xong khoảng 10:00.
+    - **Luật đặt trước cho điểm gộp** (ghi trong script trước khi chạy):
+      - 4B hơn 1.7B (gộp chữ ASR fine-tune 33,07) ít nhất 1,0 điểm → 4B thành model agent.
+      - Kém hơn mức đó → giữ 1.7B.
+      - Riêng dev_random mà 4B kém quá 1 điểm thì báo đội quyết.
+    - **Còn chưa biết:**
+      - Thời gian trên A30. 4B ở bf16 nặng khoảng 8 GB, vừa A30 24 GB; A30 đọc bộ nhớ nhanh hơn GPU laptop nhiều, nhưng chưa đo. Cả mẫu, tính cả ASR (khoảng 0,5 giây), vẫn phải dưới 30 giây.
+      - Adapter học trên base 4-bit. Nạp base bf16 trên A30 có thể làm điểm lệch nhẹ; nạp 4-bit thì khớp hơn nhưng có thể chậm hơn. Cần đo cả điểm lẫn thời gian.
+      - Tổng tham số: 4B + Whisper-turbo 0,8B = 4,8B, dưới trần 6B; LLM dưới 5B.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1299,6 +1332,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
   - **[Leader]** Thêm Qwen3-ASR-0.6B vào so sánh ASR; thử ITN tiếng Việt của NeMo (`r1.2.0`).
 - [ ] Nếu duyệt: sinh đủ khoảng 230 mẫu D, chạy D-lao và D-random với số bước giữ nguyên (EXPERIMENT_D mục 8).
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
+- [x] **4B 4-bit trên laptop, vòng dev_lao** (C6): +14,65 trên chữ ASR fine-tune, 4B thắng vòng này (02/11, entry 57).
+- [ ] **4B: quyết bằng điểm gộp 495 dòng** (C7, laptop đang chạy, dự kiến khoảng 10:00 ngày 02/11). Nếu chọn 4B: đo trên A30, kiểm nạp 4-bit hay bf16, thêm cờ 4-bit vào `eval_ckpt.sh`, `train_local.sh`, `predict.sh`, rồi làm file nộp public.
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.
 - [ ] **Thí nghiệm D:** thiết kế dữ liệu phản thực tế từ fit cho điều kiện và ranh giới hỏi lại; mọi nhãn phải qua kiểm tra thực thi.

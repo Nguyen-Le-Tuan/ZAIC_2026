@@ -27,7 +27,7 @@ Checks (check): every gold call is run in the split's zaic_tools simulator on th
                installed tool, or calls the tool it asks about (writes for other parts of the request are fine,
                as in gold)
   duplicate    the request nearly repeats an accepted request of the same app (difflib ratio >= 0.8)
-  solver       an independent LLM call, given the request, the context and the state (as the results the tools would
+  solver       (asked twice when its arguments JSON is broken) an independent LLM call, given the request, the context and the state (as the results the tools would
                return), predicts the calls; the sample is kept only if the predicted calls reach the same final state
                and make the same write/ask calls by name
 """
@@ -224,7 +224,7 @@ Hãy viết {n} mẫu MỚI, khác nhau, đều dùng app `{app}` ({name_vi}: {d
 
 Yêu cầu với từng mẫu:
 1. `state_json`: chuỗi JSON của trạng thái ban đầu, dạng {{"<app id>": {{...}}}}, viết đúng cấu trúc mà code bộ giả lập bên dưới đọc (tên collection, tên trường, kiểu dữ liệu). Có 3-8 bản ghi hợp lý, có cả bản ghi gây nhiễu. ID theo kiểu ngắn như code dùng (ví dụ book_01). Nếu đáp án gọi tool của app khác (ví dụ contacts), thêm state cho app đó và app đó phải có trong context.
-2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp", "giùm", "cho", "với", hoặc không dùng), khoảng 2/5 số câu có từ hai việc trở lên, có giọng miền; câu tự sửa giữa chừng ("à không...") và câu điều kiện ("nếu ... thì ...") mỗi loại chỉ khoảng 1/10 số câu như dữ liệu thật. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
+2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp" khoảng 1/4 số câu, "giùm" chỉ khoảng 1/8, còn lại "cho", "với", hoặc không dùng), khoảng 2/5 số câu có từ hai việc trở lên, có giọng miền; câu tự sửa giữa chừng ("à không...") và câu điều kiện ("nếu ... thì ...") mỗi loại chỉ khoảng 1/10 số câu như dữ liệu thật. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
 3. `calls`: danh sách lời gọi tool đúng theo thứ tự; mỗi lời gọi có `name` và `arguments_json` (chuỗi JSON của tham số). ID phải lấy từ kết quả của lời gọi đọc trước đó (trợ lý không thấy state). Thời gian đầy đủ ISO-8601 có giây và +07:00, tính từ thời điểm của context.
 4. Chạy thử trong đầu từng lời gọi trên state bằng code bộ giả lập: không được có lời gọi trả về done=false hoặc lỗi.
 5. `scenario`: một câu mô tả ngắn mẫu này kiểm tra điều gì.
@@ -515,7 +515,13 @@ def cmd_check(a):
     examples = "\n".join(example_text(s) for s in pick_examples(fit_samples(a.root, a.fit, drop), rng))
     client = None if a.no_solver else Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
     ok, rej, reasons = [], [], Counter()
-    cache = {x["id"]: x["calls"] for x in load_jsonl(P["solver"])} if P["solver"].exists() else {}
+    cache = {}
+    for x in (load_jsonl(P["solver"]) if P["solver"].exists() else []):
+        try:
+            parse_calls(x["calls"])
+            cache[x["id"]] = x["calls"]  # only answers that parse: a broken one is asked again
+        except ValueError:
+            pass
     seen_by_app: dict[str, list[str]] = {}
     for r in load_jsonl(P["raw"]):
         g = {**r}
@@ -541,13 +547,19 @@ def cmd_check(a):
                 tools=tools_json(names, tools), state=json.dumps(g["state"], ensure_ascii=False), request=g["request"])
             try:
                 if g["id"] in cache:  # paid for already: reuse
-                    raw_calls = cache[g["id"]]
+                    solved = parse_calls(cache[g["id"]])
                 else:
-                    raw_calls = client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls", a.solver_effort,
-                                            f"solve {g['id']}")["calls"]
+                    for attempt in range(2):  # the solver sometimes leaves junk after the arguments JSON: ask once more
+                        raw_calls = client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls",
+                                                a.solver_effort, f"solve {g['id']}")["calls"]
+                        try:
+                            solved = parse_calls(raw_calls)
+                            break
+                        except ValueError:
+                            if attempt:
+                                raise
                     with open(P["solver"], "a", encoding="utf-8") as f:
                         f.write(json.dumps({"id": g["id"], "calls": raw_calls}, ensure_ascii=False) + "\n")
-                solved = parse_calls(raw_calls)
                 g["solver_calls"] = solved
                 reason = solver_agrees(zt, g, solved, tools, catalog)
             except BudgetExceeded as e:

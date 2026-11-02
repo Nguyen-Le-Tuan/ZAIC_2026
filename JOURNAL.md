@@ -21,7 +21,7 @@ File này ghi lại toàn bộ trao đổi và quyết định của đội, đ�
 
 ## 0. Trạng thái hiện tại
 
-*Cập nhật: 2026-11-02 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
+*Cập nhật: 2026-11-02 12:15: Anh tự chạy file nộp public bằng 4B; đánh giá ý tưởng sinh dữ liệu bằng Claude API, đề xuất pilot (entry 59). Trước đó 10:20: chốt Qwen3-4B làm model agent; gộp 495 dòng chữ ASR fine-tune 33,07 → 46,17 (entry 58). Trước đó 03:40: 4B 4-bit thắng rõ trên dev_lao (+14,65 chữ ASR fine-tune, +17,78 chữ chuẩn); laptop chạy 4B trên fit_random để quyết bằng điểm gộp, dự kiến xong khoảng 10:00 (entry 57). Trước đó 2026-11-01 20:55: lượt 4B chạy lại từ 20:47, dự kiến xong khoảng 03:00 ngày 02/11 (entry 56). Trước đó 10:40: lượt 4B tạm dừng vì laptop mang đi học; thêm lưu và chạy tiếp (entry 56). Trước đó 09:30: train Qwen3-4B 4-bit, luật chọn đặt trước (entry 55). Trước đó 08:25: bắt đầu phần agent (entry 54). Trước đó 08:11: điểm public lần 2 là 35,24 (entry 53). Trước đó 01:05: ASR fine-tune (entry 52). Trước đó 2026-10-31 21:08: các dòng về laptop, B-up và giới hạn thời gian theo entry 48–50; bảng điều phối mới nhất ở đầu `HUMAN_TODO.md`. Cập nhật trước: 10:30. Giai đoạn 2 của D và baseline đầu-cuối đã xong (entry 30–31); kế hoạch ngày 31/10 ở `docs/PLAN_2026-10-31.md`; Anh đã chọn lượt cloud, gói v3 sẵn (entry 32). Bản trước xem lịch sử git.*
 
 - **Baseline phần agent: đã xong và tái lập được.** Model đọc chữ chuẩn `audio_text`, chưa qua ASR.
 
@@ -1325,6 +1325,29 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - PR: thêm `--load-4bit` vào `predict.sh`, `eval_ckpt.sh`, `train_local.sh`, kèm bước khởi động trước mẫu đầu.
       - Đo trên A30 (hoặc GPU 24 GB gần nhất), cả 4-bit lẫn bf16, cả điểm lẫn thời gian. Đây là rủi ro lớn nhất còn lại của 4B.
 
+59. **File nộp public 4B giao Anh tự chạy; ý tưởng sinh dữ liệu bằng Claude API** (02/11, khoảng 10:30–12:15). Anh: "Để tôi chạy sau, gửi tôi lệnh chạy riêng"; Anh có ý dùng model của Anthropic hoặc Meta (có API key cả hai: 100 USD credit Claude, 100 USD cho dịch vụ chuyển giọng nói thành chữ của Meta) để bổ sung dữ liệu train.
+    - **Lệnh file nộp public:** `~/zac-c3/start_public_q4b.sh` gọi `run_e2e_public_q4b.sh` trong unit `lifemate-public-q4b` (trần RAM 7/9 GB, chặn máy ngủ).
+      - Dùng lại chữ ASR của lần nộp 35,24 (`runs/e2e_public_turboft_asr.jsonl`), nên chỉ agent thay đổi.
+      - Agent: `q4b4_fit_random` nạp 4-bit, hạn 60 giây như các lượt dev. Kiểm bằng `check_submission.py`.
+      - Thử 2 mẫu public (`--limit 2`): 12,0 và 19,0 giây, kết quả đúng định dạng.
+    - **Luật thi (mục 1.3, 1.5):** được dùng LLM hoặc TTS bên ngoài để sinh dữ liệu tổng hợp lúc phát triển, lúc suy luận thì không. BTC cho dùng catalog và `zaic_tools` của public_test để sinh dữ liệu. Cấm gán nhãn hay pseudo-label audio và yêu cầu của public/private test.
+    - **Phát hiện: public_test có 11 app không có trong train**: ecommerce, event_tickets, grocery, habit_tracker, pantry, parking, public_transit, recipes, stocks, train_bus_tickets, translator (34 tool).
+      - 410/634 mẫu public cài ít nhất một app này; 266 lượt assistant trong history của public gọi tới chúng.
+      - 25 app có ở cả hai catalog, và tool của chúng giống hệt nhau.
+      - `zaic_tools` của public_test có sẵn bộ giả lập cho cả 11 app (`apps/grocery.py`…), nên kiểm được từng call bằng cách chạy thật.
+      - Đây đúng là tình huống dev_lao mô phỏng: 4B trên dev_lao (app bị giấu) đạt 39,20 so với 54,01 trên dev_random (chữ ASR fine-tune). Khoảng cách 15 điểm này là chỗ dữ liệu tổng hợp có thể lấp.
+    - **Đánh giá:**
+      - **Claude API: đáng làm**, nhắm vào app chưa thấy, không sinh đại trà cho app đã có đủ mẫu.
+      - **Dịch vụ chuyển giọng nói thành chữ của Meta: gần như không dùng được.** Chạy trên audio test là gán nhãn test (cấm); lúc suy luận phải offline; audio train đã có nhãn `audio_text`. Chỉ có ích nếu sau này cần TTS sinh audio cho từ vựng app mới, mà dịch vụ này không phải TTS.
+    - **Đề xuất pilot (chờ Anh duyệt, HUMAN_TODO B12):**
+      - Sinh 300–600 mẫu cho 6 app bị giấu của dev_lao (catalog và bộ giả lập của train), trộn execute / hỏi lại / ngoài phạm vi theo tỉ lệ của train.
+      - Mỗi mẫu gồm context (giờ, hồ sơ, app đã cài), trạng thái ban đầu do Claude viết theo cấu trúc trong code bộ giả lập, câu yêu cầu kiểu nói (số viết bằng chữ như `audio_text`), và chuỗi call đúng. Không đọc `<split>_environment/`, không dùng trạng thái của mẫu test.
+      - Lọc: chạy chuỗi call trong `zaic_tools.Session`; bỏ mẫu có call lỗi, sai schema, hay không đổi trạng thái khi phải đổi. Mẫu hỏi lại phải thật sự thiếu tham số. Rồi cho một model khác giải lại từ câu yêu cầu; không khớp thì bỏ.
+      - Train 4B trên fit_lao + mẫu sinh (cùng công thức), chấm dev_lao. **Luật đặt trước:** tăng ít nhất 2,0 điểm trên chữ ASR fine-tune (mốc 39,20) thì sinh tiếp cho 11 app của public và train bản cuối; dưới mức đó thì dừng.
+      - Chi phí: Claude Opus 5.5 giá 4 / 20 USD mỗi triệu token vào / ra, Batch API giảm 50%. Mỗi lần gọi sinh vài mẫu cho cùng một app, nên ước khoảng 10–20 USD cho pilot. Script có trần tiền cứng. Claude Sonnet 5.5 rẻ bằng nửa, nếu Anh muốn tiết kiệm.
+      - Key: Anh tự đặt trong `~/.zac_anthropic_env` (chmod 600); Claude không cần thấy key, không commit key.
+    - **Cần Anh tự kiểm:** điều khoản API của Anthropic có điều cấm dùng dịch vụ để train model cạnh tranh. Agent 4B cho cuộc thi nhiều khả năng không thuộc diện đó, nhưng Anh nên đọc lại. Dữ liệu sinh ra và code sinh phải nằm trong gói Docker, vì BTC yêu cầu nộp cả code train và dữ liệu.
+
 ---
 
 ## 8. Việc tiếp theo
@@ -1361,7 +1384,8 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
 - [ ] Thiết kế D, ưu tiên hỏi lại với schema chưa thấy: dữ liệu đủ/thiếu slot trên schema đổi tên hoặc tổng hợp; thử kiểm tra tất định xem tham số bắt buộc có nguồn trong lời nói, history hoặc kết quả tool không, đo trên fit trước.
 - [x] **4B 4-bit trên laptop, vòng dev_lao** (C6): +14,65 trên chữ ASR fine-tune, 4B thắng vòng này (02/11, entry 57).
 - [x] **4B: quyết bằng điểm gộp 495 dòng** (C7): gộp 33,07 → 46,17, **chốt 4B** (02/11 10:13, entry 58).
-- [ ] **Sau khi chốt 4B:** file nộp public bằng 4B (HUMAN_TODO B11); đo trên A30, kiểm nạp 4-bit hay bf16; thêm cờ 4-bit và bước khởi động vào `eval_ckpt.sh`, `train_local.sh`, `predict.sh` (entry 58).
+- [ ] **Pilot dữ liệu tổng hợp bằng Claude API** cho app chưa thấy (chờ Anh duyệt, HUMAN_TODO B12, entry 59).
+- [ ] **Sau khi chốt 4B:** file nộp public bằng 4B (HUMAN_TODO B11, Anh tự chạy); đo trên A30, kiểm nạp 4-bit hay bf16; thêm cờ 4-bit và bước khởi động vào `eval_ckpt.sh`, `train_local.sh`, `predict.sh` (entry 58).
 - [ ] **Thí nghiệm A:** 2 epoch trên fit_random, để tách "thiếu ngân sách train" với "thiếu dữ liệu đa dạng".
 - [ ] **Thí nghiệm C:** trong agent, giữ nguyên call JSON hỏng và nhắc khi gặp `done=false`; PR riêng, 12 phút đánh giá.
 - [ ] **Thí nghiệm D:** thiết kế dữ liệu phản thực tế từ fit cho điều kiện và ranh giới hỏi lại; mọi nhãn phải qua kiểm tra thực thi.

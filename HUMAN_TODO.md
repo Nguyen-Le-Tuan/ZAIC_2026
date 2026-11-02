@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 10:20 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 12:15 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **12:15 ngày 02/11:** **Anh tự chạy file nộp public bằng 4B (B11):** `bash ~/zac-c3/start_public_q4b.sh`, khoảng 1,5–2 giờ; đã thử 2 mẫu public, chạy đúng. **Ý tưởng sinh dữ liệu bằng Claude API: luật cho phép, và có chỗ đáng làm.** 11 app của public_test không có trong train (410/634 mẫu public có cài ít nhất một app này), và 4B trên app chưa thấy (dev_lao) kém app đã thấy khoảng 15 điểm. Claude đề xuất pilot trên 6 app của dev_lao trước, khoảng 10–20 USD; **Anh quyết B12.** Credit Meta (chuyển giọng nói thành chữ) gần như không dùng được: không được gán nhãn audio test, và audio train đã có nhãn (JOURNAL entry 59).
 > - **10:20 ngày 02/11:** **Chốt 4B làm model agent (C7 xong).** Điểm gộp 495 dòng trên chữ Whisper-turbo fine-tune: 1.7B 33,07 → 4B **46,17**, +13,11 [+8,94; +17,32]. Riêng dev_random: 42,64 → **54,01** (+11,37 [+5,35; +17,45]); chữ chuẩn 53,92 → **65,61**. Luật đặt trước cần hơn ít nhất 1 điểm và dev_random không kém, nên 4B được chọn. Không mẫu nào chạy quá 25 giây mà có điểm, nên hạn giờ không làm đổi kết quả. Mẫu đầu tiên của một lượt chấm chạy 110 giây vì model vừa nạp; cần chạy khởi động trước khi tính giờ. **Laptop rảnh từ 10:13, gập máy được.** **Anh quyết B11:** làm file nộp public bằng 4B trên laptop (khoảng 1,5–2 giờ GPU). **Leader (L6):** Docker giờ chạy 4B (khoảng 8 GB ở bf16) cùng Whisper-turbo fine-tune; thời gian trên A30 chưa đo (JOURNAL entry 58).
 > - **03:40 ngày 02/11:** **4B thắng rõ trên dev_lao (C6 xong).** Chữ ASR fine-tune: 1.7B 24,55 → 4B **39,20**, +14,65 [+8,79; +20,49] (tốt hơn ở 78 mẫu, kém hơn ở 30). Chữ chuẩn: 35,62 → **53,40**, +17,78 [+11,74; +23,61]. Tăng ở cả mẫu cần làm (execute) lẫn mẫu hỏi lại. Hai bên chạy cùng code suy luận, cùng 262 mẫu; chỉ khác model. Laptop 4-bit: trung bình 7,8 giây mỗi mẫu, chậm nhất 27,9 giây (1 mẫu quá 25 giây, mẫu đó vốn 0 điểm). Theo luật đặt trước, **laptop đang chạy lượt kế tiếp: 4B trên fit_random → dev_random (C7, từ 03:30, dự kiến xong khoảng 10:00)**, rồi quyết bằng điểm gộp 495 dòng. Phải mang máy đi trước khi xong thì dừng bằng `systemctl --user stop lifemate-q4b-random` (đợi 1–3 phút cho lưu xong rồi gập); về chạy `bash ~/zac-c3/start_q4b_random.sh` là tiếp từ chỗ dừng. **Leader (L6):** nếu C7 chốt 4B, Docker sẽ chạy 4B (khoảng 8 GB ở bf16) cùng Whisper-turbo; thời gian trên A30 chưa đo (JOURNAL entry 57).
 > - **20:55 ngày 01/11:** **Lượt 4B chạy lại từ 20:47** (B10 xong: Anh bấm "Chạy tiếp 4B"). 711 token/giây, như lúc sáng. **Dự kiến train xong khoảng 01:30, chấm xong khoảng 03:00 sáng 02/11.** Để máy cắm sạc, không gập, tránh app nặng GPU. Cần mang máy đi thì dừng bằng `systemctl --user stop lifemate-q4b-lao`, đợi 1–3 phút cho lưu xong rồi gập; chạy lại `bash ~/zac-c3/start_q4b.sh` là tiếp từ chỗ dừng.
@@ -43,7 +44,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
-- **Laptop:** GPU rảnh từ 10:13 ngày 02/11, gập máy được. Lượt kế tiếp chờ Anh quyết (B11).
+- **Laptop:** GPU rảnh từ 10:13 ngày 02/11, gập máy được. Lượt kế tiếp: Anh tự chạy file nộp public bằng 4B (B11).
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -82,7 +83,17 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Cần khoảng 7,5 giờ GPU (train 6,2 giờ, chấm 1,3 giờ), chia nhiều buổi được: lưu mỗi 10 bước (khoảng 12 phút).
   - ***Xong (20:47, Anh bấm "Chạy tiếp 4B"):*** lượt chạy lại từ đầu, đang train (C6).
   - Dừng bất cứ lúc nào: `systemctl --user stop lifemate-q4b-lao`. Lệnh chờ bước đang chạy xong rồi lưu, mất 1–3 phút; đợi xong mới gập máy. Chạy lại `bash ~/zac-c3/start_q4b.sh` là tiếp từ chỗ dừng.
-- [ ] **B11. ← MỚI (10:20 ngày 02/11).** (1 phút) **Quyết: làm file nộp public bằng 4B trên laptop ngay?** Agent 4B `q4b4_fit_random` nạp 4-bit, dùng lại chữ Whisper-turbo fine-tune của lần nộp 35,24, nên chỉ agent thay đổi. Khoảng 1,5–2 giờ GPU; cắm sạc, không gập máy trong lúc chạy. Anh hoặc leader tự nộp; Claude không nộp. Dev gộp tăng 33,07 → 46,17; hai lần trước public cao hơn dev gộp khoảng 2 điểm, nhưng đó chỉ là ước lượng thô.
+- [ ] **B11.** *(12:10 ngày 02/11, Anh chọn tự chạy sau.)* **Chạy file nộp public bằng 4B trên laptop, rồi nộp.** Agent 4B `q4b4_fit_random` nạp 4-bit, dùng lại chữ Whisper-turbo fine-tune của lần nộp 35,24, nên chỉ agent thay đổi. Khoảng 1,5–2 giờ GPU; cắm sạc, không gập máy trong lúc chạy. Anh hoặc leader tự nộp; Claude không nộp. Dev gộp tăng 33,07 → 46,17; hai lần trước public cao hơn dev gộp khoảng 2 điểm, nhưng đó chỉ là ước lượng thô.
+  - Chạy: `bash ~/zac-c3/start_public_q4b.sh`. Lệnh chạy nền, đóng terminal được; cắm sạc, không gập máy tới khi xong.
+  - Xem tiến độ: `tail -f ~/zac-c3/lifemate/runs/e2e_public_q4b_2026-11-02.log`. Xong khi log có dòng `done: 634 lines, ok=True`.
+  - Dừng: `systemctl --user stop lifemate-public-q4b`. Chạy lại thì làm lại từ mẫu đầu.
+  - File nộp: `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl`. Claude đã thử 2 mẫu public: chạy đúng, đúng định dạng.
+  - Nộp xong thì báo điểm để Claude ghi.
+- [ ] **B12. ← MỚI (12:15 ngày 02/11).** (5 phút) **Quyết: pilot sinh dữ liệu tổng hợp bằng Claude API?** (JOURNAL entry 59)
+  - Pilot: sinh khoảng 300–600 mẫu cho 6 app bị giấu của dev_lao, kiểm từng mẫu bằng cách chạy thật trong `zaic_tools`, train lại 4B trên fit_lao + mẫu sinh, chấm dev_lao. Luật đặt trước: tăng ít nhất 2 điểm trên chữ ASR fine-tune (mốc 39,20) thì sinh tiếp cho 11 app của public.
+  - Chi phí pilot ước khoảng 10–20 USD (Claude Opus 5.5 qua Batch API, giảm 50%). Script sẽ có trần tiền cứng; Claude không chi vượt mức Anh duyệt.
+  - Anh tự đặt API key trên laptop (Claude không cần thấy key): tạo file `~/.zac_anthropic_env` chứa dòng `export ANTHROPIC_API_KEY=...`, rồi `chmod 600 ~/.zac_anthropic_env`. Không dán key vào chat, không commit.
+  - Gói Claude Max và credit API là hai thứ riêng: script chỉ dùng được credit trên Console (platform.claude.com).
 - [ ] **B7.** (tuỳ chọn) Xác minh số điện thoại cho tài khoản Kaggle của Anh (thêm khoảng 30 giờ GPU/tuần). Lưu bằng chứng BTC cho phép nhờ anh trai train vào mục 4.
 
 **Leader:**
@@ -141,7 +152,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | ~~09:27–khoảng 17:00~~ 09:27–10:13 ngày 01/11 | Laptop train 4B 4-bit (C6): dừng vì máy mang đi học; chạy lại khi Anh về (B10) |
 | 20:47 ngày 01/11 – 03:28 ngày 02/11 | Laptop train và chấm 4B 4-bit (C6): 4B thắng rõ trên dev_lao |
 | 03:30–10:13 ngày 02/11 | Laptop train và chấm 4B trên fit_random / dev_random (C7): chốt 4B |
-| Khi Anh quyết (B11) | Laptop làm file nộp public bằng 4B, khoảng 1,5–2 giờ |
+| Khi Anh chạy (B11) | Laptop làm file nộp public bằng 4B, khoảng 1,5–2 giờ |
+| Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 
 ### D. Khi máy xong: gửi kết quả một lần

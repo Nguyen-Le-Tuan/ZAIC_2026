@@ -1541,7 +1541,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Tín hiệu nhất quán nhất là mẫu hỏi lại giảm ở cả hai dev: dev_random −7,4 (chữ ASR) và −9,1 (chữ chuẩn); dev_lao −12,0 (chữ ASR). Từng phần đều ít mẫu và khoảng tin cậy chứa 0. Nguyên nhân chưa kiểm; giả thuyết: chữ turbo nhiễu làm model khó nhận ra khi nào thật sự thiếu thông tin.
     - **Bước tiếp theo theo kế hoạch ở entry 66: bỏ chữ trộn; train lại công thức 4B chữ chuẩn trên đủ 1.545 mẫu, rồi làm file nộp public.**
       - Đã chuẩn bị, **chưa bật**: script `~/zac-c3/run_q4b_all.sh`, lệnh bật `bash ~/zac-c3/start_q4b_all.sh`, unit `lifemate-q4b-all`. Script tự chờ lượt chấm dev_lao xong rồi mới chạy.
-      - Dữ liệu `sft/all_q4b.jsonl` (dựng lúc 15:00): 1.545 mẫu (fit_random + dev_random), không bỏ app nào. Cùng code `sft.py` (sha 17c606b9) và tham số augmentation như các bản trước; 4.874 dòng, khoảng 305 bước. Cờ train giống hệt `q4b4_fit_random`.
+      - Dữ liệu `sft/all_q4b.jsonl` (dựng lúc 15:05): 1.545 mẫu (fit_random + dev_random), không bỏ app nào. Cùng code `sft.py` (sha 17c606b9) và tham số augmentation như các bản trước; 4.874 dòng, khoảng 305 bước. Cờ train giống hệt `q4b4_fit_random`.
       - Không còn dev để chấm, nên chỉ kiểm loss và định dạng file nộp. File nộp dùng cùng chữ ASR fine-tune với bản 45,39, chỉ đổi adapter: `runs/e2e_public_q4b_all.jsonl`.
       - Thời gian: train khoảng 6,3 giờ, file nộp khoảng 1,7 giờ, tổng khoảng 8 giờ laptop. Bật lúc khoảng 15:30 thì xong khoảng 23:30.
       - Chờ Anh chọn bật ngay hay để sau (HUMAN_TODO B17), vì máy sẽ bận tới khuya.

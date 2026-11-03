@@ -91,6 +91,11 @@ class VLLMBackend:
         """`deadline` is not enforced here: an in-process generate cannot be stopped; max_tokens bounds it."""
         return self.llm.generate([prompt], self.params, use_tqdm=False)[0].outputs[0].text
 
+    def warmup(self, prompt: str, max_new_tokens: int = 16) -> None:
+        """One untimed generation before the first sample (see HFBackend.warmup)."""
+        from vllm import SamplingParams
+        self.llm.generate([prompt], SamplingParams(temperature=0, max_tokens=max_new_tokens, seed=0), use_tqdm=False)
+
 
 class HFBackend:
     """transformers + optional LoRA adapter (merged). Slower than vLLM but runs anywhere; used for local evals."""
@@ -126,6 +131,15 @@ class HFBackend:
                                       pad_token_id=self.eos, **kw)
         return self.tok.decode(out[0, ids.shape[1]:], skip_special_tokens=False).split("<|im_end|>")[0]
 
+    def warmup(self, prompt: str, max_new_tokens: int = 16) -> None:
+        """One untimed generation right after loading. The first generate call pays one-off GPU setup that the
+        per-sample deadline cannot cut (max_time is only checked between tokens): in the 4-bit dev runs the first
+        sample took 110 s and 62 s and stopped on time with one step (JOURNAL entry 58). Output is discarded."""
+        ids = self.tok(prompt, return_tensors="pt", add_special_tokens=False).input_ids.to(self.model.device)
+        with self.torch.no_grad():
+            self.model.generate(ids, max_new_tokens=max_new_tokens, do_sample=False, eos_token_id=self.eos,
+                                pad_token_id=self.eos)
+
 
 class PrefixBackend:
     """Forces the start of every assistant turn, e.g. an empty '<think>\\n\\n</think>\\n\\n' so hybrid Qwen3
@@ -136,6 +150,10 @@ class PrefixBackend:
 
     def generate(self, prompt: str, deadline: float | None = None) -> str:
         return self.prefix + self.inner.generate(prompt + self.prefix, deadline=deadline)
+
+    def warmup(self, prompt: str, max_new_tokens: int = 16) -> None:
+        if hasattr(self.inner, "warmup"):
+            self.inner.warmup(prompt + self.prefix, max_new_tokens)
 
 
 class OracleBackend:

@@ -8,7 +8,12 @@
 #   FIT_SFT_ARGS (default: --drop-apps splits/heldout_apps.json for fit_lao), EVAL_STEPS=0 (only evaluate final),
 #   EXTRA_SAMPLES=gen/x.jsonl (appended with sft --extra-samples; the train file is then sft/${FIT}_$TAG.jsonl),
 #   ASR_FIT=asr/x.jsonl (user turns of the SFT rows from that ASR file instead of audio_text; train file
-#   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr).
+#   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr),
+#   LOAD_4BIT=1 (QLoRA: base in NF4 with 8-bit AdamW for training, and the same 4-bit load for every rollout; no
+#   teacher-forced loss pass, train.py logs the dev loss), TIME_BUDGET (rollout seconds per sample, default 25).
+#   4B on the laptop (JOURNAL entries 55-58; about 5.5 h train + 1.2 h per rollout):
+#   MODEL=Qwen/Qwen3-4B-Instruct-2507 TAG=q4b4_x LOAD_4BIT=1 TIME_BUDGET=60 SKIP_ZS=1 EVAL_STEPS=0 \
+#     TRAIN_ARGS="--max-len 6144 --state-every 10" bash scripts/train_local.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODEL=${MODEL:-Qwen/Qwen3-1.7B}
@@ -16,6 +21,11 @@ FIT=${FIT:-fit_random}
 DEV=${DEV:-dev_random}
 TAG=${TAG:-q17b_$FIT}
 EPOCHS=${EPOCHS:-1}
+LOAD_4BIT=${LOAD_4BIT:-0}
+TIME_BUDGET=${TIME_BUDGET:-25}
+export LOAD_4BIT TIME_BUDGET   # read by scripts/eval_ckpt.sh
+case $LOAD_4BIT in 1) QTRAIN="--load-4bit --optim adamw8bit"; CK_LOSS=0 ;; 0) QTRAIN=""; CK_LOSS=1 ;;
+  *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
 PY=.venv/bin/python
 case $FIT in fit_lao) FIT_SFT_ARGS=${FIT_SFT_ARGS:---drop-apps splits/heldout_apps.json} ;; *) FIT_SFT_ARGS=${FIT_SFT_ARGS:-} ;; esac
 SFT_FIT=sft/$FIT.jsonl
@@ -66,7 +76,7 @@ fi
 stamp "training $MODEL on $SFT_FIT ($EPOCHS epoch), dev loss on every row of sft/$DEV.jsonl"
 # shellcheck disable=SC2086
 $PY -m lifemate.train --model "$MODEL" --data "$SFT_FIT" --eval-data "sft/$DEV.jsonl" \
-    --epochs "$EPOCHS" --out "ckpt/$TAG" ${TRAIN_ARGS:-}
+    --epochs "$EPOCHS" --out "ckpt/$TAG" $QTRAIN ${TRAIN_ARGS:-}
 
 stamp "rollout eval on $DEV (oracle text) of the saved checkpoints"
 CKPTS=(final)
@@ -77,7 +87,7 @@ for c in "${CKPTS[@]}"; do
   suffix=$([ "$c" = final ] && echo "" || echo "_s${c#step_}")
   stamp "eval $c"
   adapter="ckpt/$TAG/$c"
-  TAG="$TAG$suffix" ADAPTER="$adapter" MODEL="$MODEL" DEV="$DEV" LOSS=1 bash scripts/eval_ckpt.sh
+  TAG="$TAG$suffix" ADAPTER="$adapter" MODEL="$MODEL" DEV="$DEV" LOSS=$CK_LOSS bash scripts/eval_ckpt.sh
 done
 if [ -n "${ASR_DEV:-}" ]; then
   stamp "eval final on $DEV with ASR text from $ASR_DEV"

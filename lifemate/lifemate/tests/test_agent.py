@@ -13,10 +13,10 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
-from lifemate.agent import Agent, OpenAICompletionsBackend, OracleBackend
+from lifemate.agent import Agent, OpenAICompletionsBackend, OracleBackend, PrefixBackend
 from lifemate.data import DEFAULT_ROOT, catalog_tools, load_catalog, load_split, zaic_tools
 from lifemate.guard import guarded_values, seen, unseen_ids
-from lifemate.prompt import render_calls
+from lifemate.prompt import build_messages, render_calls, to_chatml
 from lifemate.tests.test_scorer import Skip, _skip
 
 GUARD_SKEW = "train_1696"  # the one fit sample whose gold write uses an ID never shown (data skew; docs/ID_GUARD_2026-10-30.md)
@@ -246,6 +246,36 @@ def test_openai_client_without_deadline_waits_and_raises_on_timeout():
             raise AssertionError("a timeout without a deadline must raise")
     finally:
         srv.shutdown()
+
+
+# ------------------------------------------------------------------ warm-up (untimed generation after loading)
+
+def test_warmup_prompt_uses_only_the_context():
+    from lifemate.infer import WARMUP_TEXT, warmup_prompt
+    _, tools, apps, items = _data()
+    item = next(s for s in items.values() if s.get("history"))
+    p = warmup_prompt(item, tools, apps)
+    real = to_chatml(build_messages(item, item["audio_text"], _hist(item), tools, apps))
+    system = real.split("<|im_end|>")[0]
+    assert p.startswith(system), "same system prompt (rules, profile, calendar, tools) as the real first step"
+    assert p.endswith(f"<|im_start|>user\n{WARMUP_TEXT}<|im_end|>\n<|im_start|>assistant\n")
+    assert item["audio_text"] not in p and not any(h["audio_text"] in p for h in item["history"] if h["role"] == "user")
+    assert p.count("<|im_start|>") == 3  # system, the greeting, the generation prompt: no history turns
+
+
+def test_prefix_backend_forwards_warmup():
+    got = []
+
+    class Inner:
+        def generate(self, prompt, deadline=None):
+            return ""
+
+        def warmup(self, prompt, max_new_tokens=16):
+            got.append((prompt, max_new_tokens))
+
+    PrefixBackend(Inner(), "<think>\n\n</think>\n\n").warmup("P", 4)
+    assert got == [("P<think>\n\n</think>\n\n", 4)]
+    PrefixBackend(OracleBackend([]), "x").warmup("P")  # an inner backend without warmup is skipped
 
 
 if __name__ == "__main__":

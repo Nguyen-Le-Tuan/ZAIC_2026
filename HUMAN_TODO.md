@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:17 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:39 ngày 02/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **22:39 ngày 02/11:** **Chấm xong: pilot không đạt cả hai loại chữ.** Chữ chuẩn 53,40 → 50,57 (−2,83 [−7,93; +2,35]); chữ ASR 39,20 → 37,12. Giảm cả ở app mà dữ liệu sinh nhắm tới. → Không dùng dữ liệu sinh này, không sinh cho 11 app public, giữ chi ở 12,57 USD. **B14 không cần làm nữa.** GPU laptop rảnh, gập máy được (JOURNAL entry 61).
 > - **22:17 ngày 02/11:** **Pilot dữ liệu sinh không đạt.** Train 4B trên fit_lao + 280 mẫu sinh xong 21:15. Chấm dev_lao chữ ASR fine-tune: 39,20 → **37,12** (−2,09, khoảng tin cậy 95% [−7,22; +3,01]). Luật đặt trước cần tăng ít nhất 2,0, nên **không giữ** dữ liệu sinh ở dạng này và **chưa sinh cho 11 app public** (đã chi 12,57 / 30 USD). App bị giấu −0,96, app đã thấy −4,69. Chữ chuẩn đang chấm, xong khoảng 22:40 (JOURNAL entry 61).
 > - **15:47 ngày 02/11:** **Điểm public lần 3: 45,39** (Anh nộp `e2e_public_q4b.jsonl`, agent 4B; B11 xong). Tăng 10,15 so với 35,24; dev gộp dự đoán tăng 13,11, khoảng tin cậy +8,94 đến +17,32, nên vẫn khớp. Lần này public thấp hơn dev gộp 0,78 điểm (hai lần trước cao hơn khoảng 2 điểm); một lần như vậy vẫn là nhiễu. Train pilot vẫn đang chạy, xong khoảng 23:00 (JOURNAL entry 62).
 > - **14:54 ngày 02/11:** **File nộp public 4B xong (B11): Anh nộp được rồi.** `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl`: 634 dòng, kiểm định dạng đạt (0 lỗi), sha256 `2fc287ffa729…`. Trên laptop mỗi mẫu trung bình 9,1 giây, p95 17,9 giây; 2 mẫu quá 30 giây vì chạy hết 8 bước, nên bản Docker phải đặt hạn dưới 30 giây. **Pilot sinh xong: 280/384 mẫu đạt, 11,55 USD.** Giọng văn gần câu thật ("giùm" 10% so với 12%, dài 20,6 so với 22,5 từ). **Tổng đã chi: 12,57 / 30 USD.** **Train pilot tự bật lúc 14:52**, xong khoảng 22:30–23:00; cắm sạc, không gập máy. Luật: giữ nếu dev_lao chữ ASR tăng ít nhất 2,0 điểm so với 39,20 (JOURNAL entry 61).
@@ -53,7 +54,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
-- **Laptop: train pilot xong 21:15; đang chấm dev_lao chữ chuẩn, xong khoảng 22:40.** Chữ ASR: 37,12, không đạt luật (22:17). Cắm sạc, không gập máy. Cần mang máy đi: `systemctl --user stop lifemate-q4b-synth`, đợi 1–3 phút cho lưu xong; chạy tiếp bằng `bash ~/zac-synth/start_q4b_lao_synth.sh`. File nộp public 4B (B11) đã xong lúc 14:42.
+- **Laptop: rảnh từ 22:38 ngày 02/11, gập máy được.** Pilot dữ liệu sinh xong, không đạt. Chữ ASR: 37,12, không đạt luật (22:17). Cắm sạc, không gập máy. Cần mang máy đi: `systemctl --user stop lifemate-q4b-synth`, đợi 1–3 phút cho lưu xong; chạy tiếp bằng `bash ~/zac-synth/start_q4b_lao_synth.sh`. File nộp public 4B (B11) đã xong lúc 14:42.
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -99,7 +100,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - File nộp: `~/zac-c3/lifemate/runs/e2e_public_q4b.jsonl`. Claude đã thử 2 mẫu public: chạy đúng, đúng định dạng.
   - Nộp xong thì báo điểm để Claude ghi.
   - *(14:54 ngày 02/11) File xong: 634 dòng, 0 lỗi định dạng, sha256 `2fc287ffa729…`. Còn: Anh hoặc leader nộp file này và báo điểm.*
-- [ ] **B12. ← MỚI (12:15 ngày 02/11).** (5 phút) **Quyết: pilot sinh dữ liệu tổng hợp bằng Claude API?** (JOURNAL entry 59)
+- [x] **B12.** *(Xong 22:39: pilot chạy hết, không đạt luật, dừng hướng này.)* (5 phút) **Quyết: pilot sinh dữ liệu tổng hợp bằng Claude API?** (JOURNAL entry 59)
   - Pilot: sinh khoảng 300–600 mẫu cho 6 app bị giấu của dev_lao, kiểm từng mẫu bằng cách chạy thật trong `zaic_tools`, train lại 4B trên fit_lao + mẫu sinh, chấm dev_lao. Luật đặt trước: tăng ít nhất 2 điểm trên chữ ASR fine-tune (mốc 39,20) thì sinh tiếp cho 11 app của public.
   - Chi phí pilot ước khoảng 10–20 USD (Claude Opus 5.5 qua Batch API, giảm 50%). Script sẽ có trần tiền cứng; Claude không chi vượt mức Anh duyệt.
   - Anh tự đặt API key trên laptop (Claude không cần thấy key): tạo file `~/.zac_anthropic_env` chứa dòng `export ANTHROPIC_API_KEY=...`, rồi `chmod 600 ~/.zac_anthropic_env`. Không dán key vào chat, không commit.
@@ -111,7 +112,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - `printf 'export META_API_KEY=%s\n' 'DÁN_KEY_VÀO_ĐÂY' > ~/.zac_meta_env && chmod 600 ~/.zac_meta_env`
   - Không dán key vào chat. Tạo xong file là bài thử tự chạy (lệnh chờ của Claude), trần 3 USD.
   - Sau đó đọc file `~/zac-synth/lifemate/gen/synth_t20_show.txt` và chấm: trong 5 câu được nhận, mấy câu nghe tự nhiên như người Việt nói thật.
-- [ ] **B14. ← MỚI (13:20 ngày 02/11).** (10 phút) **Chấm độ tự nhiên của câu sinh** (điều kiện thứ hai để sang pilot): mở `lifemate/gen/synth_review_t12_t20.md`, đánh **T** (tự nhiên) hoặc **K** (không) cho từng câu, ghi chú nếu đáp án sai ý câu nói. Chú ý nhất 9 câu đầu (bản t12 đang dùng). Đạt khi ít nhất 4/5 câu là T. Báo Claude số T/K.
+- [x] **B14.** *(Không cần nữa (22:39): pilot không đạt trên điểm chấm, nên kết quả chấm độ tự nhiên không đổi quyết định.)* (10 phút) **Chấm độ tự nhiên của câu sinh** (điều kiện thứ hai để sang pilot): mở `lifemate/gen/synth_review_t12_t20.md`, đánh **T** (tự nhiên) hoặc **K** (không) cho từng câu, ghi chú nếu đáp án sai ý câu nói. Chú ý nhất 9 câu đầu (bản t12 đang dùng). Đạt khi ít nhất 4/5 câu là T. Báo Claude số T/K.
   - Nếu đạt: pilot khoảng 380 mẫu đạt cho 6 app của dev_lao, khoảng 8 USD (tổng vẫn dưới 10 USD), rồi train 4B trên fit_lao + mẫu sinh trên laptop (khoảng 7 giờ) và chấm dev_lao (khoảng 1,2 giờ).
   - Sinh cho 11 app của public sau pilot sẽ làm tổng vượt 10 USD; khi đó Claude hỏi Anh trước.
   - *(13:40 ngày 02/11) Anh nâng trần lên 30 USD; chưa báo kết quả chấm. Claude sinh pilot ngay (chỉ dùng API, không cần GPU) bằng `muse-wonder-1.0`. Phần train vẫn chờ GPU rảnh (sau B11). Nếu Anh chấm thấy dưới 4/5 câu tự nhiên thì báo để Claude dừng trước khi train.*

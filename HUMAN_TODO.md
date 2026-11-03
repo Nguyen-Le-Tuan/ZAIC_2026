@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:54 ngày 03/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 08:56 ngày 03/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **08:56 ngày 03/11:** **Lượt chữ trộn qua cửa 1 trên dev_random:** chữ ASR fine-tune 54,01 → **56,32** (+2,31), chữ chuẩn 65,61 → 66,05 (+0,43). Khoảng tin cậy còn chứa 0, và mẫu hỏi lại giảm ở cả hai loại chữ (33 mẫu), cần theo dõi. **Laptop chạy cùng cách trộn trên fit_lao từ 08:54, chấm dev_lao xong khoảng 15:40**, rồi quyết bằng điểm gộp 495 dòng. Cần mang máy đi thì dùng lệnh ở dòng Laptop (JOURNAL entry 67).
 > - **00:54 ngày 03/11:** **Laptop khởi động lại lúc 00:37** (lệnh khởi động lại thường, không phải crash), nên lượt chữ trộn dừng ở bước 10. **Đã chạy tiếp từ 00:53**, chỉ mất vài phút train; **chấm xong khoảng 07:25**. Đừng khởi động lại hay tắt máy tới khi xong; cần dừng thì dùng lệnh ở dòng Laptop. **B16: Anh chọn chưa cần Colab trả phí** (JOURNAL entry 65).
 > - **00:22 ngày 03/11:** **Laptop train 4B học chữ trộn từ 00:19** (B15 xong: Anh chọn chạy đêm nay). Một nửa mẫu fit_random học trên chữ Whisper-turbo, nửa kia trên chữ chuẩn. **Chấm dev_random xong khoảng 07:05.** Giữ nếu chữ ASR fine-tune tăng ít nhất 1,0 so với 54,01 và chữ chuẩn không giảm quá 2,0 so với 65,61; qua thì chạy tiếp trên fit_lao. **Cắm sạc, không gập máy, tắt bớt app nặng** (RAM còn khoảng 2,8 GB). **Colab:** bản miễn phí là GPU T4, chậm gần 9 lần laptop khi train (đã đo ở Kaggle), nên không dùng. Bản trả phí (L4/A100) chưa cần cho train; có ích cho việc đo bf16 và thời gian (B16, không gấp) (JOURNAL entry 64).
 > - **22:44 ngày 02/11:** **Anh hỏi chiến lược để nộp public thêm.** Claude đề xuất theo thứ tự: (1) 4B học trên chữ trộn (nửa chữ chuẩn, nửa chữ ASR), khoảng 6,7 giờ laptop, chấm trên dev_random; (2) train lại công thức thắng trên đủ 1.545 mẫu train rồi nộp public; (3) chuẩn bị Docker. **Anh chọn B15** (JOURNAL entry 63).
@@ -53,11 +54,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | **Từ 00:19 ngày 03/11: train 4B học chữ trộn (B15); dừng 00:37 vì máy khởi động lại, chạy tiếp 00:53; chấm xong khoảng 07:25.** Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | **Từ 08:54 ngày 03/11: train 4B học chữ trộn trên fit_lao, chấm dev_lao xong khoảng 15:40.** Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
-- **Laptop: đang train 4B học chữ trộn (chạy tiếp từ 00:53 ngày 03/11 sau lần khởi động lại lúc 00:37), chấm xong khoảng 07:25.** Cắm sạc, không gập máy, không khởi động lại, tắt bớt app nặng. Cần mang máy đi: `systemctl --user stop lifemate-q4b-mix`, đợi 1–3 phút cho lưu xong rồi gập; về chạy `bash ~/zac-c3/start_q4b_mix.sh` là tiếp từ chỗ dừng. Trước đó: pilot dữ liệu sinh xong 22:38 ngày 02/11, không đạt.
+- **Laptop: đang train 4B học chữ trộn trên fit_lao (từ 08:54 ngày 03/11), chấm dev_lao xong khoảng 15:40.** Cắm sạc, không gập máy, không khởi động lại, tắt bớt app nặng. Cần mang máy đi: `systemctl --user stop lifemate-q4b-lao-mix`, đợi 1–3 phút cho lưu xong rồi gập; về chạy `bash ~/zac-c3/start_q4b_lao_mix.sh` là tiếp từ chỗ dừng. Trước đó: lượt chữ trộn trên fit_random xong 07:30, qua cửa 1.
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -185,7 +186,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 15:47 ngày 02/11 | Anh báo điểm public lần 3: 45,39 (B11 xong) |
 | 13:38–14:45 ngày 02/11 | Pilot sinh 280 mẫu đạt bằng API Meta (11,55 USD) |
 | 14:52 – khoảng 23:00 ngày 02/11 | Laptop train 4B pilot trên fit_lao + mẫu sinh, rồi chấm dev_lao |
-| 00:19 – khoảng 07:25 ngày 03/11 | Laptop train 4B học chữ trộn trên fit_random, rồi chấm dev_random (B15); dừng 00:37–00:53 vì máy khởi động lại |
+| 00:19–07:30 ngày 03/11 | Laptop train 4B học chữ trộn trên fit_random, rồi chấm dev_random (B15); dừng 00:37–00:53 vì máy khởi động lại; qua cửa 1 |
+| 08:54 – khoảng 15:40 ngày 03/11 | Laptop train cùng cách trộn trên fit_lao, rồi chấm dev_lao; quyết bằng điểm gộp 495 dòng |
 | Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
 

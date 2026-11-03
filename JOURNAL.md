@@ -1579,7 +1579,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Rủi ro thấp vì cùng công thức. Nếu điểm public thấp hơn rõ so với 45,39 thì giữ adapter cũ cho Docker.
       - Không bắt buộc: bỏ qua thì Docker dùng adapter 45,39. Chi phí là khoảng 8 giờ laptop; hợp nhất là chạy qua đêm, ban ngày làm phần sẵn sàng Docker (bước khởi động, hạn dưới 30 giây, cờ 4-bit), phần này quan trọng hơn cho hạn 16/11.
 
-72. **Anh mang laptop đi tối nay; nhờ hẹn lượt train lại lúc 00:30 và làm trước các việc không cần kết quả train** (03/11, 16:05; Claude xong lúc 16:27).
+72. **Anh mang laptop đi tối nay; nhờ hẹn lượt train lại lúc 00:30 và làm trước các việc không cần kết quả train** (03/11, khoảng 16:08; Claude xong lúc 16:27).
     - **Hẹn giờ (B17 xong):** timer `lifemate-q4b-all-kick.timer` (file trong `~/.config/systemd/user/`, đã enable) chạy một lần lúc **00:30 ngày 04/11**, gọi `~/zac-c3/kick_q4b_all.sh`.
       - Script chỉ bật khi máy đang cắm sạc. Nếu đang chạy pin, nó kiểm lại mỗi phút và bật ngay khi cắm sạc, để không train 8 giờ bằng pin.
       - Rồi gọi `start_q4b_all.sh` như cũ (unit `lifemate-q4b-all`, giới hạn RAM 7–9 GB, chặn ngủ khi rảnh): train khoảng 6,3 giờ, rồi file nộp public khoảng 1,7 giờ. Bắt đầu 00:30 thì xong khoảng 08:30–09:00.

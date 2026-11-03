@@ -1,25 +1,42 @@
 #!/usr/bin/env bash
 # One offline command from the data folder to a checked submission.jsonl: ASR on every wav of the split -> agent loop
 # (one ToolEnv per sample) -> format and schema checks. This is the core a Docker image will wrap.
-#   SPLIT=public_test ASR_MODEL=openai/whisper-large-v3-turbo ASR_REV=41f01f3fe87f28c78e2fbf8b568835947dd65ed9 \
-#     ADAPTER=ckpt/q17b_fit_random/final OUT=runs/e2e_public_turbo.jsonl bash scripts/predict.sh
-# Env: SPLIT, ASR_MODEL, ADAPTER, OUT (required); ASR_REV, LLM (default Qwen/Qwen3-1.7B), DATA (default the repo's data
-#      folder), IDS (subset), ASR_BATCH (default 1 = per-file latency), ASR_OUT (default ${OUT%.jsonl}_asr.jsonl).
-# Models must already be in the Hugging Face cache: nothing is downloaded (HF_HUB_OFFLINE=1). Re-running skips the ASR
-# step when its file exists; the agent step refuses to overwrite OUT.
+# Current system (JOURNAL entries 52, 58, 62): fine-tuned Whisper-turbo (merged) + Qwen3-4B-Instruct-2507 in 4-bit
+# with a LoRA adapter trained on that 4-bit base:
+#   SPLIT=public_test ASR_MODEL=ckpt/asr_turboft/merged ADAPTER=ckpt/q4b4_fit_random/final \
+#     OUT=runs/e2e_public_q4b.jsonl bash scripts/predict.sh
+# Older 1.7B system: LLM=Qwen/Qwen3-1.7B LOAD_4BIT=0 ADAPTER=ckpt/q17b_fit_random/final ...
+# Env: SPLIT, ASR_MODEL, ADAPTER, OUT (required);
+#      LLM (default Qwen/Qwen3-4B-Instruct-2507);
+#      LOAD_4BIT (default 1: base in NF4, adapter not merged, as in every 4B dev run; 0 = bf16 + merged adapter, whose
+#        score has not been checked yet, HUMAN_TODO B16);
+#      TIME_BUDGET (default 25: seconds per sample, the sample's ASR seconds included; the competition limit is 30 on
+#        an A30; the laptop dev runs used 60 because the laptop is slower);
+#      WARMUP (default 1: one untimed generation after loading, so the first sample does not pay the first-call
+#        cost; 0 skips it);
+#      ASR_REV, DATA (default the repo's data folder), IDS (subset), ASR_BATCH (default 1 = per-file latency),
+#      ASR_OUT (default ${OUT%.jsonl}_asr.jsonl).
+# Models must already be in the Hugging Face cache or on disk: nothing is downloaded (HF_HUB_OFFLINE=1). Re-running
+# skips the ASR step when its file exists; the agent step refuses to overwrite OUT.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${SPLIT:?set SPLIT}" "${ASR_MODEL:?set ASR_MODEL}" "${ADAPTER:?set ADAPTER}" "${OUT:?set OUT}"
 DATA=${DATA:-../data/train+public_test}
-LLM=${LLM:-Qwen/Qwen3-1.7B}
+LLM=${LLM:-Qwen/Qwen3-4B-Instruct-2507}
+LOAD_4BIT=${LOAD_4BIT:-1}
+TIME_BUDGET=${TIME_BUDGET:-25}
+WARMUP=${WARMUP:-1}
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}
 IDS=${IDS:-}
 ASR_OUT=${ASR_OUT:-${OUT%.jsonl}_asr.jsonl}
 TRACE=${OUT%.jsonl}_trace.jsonl
 PY=.venv/bin/python
-export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 stamp() { echo "[$(date '+%F %T')] $*"; }
+case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
+case $WARMUP in 1) W=() ;; 0) W=(--no-warmup) ;; *) echo "WARMUP must be 0 or 1" >&2; exit 1 ;; esac
+awk -v t="$TIME_BUDGET" 'BEGIN { exit !(t > 0 && t < 30) }' || { echo "TIME_BUDGET must be above 0 and below 30" >&2; exit 1; }
 
 if [ -e "$ASR_OUT" ]; then
   stamp "reuse $ASR_OUT"
@@ -28,9 +45,10 @@ else
   $PY -m lifemate.asr --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --model "$ASR_MODEL" \
       ${ASR_REV:+--revision "$ASR_REV"} --batch-size "$ASR_BATCH" --out "$ASR_OUT"
 fi
-stamp "agent $LLM + $ADAPTER -> $OUT"
+stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP) -> $OUT"
 $PY -m lifemate.infer --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --text asr --asr-file "$ASR_OUT" \
-    --backend hf --model "$LLM" --adapter "$ADAPTER" --out "$OUT" --trace "$TRACE"
+    --backend hf --model "$LLM" "${Q[@]}" --adapter "$ADAPTER" --time-budget "$TIME_BUDGET" "${W[@]}" \
+    --out "$OUT" --trace "$TRACE"
 stamp "check $OUT"
 $PY scripts/check_submission.py "$OUT" --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} \
     --asr-file "$ASR_OUT" --trace "$TRACE" --json "${OUT%.jsonl}_check.json"

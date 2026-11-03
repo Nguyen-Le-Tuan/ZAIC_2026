@@ -4,7 +4,11 @@
 #   TAG=q17b_base bash scripts/eval_ckpt.sh                      # no ADAPTER = zero-shot (forces an empty <think>)
 # Env: TAG (required), ADAPTER, MODEL, DEV (split name, default dev_random), LOSS=1 (also teacher-forced loss on
 #      every dev row; needs sft/$DEV.jsonl), ASR_FILE=asr/x.jsonl (user turns from that ASR file instead of
-#      audio_text; the loss stays on sft/$DEV.jsonl).
+#      audio_text; the loss stays on sft/$DEV.jsonl), LOAD_4BIT=1 (base model in NF4 and adapter not merged, as the
+#      4B adapters were trained; LOSS=1 is then refused because eval_loss loads bf16, and train.py already logs the
+#      dev loss), TIME_BUDGET (seconds per sample, default 25; the 4B laptop dev runs used 60).
+#   4B on the laptop: TAG=q4b4_x ADAPTER=ckpt/q4b4_x/final MODEL=Qwen/Qwen3-4B-Instruct-2507 LOAD_4BIT=1 TIME_BUDGET=60 \
+#     bash scripts/eval_ckpt.sh
 # Writes runs/{sft|zs}_$TAG{.jsonl,.meta.json,_trace.jsonl,_rows.jsonl,_score.json} (+ runs/loss_$TAG.json).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -12,6 +16,12 @@ cd "$(dirname "$0")/.."
 MODEL=${MODEL:-Qwen/Qwen3-1.7B}
 DEV=${DEV:-dev_random}
 ADAPTER=${ADAPTER:-}
+LOAD_4BIT=${LOAD_4BIT:-0}
+TIME_BUDGET=${TIME_BUDGET:-25}
+case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
+if [ "${LOSS:-0}" = 1 ] && [ "$LOAD_4BIT" = 1 ]; then
+  echo "LOSS=1 needs a bf16 load (lifemate.eval_loss has no 4-bit option); train.py already logs the dev loss" >&2; exit 1
+fi
 TEXT=(--text oracle)
 if [ -n "${ASR_FILE:-}" ]; then
   [ -f "$ASR_FILE" ] || { echo "no $ASR_FILE" >&2; exit 1; }
@@ -33,8 +43,8 @@ done
 if [ "${LOSS:-0}" = 1 ] && [ -n "$ADAPTER" ]; then
   $PY -m lifemate.eval_loss --model "$MODEL" --adapter "$ADAPTER" --data "sft/$DEV.jsonl" --out "runs/loss_$TAG.json"
 fi
-$PY -m lifemate.infer --split train --ids "splits/$DEV.txt" "${TEXT[@]}" --backend hf --model "$MODEL" "${EXTRA[@]}" \
-    --out "$P.jsonl" --trace "${P}_trace.jsonl"
+$PY -m lifemate.infer --split train --ids "splits/$DEV.txt" "${TEXT[@]}" --backend hf --model "$MODEL" "${Q[@]}" \
+    "${EXTRA[@]}" --time-budget "$TIME_BUDGET" --out "$P.jsonl" --trace "${P}_trace.jsonl"
 # --ids: a sample missing from the predictions counts as 0 instead of silently shrinking the denominator
 $PY -m lifemate.scorer "$P.jsonl" --split train --ids "splits/$DEV.txt" --rows "${P}_rows.jsonl" > "${P}_score.json"
 cat "${P}_score.json"

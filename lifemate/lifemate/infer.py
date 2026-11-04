@@ -76,6 +76,7 @@ def main():
                     help="seconds per sample, ASR included (with --text asr, the ASR file's per-wav seconds count)")
     ap.add_argument("--max-tokens", type=int, default=512, help="cap on generated tokens per step (gold steps: max 200)")
     ap.add_argument("--no-id-guard", action="store_true", help="do not block write calls with IDs never shown")
+    ap.add_argument("--drop-params", help="JSON from lifemate.rare_params: optional params removed from every call")
     ap.add_argument("--no-warmup", action="store_true",
                     help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
@@ -124,13 +125,17 @@ def main():
         warmup_s = round(time.monotonic() - tw, 3)
         print(json.dumps({"warmup_s": warmup_s}), flush=True)
 
+    drop = None
+    if a.drop_params:
+        drop = {(r["tool"], r["param"]) for r in json.loads(Path(a.drop_params).read_text())["params"]}
+
     def infer(item):
         t0 = time.monotonic()
         env = zt.ToolEnv(a.split, item["id"], root=str(a.root))  # exactly one environment per sample
         llm = OracleBackend(item["label"]["tool_calls"]) if a.backend == "oracle" else shared
         user_text, hist = texts_for(item, a.text, asr)
         spent = asr_seconds_for(item, asr_secs) if a.text == "asr" else 0.0
-        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard)
+        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard, drop_params=drop)
         trace = agent.run(item, env, user_text, hist, t0=t0, spent=spent)
         row = {"id": item["id"], "tool_calls": env.get_tool_calls(), "state_hash": env.get_state_hash()}
         extra = {"asr_seconds": round(spent, 3)} if a.text == "asr" else {}
@@ -159,6 +164,9 @@ def main():
         "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
         "timing": timing, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
         "id_guard_blocked": sum(len(s.get("blocked", [])) for _, t in out for s in t["steps"]),
+        "drop_params": {"file": a.drop_params, "sha256": runinfo.sha256_file(a.drop_params), "n": len(drop),
+                        "calls_changed": sum(len(s.get("dropped", [])) for _, t in out for s in t["steps"])}
+        if a.drop_params else None,
         "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit. "
                 "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget. "
                 "warmup_s: the one untimed generation after loading, counted in no sample"})

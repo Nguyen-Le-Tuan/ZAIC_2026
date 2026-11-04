@@ -9,6 +9,7 @@
 # 4. CPU tests; SFT files rebuilt and compared with the local ones (sha256 in the manifest)
 # 5. GPU smoke test on GPU 0: 3 training steps + 2 rollouts per model in SMOKE_MODELS
 # Writes lifemate/runs/cloud_setup.json (GPU, driver, versions, tokens/s, peak memory, rough hours per epoch).
+# ASR_ONLY=1 stops after step 2 (enough for lifemate.asr_train / lifemate.asr: no LLM download, SFT files or smoke test).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(cd .. && pwd)
@@ -27,9 +28,13 @@ if [ -f "$ROOT/BUNDLE_MANIFEST.json" ]; then
 import hashlib, json, sys
 from pathlib import Path
 root = Path(sys.argv[1]); man = json.loads((root / "BUNDLE_MANIFEST.json").read_text())
-bad = [f for f, h in man["files"].items()
-       if not (root / f).is_file() or hashlib.sha256((root / f).read_bytes()).hexdigest() != h]
-print(f"bundle {man['commit'][:10]} ({man['ref']}): {len(man['files'])} files, {len(bad)} differ", bad[:5])
+# .DS_Store and __pycache__ files are junk some uploaders (Kaggle datasets) drop; missing ones are not an error
+junk = lambda f: Path(f).name == ".DS_Store" or "__pycache__" in Path(f).parts
+dropped = [f for f in man["files"] if junk(f) and not (root / f).is_file()]
+bad = [f for f, h in man["files"].items() if f not in dropped
+       and (not (root / f).is_file() or hashlib.sha256((root / f).read_bytes()).hexdigest() != h)]
+print(f"bundle {man['commit'][:10]} ({man['ref']}): {len(man['files'])} files, {len(bad)} differ", bad[:5],
+      f"({len(dropped)} missing .DS_Store/__pycache__ files ignored)" if dropped else "")
 sys.exit(1 if bad else 0)
 PY
 else
@@ -59,6 +64,10 @@ torch_ok || die "torch $TORCH_VERSION cannot use this GPU; set TORCH_INDEX_URL t
 uv pip install --python $PY -r requirements-lock.txt
 $PY -c "import torch, transformers, peft; print('torch', torch.__version__, 'cuda', torch.version.cuda, \
 'transformers', transformers.__version__, 'peft', peft.__version__)"
+if [ "${ASR_ONLY:-0}" = 1 ]; then
+  stamp "ASR_ONLY=1: python env ready; LLM models, SFT files and the GPU smoke test skipped"
+  exit 0
+fi
 
 stamp "3/5 base models"
 for m in "${!REV[@]}"; do

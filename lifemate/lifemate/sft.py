@@ -32,6 +32,7 @@ from pathlib import Path
 
 from . import runinfo
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split
+from . import prompt
 from .prompt import build_messages, render_calls, render_results
 
 FINAL_DONE = "Đã xong."
@@ -318,6 +319,8 @@ def main():
     ap.add_argument("--history", choices=["off", "tagged", "plain"], default="off")
     ap.add_argument("--asr-file", help="use ASR transcripts (k-fold, so not trained on) instead of audio_text")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--prompt-style", choices=prompt.STYLES, default="compact",
+                    help="system prompt style (lifemate.prompt); the model must be run with the same style")
     ap.add_argument("--out", required=True)
     ap.add_argument("--extra-samples", help="synthetic samples (lifemate.counterfactual build) appended after --fit; "
                                            "each _origin must be in --fit")
@@ -325,6 +328,7 @@ def main():
                     help="keep an existing --out only if its manifest matches these settings and its sha256 "
                          "(a file without manifest is kept only if a rebuild is byte-identical); otherwise rebuild")
     a = ap.parse_args()
+    prompt.set_style(a.prompt_style)
 
     out = Path(a.out)
     man_path = out.with_name(out.name + ".manifest.json")

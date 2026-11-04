@@ -27,6 +27,21 @@ TOOL_FORMAT = """Gọi tool bằng JSON trong thẻ <tool_call></tool_call>, m�
 {"name": "<tên tool>", "arguments": {<tham số>}}
 </tool_call>"""
 
+# Prompt style. "compact" (default) is what every adapter so far was trained on. "xref" also shows, for ID parameters,
+# the collection their value must come from (`x-ref`) and, for read tools, what they return (`returns`): the catalog
+# has both but the compact lines leave them out (Codex report 04/11, JOURNAL entries 81-82). Set once per process with
+# set_style() (lifemate.sft and lifemate.infer --prompt-style); a model must be run with the style it was trained on.
+STYLES = ("compact", "xref")
+STYLE = "compact"
+
+
+def set_style(style: str) -> None:
+    global STYLE
+    if style not in STYLES:
+        raise ValueError(f"prompt style must be one of {STYLES}, not {style!r}")
+    STYLE = style
+
+
 # Descriptions repeated across many tools; covered once by rule 5.
 _GENERIC_DESC_PREFIXES = ("ISO-8601", "Số nguyên, không dấu")
 
@@ -55,6 +70,8 @@ def _param_str(name: str, spec: dict, required: bool) -> str:
     desc = spec.get("description", "")
     if desc and not desc.startswith(_GENERIC_DESC_PREFIXES):
         s += f" ({desc})"
+    if STYLE == "xref" and spec.get("x-ref"):
+        s += f" [ID thuộc {spec['x-ref']}]"
     return s
 
 
@@ -63,6 +80,8 @@ def render_tool(tool: dict) -> str:
     req = set(params.get("required", []))
     args = "; ".join(_param_str(k, v, k in req) for k, v in params.get("properties", {}).items())
     line = f"- {tool['name']}({args}) — {tool.get('description', '')}"
+    if STYLE == "xref" and tool.get("returns"):
+        line += f" → trả về: {tool['returns']}"
     if params.get("x-one-of"):
         line += " | cần một trong: " + " hoặc ".join("[" + ", ".join(g) + "]" for g in params["x-one-of"])
     return line

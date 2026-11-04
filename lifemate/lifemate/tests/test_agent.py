@@ -248,6 +248,32 @@ def test_openai_client_without_deadline_waits_and_raises_on_timeout():
         srv.shutdown()
 
 
+# ------------------------------------------------------------------ prompt styles
+
+def test_prompt_style_compact_is_unchanged_and_xref_adds_refs_and_returns():
+    from lifemate import prompt
+    from lifemate.prompt import render_tool
+    _, tools, _, _ = _data()
+    compact = ("- banking.transfer(from_account_id*: str (ID tài khoản, lấy từ banking.get_balance); beneficiary_id*: str "
+               "(ID người thụ hưởng, lấy từ banking.list_beneficiaries); amount*: int >0; note: str) — Chuyển tiền cho "
+               "người thụ hưởng")
+    assert prompt.STYLE == "compact" and render_tool(tools["banking.transfer"]) == compact  # what the adapters saw
+    try:
+        prompt.set_style("xref")
+        x = render_tool(tools["banking.transfer"])
+        assert "[ID thuộc banking.accounts]" in x and "[ID thuộc banking.beneficiaries]" in x
+        assert render_tool(tools["banking.get_balance"]).endswith(" → trả về: accounts[]")
+        assert "trả về" not in x  # a write tool with empty `returns` gets nothing
+    finally:
+        prompt.set_style("compact")
+    try:
+        prompt.set_style("long")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown style must be refused")
+
+
 # ------------------------------------------------------------------ warm-up (untimed generation after loading)
 
 def test_warmup_prompt_uses_only_the_context():

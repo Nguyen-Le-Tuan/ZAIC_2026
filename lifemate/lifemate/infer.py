@@ -22,6 +22,7 @@ from pathlib import Path
 from . import runinfo
 from .agent import Agent, HFBackend, OpenAICompletionsBackend, OracleBackend, PrefixBackend, VLLMBackend
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl, zaic_tools
+from . import prompt
 from .prompt import build_messages, to_chatml
 
 WARMUP_TEXT = "Xin chào."
@@ -65,6 +66,8 @@ def main():
                     help="seconds per sample, ASR included (with --text asr, the ASR file's per-wav seconds count)")
     ap.add_argument("--max-tokens", type=int, default=512, help="cap on generated tokens per step (gold steps: max 200)")
     ap.add_argument("--no-id-guard", action="store_true", help="do not block write calls with IDs never shown")
+    ap.add_argument("--prompt-style", choices=prompt.STYLES, default="compact",
+                    help="system prompt style; must be the style the adapter was trained with (sft --prompt-style)")
     ap.add_argument("--no-warmup", action="store_true",
                     help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
@@ -72,6 +75,7 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--overwrite", action="store_true", help="allow replacing an existing --out/--trace")
     a = ap.parse_args()
+    prompt.set_style(a.prompt_style)
 
     meta_path = Path(a.out).with_suffix(".meta.json")
     runinfo.refuse_existing(a.out, a.trace, meta_path, overwrite=a.overwrite)

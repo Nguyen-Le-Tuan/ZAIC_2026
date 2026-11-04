@@ -3,7 +3,7 @@
 > **Cách dùng:** mở Codex trong thư mục `~/Zalo AI Challenge`, rồi gõ:
 > *"Đọc và làm đúng theo `docs/CODEX_4B_STRATEGY_PROMPT_2026-11-04.md`."*
 >
-> Claude viết lúc 14:00 ngày 04/11/2026, theo yêu cầu của Anh. Từ đây trở xuống là chỉ dẫn cho Codex.
+> Claude viết lúc 13:50 ngày 04/11/2026, theo yêu cầu của Anh. Từ đây trở xuống là chỉ dẫn cho Codex.
 
 ---
 

@@ -13,10 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 14:55 ngày 04/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 14:49 ngày 04/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
-> - **14:55 ngày 04/11:** **B23 xong: Anh duyệt cả hai thí nghiệm.**
+> - **14:49 ngày 04/11:** **B23 xong: Anh duyệt cả hai thí nghiệm.**
 >   - **Đang chạy:** chấm 4B với chữ PhoWhisper fine-tune, xong khoảng 17:15. Trong lúc chạy, laptop vẫn dùng được nhưng chậm hơn.
 >   - **23:30 tối nay (giờ máy):** tự train lượt prompt `xref`, khoảng 8 giờ, xong khoảng 07:30 ngày 05/11. **Trước 23:30 cắm sạc và để máy mở.**
 >   - **Trần API:** tổng 80 USD, chỉ dùng khi cần.

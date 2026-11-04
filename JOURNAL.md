@@ -1624,6 +1624,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Dự kiến:** 305 bước, khoảng 6,3 giờ, train xong khoảng 06:35. Sau đó file nộp public 634 mẫu khoảng 1,7 giờ, xong khoảng 08:20–08:45. Kết quả: `runs/e2e_public_q4b_all.jsonl` kèm `_check.json`; Anh hoặc leader nộp.
     - Cần mang máy đi giữa chừng: `systemctl --user stop lifemate-q4b-all`, đợi 1–3 phút rồi gập máy. Về chạy `bash ~/zac-c3/start_q4b_all.sh` là tiếp từ chỗ dừng. Bước làm file nộp chạy lại từ mẫu đầu nếu bị dừng giữa chừng.
     - Lần khởi động lại máy tối 03/11 xoá `/tmp`, nên script đồng bộ tài liệu sang các nhánh được viết lại, cùng cách làm.
+    - **00:26, bước 10/305:** loss 0,31, 695 token/giây, đỉnh 5,46 GB, đã lưu `state.pt`. Cùng nhịp các lượt 4B trước. Dự kiến train xong khoảng 06:25.
 
 ---
 

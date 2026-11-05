@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:04 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:06 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **09:06 ngày 05/11:** Trong lúc leader làm B26, Anh không phải chờ. **Anh quyết B27:** cho laptop fine-tune lại PhoWhisper trên gần đủ train không (JOURNAL entry 89).
 > - **08:54 ngày 05/11:** **Lượt prompt `xref` không qua cửa 1** (xong 06:38): dev_lao chữ ASR 39,20 → 38,18 (−1,02), chữ chuẩn 53,40 → 52,72 (−0,69). Dừng theo luật; [PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14) đã đóng, không merge (Anh duyệt 09:03).
 >   - **B26:** hướng dẫn cho leader ở [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md), kèm danh sách file Anh cần gửi.
 >   - Laptop rảnh từ 06:38 (JOURNAL entry 87).
@@ -162,6 +163,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(13:40 ngày 02/11) Anh nâng trần lên 30 USD; chưa báo kết quả chấm. Claude sinh pilot ngay (chỉ dùng API, không cần GPU) bằng `muse-wonder-1.0`. Phần train vẫn chờ GPU rảnh (sau B11). Nếu Anh chấm thấy dưới 4/5 câu tự nhiên thì báo để Claude dừng trước khi train.*
   - *(13:48 ngày 02/11) Anh chọn "Tự bật khi xong": train pilot tự bật khi B11 và pilot sinh xong.*
   - *(14:54 ngày 02/11) Pilot sinh xong 280 mẫu đạt; train đã bật lúc 14:52. Kết quả chấm vẫn có ích: nếu dưới 4/5 câu tự nhiên thì báo để Claude dừng train, hoặc bỏ kết quả pilot.*
+- [ ] **B27. (09:06 ngày 05/11)** (1 phút) **Cho laptop fine-tune lại PhoWhisper trên gần đủ train?**
+  - **Vì sao:** bản hiện tại (public 51,16) chỉ học 1.033 mẫu. Bản mới học thêm 495 mẫu dev, như cách agent học đủ 1.545 mẫu (public 45,39 → 46,29). ASR vẫn là chỗ mất nhiều điểm nhất đã đo.
+  - **Claude làm:** cùng công thức Colab, giữ riêng 54 mẫu kiểm cũ để so WER với bản hiện tại. Đạt thì làm file nộp public. Laptop khoảng 4–6 giờ, vẫn dùng máy được nhưng chậm hơn. 0 USD.
+  - **Luật ghi trước:** WER trên 54 mẫu kiểm không tệ hơn quá 0,5 điểm thì làm file public. Public ≥ 51,16 thì Docker đổi sang bản mới (leader thay một thư mục); thấp hơn thì giữ bản hiện tại.
 - [ ] **B26. (00:30 ngày 05/11; cập nhật 08:54)** (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
   - **Anh gửi riêng cho leader** (trong `~/zac-c3/lifemate/`; có lệnh `tar` gói tất cả trong hướng dẫn):
     - `ckpt/asr_phoft/merged/` (2,9 GB): đúng bản cho ra 51,16.

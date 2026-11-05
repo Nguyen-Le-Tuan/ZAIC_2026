@@ -13,9 +13,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:30 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 08:54 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **08:54 ngày 05/11:** **Lượt prompt `xref` không qua cửa 1** (xong 06:38): dev_lao chữ ASR 39,20 → 38,18 (−1,02), chữ chuẩn 53,40 → 52,72 (−0,69). Dừng theo luật; [PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14) không nên merge.
+>   - **B26:** hướng dẫn cho leader ở [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md), kèm danh sách file Anh cần gửi.
+>   - Laptop rảnh từ 06:38 (JOURNAL entry 87).
 > - **00:30 ngày 05/11:** **B25 xong: public 51,16 với PhoWhisper-ft (+4,87 so với 46,29). Docker đổi sang PhoWhisper-ft** theo luật ghi trước.
 >   - Tổng hệ thống khoảng 5,63B, dưới trần 6B. Không phải sửa code: chỉ đổi `ASR_MODEL` trong Docker.
 >   - **B26:** Anh gửi bản ghép PhoWhisper-ft (2,9 GB) cho leader; leader đổi Docker và đo thời gian trên A30.
@@ -88,16 +91,14 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); từ 23:30 train lượt prompt `xref` (00:28: bước 45/253), rồi chấm dev_lao, xong khoảng 07:30 ngày 05/11.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); 23:30 ngày 04/11 – 06:38 ngày 05/11 lượt prompt `xref` (không qua cửa 1). Rảnh từ 06:38 ngày 05/11.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
 | Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
 - **Laptop:**
   - Chấm 4B với chữ PhoWhisper fine-tune xong 16:06 (qua luật).
   - File nộp public bằng PhoWhisper-ft xong 18:40 (B24); public 51,16 (B25).
-  - **Lượt `xref` đang chạy từ 23:30** (00:28: bước 45/253), xong khoảng 07:30 ngày 05/11. **Để máy cắm sạc và mở tới khi xong.**
-  - Huỷ hẹn giờ: `systemctl --user disable --now lifemate-q4b-xref-kick.timer`.
-  - Dừng giữa chừng: `systemctl --user stop lifemate-q4b-xref`. Chạy tiếp: `bash ~/zac-xref/start_q4b_xref.sh`.
+  - Lượt `xref` chạy 23:30–06:38, không qua cửa 1 (dev_lao chữ ASR −1,02). **Laptop rảnh từ 06:38 ngày 05/11.**
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -161,12 +162,16 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(13:40 ngày 02/11) Anh nâng trần lên 30 USD; chưa báo kết quả chấm. Claude sinh pilot ngay (chỉ dùng API, không cần GPU) bằng `muse-wonder-1.0`. Phần train vẫn chờ GPU rảnh (sau B11). Nếu Anh chấm thấy dưới 4/5 câu tự nhiên thì báo để Claude dừng trước khi train.*
   - *(13:48 ngày 02/11) Anh chọn "Tự bật khi xong": train pilot tự bật khi B11 và pilot sinh xong.*
   - *(14:54 ngày 02/11) Pilot sinh xong 280 mẫu đạt; train đã bật lúc 14:52. Kết quả chấm vẫn có ích: nếu dưới 4/5 câu tự nhiên thì báo để Claude dừng train, hoặc bỏ kết quả pilot.*
-- [ ] **B26. (00:30 ngày 05/11)** (Anh 10 phút, leader khoảng 1 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.**
-  - **Anh:** gửi riêng cho leader thư mục `~/zac-c3/lifemate/ckpt/asr_phoft/merged` (2,9 GB). Đây đúng là bản cho ra 51,16.
+- [ ] **B26. (00:30 ngày 05/11; cập nhật 08:54)** (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
+  - **Anh gửi riêng cho leader** (trong `~/zac-c3/lifemate/`; có lệnh `tar` gói tất cả trong hướng dẫn):
+    - `ckpt/asr_phoft/merged/` (2,9 GB): đúng bản cho ra 51,16.
+    - `ckpt/q4b4_all/final/` (263 MB), nếu chưa gửi hôm 04/11.
+    - `runs/e2e_public_phoft_asr.jsonl`, `runs/e2e_public_q4b_all_phoft.jsonl`, `runs/e2e_public_q4b_all_phoft_trace.jsonl` (1,5 MB, để so).
   - **Leader:**
-    - Kiểm sha256 của `model.safetensors`: `421a3f62f45438c6248c338e605f5833dcabb651166ff69341880cc197c12b3f`.
-    - Chép thư mục vào image, đặt `ASR_MODEL` trỏ vào đó. Code và các biến khác giữ nguyên: adapter `q4b4_all/final`, 4-bit, `TIME_BUDGET` 25.
-    - Đo thời gian mỗi mẫu trên A30 (ASR + agent). Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
+    - Kiểm sha256 của hai file model.
+    - Chép vào image, đặt `ASR_MODEL=ckpt/asr_phoft/merged`. Code (nhánh `q4b-laptop`) và các biến khác giữ nguyên: adapter `q4b4_all/final`, 4-bit, `TIME_BUDGET` 25.
+    - Chạy thử 3 mẫu trong Docker khi tắt mạng.
+  - **Còn mở:** máy leader chỉ có GPU 4 GB, nên thời gian trên GPU 24 GB chưa đo được. Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
   - **Tổng tham số:** ASR 1,543B + Qwen3-4B 4,022B + LoRA 0,066B = khoảng 5,63B, dưới trần 6B.
 - [x] **B25. (18:41 ngày 04/11)** *Anh nộp, được **51,16** (báo lúc khoảng 00:28 ngày 05/11); hơn 46,29 nên Docker đổi sang PhoWhisper-ft (B26).* (5 phút) **Nộp file public bằng PhoWhisper-ft** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoft.jsonl` (634 dòng, kiểm định dạng đạt, sha256 `b3f86ef0c812…`), **chọn cột SLM**, rồi báo điểm cho Claude. Anh hoặc leader nộp; Claude không nộp.
   - **Khác file 46,29 ở đâu:** chỉ ASR (PhoWhisper-large fine-tune thay cho Whisper-turbo fine-tune). Cùng code, adapter `q4b4_all/final` và hạn giờ. 345/634 dòng trả lời khác.
@@ -257,7 +262,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 00:13 – 07:34 ngày 04/11 | Laptop train lại 4B trên đủ 1.545 mẫu (xong 06:03), rồi làm file nộp public (xong 07:34); Anh bảo chạy ngay thay cho hẹn giờ 00:30 (B17). Nộp: B19 |
 | 14:44–16:06 ngày 04/11 | Laptop chấm 4B với chữ PhoWhisper fine-tune trên dev_random và dev_lao (B23): qua luật, gộp 46,17 → 47,88 |
 | 16:45–18:40 ngày 04/11 | Laptop ghép PhoWhisper-ft, kiểm chữ dev (779/784 câu giống Colab), làm file nộp public bằng PhoWhisper-ft (B24). Anh hoặc leader nộp (B25) |
-| 23:30 ngày 04/11 – khoảng 07:30 ngày 05/11 | Laptop tự train lượt prompt `xref` trên fit_lao rồi chấm dev_lao ([PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14), B23) |
+| 23:30 ngày 04/11 – 06:38 ngày 05/11 | Laptop tự train lượt prompt `xref` trên fit_lao rồi chấm dev_lao ([PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14), B23): không qua cửa 1 |
 | **11:59 ngày 16/11 (giờ máy)** | **Hạn nộp Docker** (23:59 GMT+7) |
 | Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |

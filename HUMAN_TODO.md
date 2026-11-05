@@ -13,10 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:31 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:30 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
-> - **00:31 ngày 05/11:** **B25 xong: public 51,16 với PhoWhisper-ft (+4,87 so với 46,29). Docker đổi sang PhoWhisper-ft** theo luật ghi trước.
+> - **00:30 ngày 05/11:** **B25 xong: public 51,16 với PhoWhisper-ft (+4,87 so với 46,29). Docker đổi sang PhoWhisper-ft** theo luật ghi trước.
 >   - Tổng hệ thống khoảng 5,63B, dưới trần 6B. Không phải sửa code: chỉ đổi `ASR_MODEL` trong Docker.
 >   - **B26:** Anh gửi bản ghép PhoWhisper-ft (2,9 GB) cho leader; leader đổi Docker và đo thời gian trên A30.
 >   - Lượt `xref` đang chạy từ 23:30, xong khoảng 07:30 (JOURNAL entry 86).
@@ -161,7 +161,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(13:40 ngày 02/11) Anh nâng trần lên 30 USD; chưa báo kết quả chấm. Claude sinh pilot ngay (chỉ dùng API, không cần GPU) bằng `muse-wonder-1.0`. Phần train vẫn chờ GPU rảnh (sau B11). Nếu Anh chấm thấy dưới 4/5 câu tự nhiên thì báo để Claude dừng trước khi train.*
   - *(13:48 ngày 02/11) Anh chọn "Tự bật khi xong": train pilot tự bật khi B11 và pilot sinh xong.*
   - *(14:54 ngày 02/11) Pilot sinh xong 280 mẫu đạt; train đã bật lúc 14:52. Kết quả chấm vẫn có ích: nếu dưới 4/5 câu tự nhiên thì báo để Claude dừng train, hoặc bỏ kết quả pilot.*
-- [ ] **B26. (00:31 ngày 05/11)** (Anh 10 phút, leader khoảng 1 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.**
+- [ ] **B26. (00:30 ngày 05/11)** (Anh 10 phút, leader khoảng 1 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.**
   - **Anh:** gửi riêng cho leader thư mục `~/zac-c3/lifemate/ckpt/asr_phoft/merged` (2,9 GB). Đây đúng là bản cho ra 51,16.
   - **Leader:**
     - Kiểm sha256 của `model.safetensors`: `421a3f62f45438c6248c338e605f5833dcabb651166ff69341880cc197c12b3f`.

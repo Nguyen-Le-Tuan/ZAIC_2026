@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:20 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 10:24 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **10:24 ngày 05/11:** **Leader build xong Docker với PhoWhisper-ft** (12,6 GB; sha256 khớp; chữ ASR 3 mẫu khớp nguyên văn). Bước agent hết VRAM trên GPU 4 GB (thiếu 116 MiB), nên chưa có `"ok"`. **Anh quyết B28:** thuê GPU 24 GB một lượt để chạy image (JOURNAL entry 91).
 > - **09:20 ngày 05/11:** **B27 xong: Anh duyệt. Laptop fine-tune lại PhoWhisper từ 09:18**, train xong khoảng 12:00. Đạt kiểm WER thì làm tiếp file public, xong khoảng 14:00–14:30 (JOURNAL entry 90).
 > - **09:06 ngày 05/11:** Trong lúc leader làm B26, Anh không phải chờ. **Anh quyết B27:** cho laptop fine-tune lại PhoWhisper trên gần đủ train không (JOURNAL entry 89).
 > - **08:54 ngày 05/11:** **Lượt prompt `xref` không qua cửa 1** (xong 06:38): dev_lao chữ ASR 39,20 → 38,18 (−1,02), chữ chuẩn 53,40 → 52,72 (−0,69). Dừng theo luật; [PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14) đã đóng, không merge (Anh duyệt 09:03).
@@ -169,7 +170,16 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Vì sao:** bản hiện tại (public 51,16) chỉ học 1.033 mẫu. Bản mới học thêm 495 mẫu dev, như cách agent học đủ 1.545 mẫu (public 45,39 → 46,29). ASR vẫn là chỗ mất nhiều điểm nhất đã đo.
   - **Claude làm:** cùng công thức Colab, giữ riêng 54 mẫu kiểm cũ để so WER với bản hiện tại. Đạt thì làm file nộp public. Laptop khoảng 4–6 giờ, vẫn dùng máy được nhưng chậm hơn. 0 USD.
   - **Luật ghi trước:** WER trên 54 mẫu kiểm không tệ hơn quá 0,5 điểm thì làm file public. Public ≥ 51,16 thì Docker đổi sang bản mới (leader thay một thư mục); thấp hơn thì giữ bản hiện tại.
-- [ ] **B26. (00:30 ngày 05/11; cập nhật 08:54)** (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
+- [ ] **B28. (10:24 ngày 05/11)** (1 phút quyết; thuê khoảng 2–3 giờ) **Thuê một GPU 24 GB (tốt nhất A30) để chạy đúng image Docker?**
+  - **Vì sao:** máy leader 4 GB không chạy nổi bước agent. Chưa ai chạy image trọn từ đầu tới cuối, và thời gian trên GPU giống máy chấm chưa đo. Đây là rủi ro mất bài lớn nhất còn lại.
+  - **Làm gì:** leader đẩy image lên registry riêng, chạy trên máy thuê:
+    - 3 mẫu để có `"ok": true`;
+    - đủ 634 mẫu public để đo thời gian mỗi mẫu và đếm số mẫu dừng vì hết giờ;
+    - chạy lại lần nữa để kiểm kết quả giống nhau.
+  - **Khi nào:** sau khi B27 có kết quả (tối 05/11 hoặc 06/11), để chỉ test image cuối một lần.
+  - **Tiền:** của Anh hoặc leader, không tính vào trần API. Claude không thuê.
+  - **Nếu không thuê:** Anh tự cài Docker + NVIDIA Container Toolkit trên laptop (cần sudo) rồi chạy image trên RTX 4070. Cách này kiểm được `"ok"` nhưng không đo được thời gian trên A30.
+- [ ] **B26. (00:30 ngày 05/11; cập nhật 10:24)** *Leader làm xong phần build (10:20 ngày 05/11): sha256 khớp; image 12,6 GB, không có Whisper-turbo-ft; chữ ASR 3 mẫu khớp tham chiếu. Còn thiếu `"ok"` vì GPU 4 GB hết VRAM ở bước agent (B28).* (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
   - **Anh gửi riêng cho leader** (trong `~/zac-c3/lifemate/`; có lệnh `tar` gói tất cả trong hướng dẫn):
     - `ckpt/asr_phoft/merged/` (2,9 GB): đúng bản cho ra 51,16.
     - `ckpt/q4b4_all/final/` (263 MB), nếu chưa gửi hôm 04/11.
@@ -178,7 +188,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Kiểm sha256 của hai file model.
     - Chép vào image, đặt `ASR_MODEL=ckpt/asr_phoft/merged`. Code (nhánh `q4b-laptop`) và các biến khác giữ nguyên: adapter `q4b4_all/final`, 4-bit, `TIME_BUDGET` 25.
     - Chạy thử 3 mẫu trong Docker khi tắt mạng.
-  - **Còn mở:** máy leader chỉ có GPU 4 GB, nên thời gian trên GPU 24 GB chưa đo được. Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
+  - **Còn mở:** máy leader chỉ có GPU 4 GB, không chạy nổi bước agent (thiếu 116 MiB ở warm-up), nên chưa có `"ok"` và chưa đo thời gian trên GPU 24 GB (B28). Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
   - **Tổng tham số:** ASR 1,543B + Qwen3-4B 4,022B + LoRA 0,066B = khoảng 5,63B, dưới trần 6B.
 - [x] **B25. (18:41 ngày 04/11)** *Anh nộp, được **51,16** (báo lúc khoảng 00:28 ngày 05/11); hơn 46,29 nên Docker đổi sang PhoWhisper-ft (B26).* (5 phút) **Nộp file public bằng PhoWhisper-ft** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoft.jsonl` (634 dòng, kiểm định dạng đạt, sha256 `b3f86ef0c812…`), **chọn cột SLM**, rồi báo điểm cho Claude. Anh hoặc leader nộp; Claude không nộp.
   - **Khác file 46,29 ở đâu:** chỉ ASR (PhoWhisper-large fine-tune thay cho Whisper-turbo fine-tune). Cùng code, adapter `q4b4_all/final` và hạn giờ. 345/634 dòng trả lời khác.

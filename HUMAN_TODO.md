@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 11:45 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 12:47 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **12:47 ngày 06/11:** **Gói pilot v2 cho máy anh trai đã sẵn, sớm hơn lịch một ngày.** 202 mẫu sinh cho 6 app bị giấu, theo đúng tỉ lệ của mẫu thật (lịch sử, dùng lại ID, câu không gọi tool); 4 lượt 4-bit, mỗi bên 2 seed. Đã chạy thử và kiểm gói trên laptop. Chi 9,36 USD, tổng API 52,39/80. **Anh gửi gói và lệnh cho anh trai (B33), tối nay nếu được** (JOURNAL entry 104, [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md)).
 > - **11:45 ngày 06/11:** Máy anh trai chỉ chạy 1 lần mỗi ngày. **Vẫn đủ: dữ liệu sinh v2 cần 2 lần chạy** (pilot 2 seed tối 07/11; train đủ dữ liệu tối 08 hoặc 09/11), chốt model 13/11, API khoảng 25 USD. **Anh duyệt B32** (JOURNAL entry 103).
 > - **11:40 ngày 06/11:** Anh hỏi train ở máy nào. **Nếu train (chỉ còn hướng dữ liệu sinh v2) thì dùng máy anh trai:** nhanh gấp 3,7 lần, chạy 2 seed cùng lúc. Laptop để kiểm Docker (B31, L9). Cần biết anh trai cho dùng máy mấy lần trước 13/11 (JOURNAL entry 102).
 > - **11:35 ngày 06/11:** **Kết quả gói v3 từ máy anh trai đã về (2× RTX 4090): không có adapter nào tốt hơn để thay vào image.** 4B bf16 so với 4B 4-bit đang nộp (chữ chuẩn): dev_random +5,70, dev_lao −2,12, gộp +1,56. Cùng một công thức train trên hai máy đã lệch tới 4,21 điểm, nên các mức chênh này chưa nói được gì. **B32:** hướng (1) xong; Claude không đề xuất bf16; còn hướng (2) dữ liệu sinh v2 (JOURNAL entry 101).
@@ -106,7 +107,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 |---|---|---|---|---|
 | Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); 23:30 ngày 04/11 – 06:38 ngày 05/11 lượt prompt `xref` (không qua cửa 1). Từ 09:18 ngày 05/11 fine-tune lại PhoWhisper trên gần đủ train (B27); kiểm WER qua; đóng băng 13:38–17:45 vì Anh cần dùng máy; file public xong 18:09 (B29). Rảnh từ 18:14.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
-| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* *(06/11 11:23: xong; máy là 2× RTX 4090, chạy 22:21–01:04; báo cáo ở `cloud_results/anh_trai/`; không có adapter tốt hơn, JOURNAL entry 101.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
+| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* *(06/11 11:23: xong; máy là 2× RTX 4090, chạy 22:21–01:04; báo cáo ở `cloud_results/anh_trai/`; không có adapter tốt hơn, JOURNAL entry 101.)* *(06/11 12:47: gói pilot v2 sẵn, chờ Anh gửi (B33); chạy 1 lần mỗi ngày.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
 - **Laptop:**
   - Chấm 4B với chữ PhoWhisper fine-tune xong 16:06 (qua luật).
@@ -192,7 +193,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Tải:** mở link Drive leader gửi trong Chrome (đăng nhập tài khoản Google mà leader đã chia sẻ file), bấm Tải xuống rồi "Vẫn tải xuống", lưu vào `~/Downloads/zac_lifemate_2026-11-05.tar` (12.635.573.248 byte). File chia sẻ riêng, phải đăng nhập mới tải được, nên Claude không tải hộ.
   - **Tuỳ Anh:** `sudo usermod -aG docker $USER` để Claude chạy `docker` không cần sudo. Nhóm này có quyền tương đương root. Không thêm thì tối nay Anh tự chạy một lệnh sudo (B31).
   - Xong thì báo Claude. Nếu còn kịp trước 11:00, Claude kiểm sha256, nạp image và chạy 3 mẫu.
-- [ ] **B32. (09:50 ngày 06/11)** (5 phút quyết) **Trong 10 ngày còn lại, thử cải tiến model theo hướng nào?** Bản 05/11 vẫn đóng gói trước. Có model tốt hơn thì chỉ thay thư mục adapter hoặc ASR trong image, chạy lại B28, và phải chốt trước khoảng 13/11 để kịp L9.
+- [x] **B32. (09:50 ngày 06/11)** *(11:50: Anh chọn (2), "Làm theo lịch"; train trên máy anh trai; JOURNAL entry 104.)* (5 phút quyết) **Trong 10 ngày còn lại, thử cải tiến model theo hướng nào?** Bản 05/11 vẫn đóng gói trước. Có model tốt hơn thì chỉ thay thư mục adapter hoặc ASR trong image, chạy lại B28, và phải chốt trước khoảng 13/11 để kịp L9.
   - **Đã thử sau 51,16 và không qua luật ghi trước:**
     - prompt `xref`: dev_lao chữ ASR −1,02;
     - PhoWhisper-ft-all: public 49,65;
@@ -223,6 +224,13 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - *làm (2). Nếu anh trai cho dùng máy thêm, mỗi vòng train + chấm còn khoảng 2 giờ thay vì 7 giờ.*
   - *(11:45) Máy anh trai 1 lần mỗi ngày: vẫn đủ. Cần 2 lần chạy, lịch và luật ở JOURNAL entry 103. Anh báo nếu mỗi lần bị giới hạn giờ (giả định 6–7 giờ trên 2 GPU).*
   - *(11:40) Nếu làm (2): train trên máy anh trai, dùng đúng công thức 4-bit, mỗi bên 2 seed. Claude làm gói mới từ code `q4b-laptop`. Anh hỏi anh trai: trước 13/11 cho dùng máy mấy lần (JOURNAL entry 102).*
+- [ ] **B33. (12:47 ngày 06/11)** (5 phút) **[Anh] Gửi anh trai gói pilot v2 và lệnh chạy; tối nay nếu anh trai rảnh.**
+  - **Gói:** `~/zac_cloud_bundle_20261106_synthv2.tar.gz` (5,5 MB, sha256 `8314687a327301d30410549489644494250067d5522548d3b49c4accc5c0c6a3`). Gửi riêng, không qua chỗ công khai: gói có dữ liệu thi.
+  - **Lệnh:** chép nguyên khối lệnh ở mục "Lệnh cho anh trai" trong [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md). Lệnh chạy khoảng 6 giờ.
+  - **Anh trai gửi lại một file:** `~/zac_v4_results.tar.gz`. Anh lưu vào `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
+  - **Sau đó:**
+    - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
+    - Không đạt thì dừng, giữ bản 05/11.
 - [ ] **B31. (09:40 ngày 06/11)** (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
   - Nếu Anh đã vào nhóm `docker`, Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy.
   - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.

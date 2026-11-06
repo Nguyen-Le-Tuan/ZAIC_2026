@@ -2,7 +2,9 @@
 
 1. Prompt identity: for every train sample, run the real Agent on a ToolEnv with a backend that replays the SFT
    steps; every prompt the agent builds must equal the SFT text before the matching loss segment.
-2. Scoring: the replayed submissions must score 100 (steps grouping loses no call).
+2. Scoring: the replayed submissions must score 100 (steps grouping loses no call). With the ID guard on (the
+   default), train_1696 is the one expected exception: its gold write uses an ID never shown (data skew), so the
+   guard blocks it: 1544/1545 prompts identical, score 99.99.
 3. Token boundaries: tokenizing segments one by one gives the same ids as tokenizing the whole sequence.
 """
 import random
@@ -24,7 +26,7 @@ class StepReplay:
     def __init__(self, steps):
         self.steps, self.prompts = steps, []
 
-    def generate(self, prompt):
+    def generate(self, prompt, deadline=None):
         self.prompts.append(prompt)
         i = len(self.prompts) - 1
         if i < len(self.steps):

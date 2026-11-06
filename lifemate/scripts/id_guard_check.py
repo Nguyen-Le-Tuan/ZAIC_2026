@@ -21,48 +21,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lifemate.data import DEFAULT_ROOT, catalog_tools, fuzzy_params, load_catalog, load_jsonl, load_split, zaic_tools  # noqa: E402
+from lifemate.guard import guarded_values, seen  # noqa: E402
 from lifemate.prompt import build_messages, render_results  # noqa: E402
 from lifemate.runinfo import read_ids, refuse_existing, write_json  # noqa: E402
 from lifemate.scorer import calls_match, category, score_sample  # noqa: E402
 
 SPLITS = Path(__file__).resolve().parents[1] / "splits"
-
-
-def _is_id(x) -> bool:
-    return isinstance(x, (str, int)) and not isinstance(x, bool)
-
-
-def _vals(name: str, spec: dict, v) -> list[tuple[str, object]]:
-    if "x-ref" in spec:
-        return [(name, x) for x in (v if isinstance(v, list) else [v]) if _is_id(x)]
-    if spec.get("type") == "array" and isinstance(v, list):
-        it = spec.get("items", {})
-        if "x-ref" in it:
-            return [(name, x) for x in v if _is_id(x)]
-        if it.get("type") == "object":
-            return [(name, val) for x in v if isinstance(x, dict)
-                    for k2, s2 in it.get("properties", {}).items() if k2 in x for _, val in _vals(k2, s2, x[k2])]
-    if spec.get("type") == "object" and isinstance(v, dict):
-        return [(name, val) for k2, s2 in spec.get("properties", {}).items() if k2 in v for _, val in _vals(k2, s2, v[k2])]
-    return []
-
-
-def guarded_values(tool: dict, args: dict) -> list[tuple[str, object]]:
-    """[(top-level param name, value)] for every x-ref value of a call."""
-    props = tool.get("parameters", {}).get("properties", {})
-    return [kv for k, spec in props.items() if k in args for kv in _vals(k, spec, args[k])]
-
-
-def seen(value, text: str) -> bool:
-    s = str(value)
-    return bool(s) and re.search(r"(?<!\w)" + re.escape(s) + r"(?!\w)", text) is not None
 
 
 def source_of(value, parts: dict[str, str]) -> str:

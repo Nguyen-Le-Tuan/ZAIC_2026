@@ -6,6 +6,8 @@ Guardrails (pure code, no model):
   * ID guard (lifemate.guard): a write call with an x-ref ID the model has never been shown is not sent to env.call;
     the model gets an error instead, like a schema error. Off with id_guard=False.
   * identical repeated READ calls are answered from the earlier result instead of being called again.
+  * optional (tool, param) pairs in `drop_params` are removed from a call before anything else (lifemate.rare_params:
+    the train labels leave them out, and an extra argument makes a call unmatched). Off by default.
   * time: a sample has `time_budget` seconds in total, including what it spent before the agent (its ASR, `spent`).
     Every generation gets the deadline: the HF backend stops generating at it (max_time) and the OpenAI-compatible
     client stops waiting. No step starts with less than `min_step_seconds` left. Complete calls of a step cut by the
@@ -173,10 +175,12 @@ class OracleBackend:
 
 class Agent:
     def __init__(self, llm, tools_by_name: dict, apps_by_id: dict, max_steps: int = 8, max_retries: int = 2,
-                 time_budget: float = 25.0, min_step_seconds: float = 1.0, id_guard: bool = True):
+                 time_budget: float = 25.0, min_step_seconds: float = 1.0, id_guard: bool = True,
+                 drop_params: set[tuple[str, str]] | None = None):
         self.llm, self.tools, self.apps = llm, tools_by_name, apps_by_id
         self.max_steps, self.max_retries, self.time_budget = max_steps, max_retries, time_budget
         self.min_step_seconds, self.id_guard = min_step_seconds, id_guard
+        self.drop_params = drop_params or set()
 
     def run(self, item: dict, env, user_text: str, history_texts: list[str], t0: float | None = None,
             spent: float = 0.0) -> dict:
@@ -205,6 +209,11 @@ class Agent:
                 break
             results, processed, stop = [], [], False
             for c in calls:
+                if self.drop_params:
+                    kept = {k: v for k, v in c["arguments"].items() if (c["name"], k) not in self.drop_params}
+                    if len(kept) < len(c["arguments"]):
+                        step.setdefault("dropped", []).append(sorted(set(c["arguments"]) - set(kept)))
+                        c = {"name": c["name"], "arguments": kept}
                 processed.append(c)
                 # only reads are de-duplicated: repeating a write can be intended (redeem twice = two tickets)
                 is_read = self.tools.get(c["name"], {}).get("kind") == "read"

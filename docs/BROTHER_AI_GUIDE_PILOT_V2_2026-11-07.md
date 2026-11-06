@@ -1,6 +1,6 @@
 # Hướng dẫn chạy pilot v2 (dành cho AI trên máy anh trai)
 
-*Đội ZAIC 2026 LifeMate soạn ngày 06/11/2026, sửa lúc 17:40: lấy file và nộp kết quả qua Google Drive. Bạn là AI trợ lý chạy trên máy GPU của anh trai Anh. File này nói đủ những gì cần làm: train gì, lấy file ở đâu, chạy lệnh nào, kiểm gì, gửi lại cái gì.*
+*Đội ZAIC 2026 LifeMate soạn ngày 06/11/2026, sửa lúc 17:25: lấy file và nộp kết quả qua Google Drive. Bạn là AI trợ lý chạy trên máy GPU của anh trai Anh. File này nói đủ những gì cần làm: train gì, lấy file ở đâu, chạy lệnh nào, kiểm gì, gửi lại cái gì.*
 
 **Thư mục Google Drive của đội** (lấy gói ở đây, tải kết quả lên đây): link Anh gửi kèm file này
 

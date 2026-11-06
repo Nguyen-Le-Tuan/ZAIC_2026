@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 11:35 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 11:40 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **11:40 ngày 06/11:** Anh hỏi train ở máy nào. **Nếu train (chỉ còn hướng dữ liệu sinh v2) thì dùng máy anh trai:** nhanh gấp 3,7 lần, chạy 2 seed cùng lúc. Laptop để kiểm Docker (B31, L9). Cần biết anh trai cho dùng máy mấy lần trước 13/11 (JOURNAL entry 102).
 > - **11:35 ngày 06/11:** **Kết quả gói v3 từ máy anh trai đã về (2× RTX 4090): không có adapter nào tốt hơn để thay vào image.** 4B bf16 so với 4B 4-bit đang nộp (chữ chuẩn): dev_random +5,70, dev_lao −2,12, gộp +1,56. Cùng một công thức train trên hai máy đã lệch tới 4,21 điểm, nên các mức chênh này chưa nói được gì. **B32:** hướng (1) xong; Claude không đề xuất bf16; còn hướng (2) dữ liệu sinh v2 (JOURNAL entry 101).
 > - **09:50 ngày 06/11:** **Đã tải xong file image (09:47, đủ byte, sha256 khớp); Docker 29.1.3 và NVIDIA toolkit 1.20.1 đã cài; Anh chưa vào nhóm `docker`.** Anh hỏi có phải nộp luôn bản này, không cải tiến nữa không. **Trả lời: đóng gói bản này là để có sẵn một bản chạy được; có model tốt hơn thì chỉ thay một thư mục trong image.** Nhưng hiện chưa có cải tiến nào có bằng chứng; **Anh chọn hướng ở B32** (JOURNAL entry 100).
 > - **09:40 ngày 06/11:** **Leader đã gửi image (L8 xong) và đã đọc hướng dẫn Docker của BTC (L4 xong).** Anh mang máy đi lúc 11:00, nên **B28 chạy tối nay (B31, khoảng 4 giờ)**. **Trước 11:00, Anh chạy `sudo bash ~/zac-c3/b28_setup_docker.sh` và tải file image từ Drive (B30).** **Theo hướng dẫn BTC, máy chấm là RTX 5090 32 GB, CUDA 13.2; gói nộp cuối phải theo giao diện `/code/predict.sh` → `/data` → `/result/submission.jsonl`, có notebook đo thời gian, trường `time`, README và code train.** Image 05/11 chưa theo giao diện này; việc mới cho leader là L9: [`docs/BTC_DOCKER_GUIDE_2026-11-06.md`](docs/BTC_DOCKER_GUIDE_2026-11-06.md) (JOURNAL entry 99).
@@ -219,6 +220,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(11:35 ngày 06/11) **Claude đề xuất mới:** không làm (3), vì trên dev_lao (tập giống public nhất) bf16 kém 2,12. Còn hai lựa chọn:*
     - *giữ bản 05/11 và dồn sức vào đóng gói (B31, L9);*
     - *làm (2). Nếu anh trai cho dùng máy thêm, mỗi vòng train + chấm còn khoảng 2 giờ thay vì 7 giờ.*
+  - *(11:40) Nếu làm (2): train trên máy anh trai, dùng đúng công thức 4-bit, mỗi bên 2 seed. Claude làm gói mới từ code `q4b-laptop`. Anh hỏi anh trai: trước 13/11 cho dùng máy mấy lần (JOURNAL entry 102).*
 - [ ] **B31. (09:40 ngày 06/11)** (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
   - Nếu Anh đã vào nhóm `docker`, Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy.
   - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.

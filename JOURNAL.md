@@ -1993,6 +1993,23 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
     - **Tiếp theo:** B28 không còn phải chờ: kiểm chính image hiện tại (`"ok"`, thời gian trên GPU 24 GB, chạy lại để kiểm giống nhau).
     - File `runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` và `ckpt/asr_phoft_all/` giữ trên laptop để đối chiếu.
 
+96. **Anh hỏi: train trên laptop mất bao lâu. Số đã đo trên RTX 4070** (06/11).
+    - **Agent Qwen3-4B 4-bit + LoRA r32, 1 epoch, max_len 6144:**
+
+      | Lượt | Dòng SFT | Bước | Train | Cả lượt (thêm dev loss) |
+      |---|---|---|---|---|
+      | `q4b4_fit_lao` | 4.051 | 254 | 318 phút | 20:48–02:11 (5 giờ 23 phút) |
+      | `q4b4_fit_random` | 4.150 | 260 | 323 phút | 03:31–08:59 (5 giờ 28 phút) |
+      | `q4b4_all` (đủ 1.545 mẫu) | 4.874 | 305 | 349 phút | 00:13–06:03 (5 giờ 50 phút) |
+
+      - Khoảng 4,3 giây mỗi dòng SFT (khoảng 1,15 phút mỗi bước 16 dòng); VRAM cao nhất 5,6 GB.
+      - Thêm 1.000 dòng (ví dụ dữ liệu tổng hợp) thì thêm khoảng 1,2 giờ.
+    - **ASR PhoWhisper-large + LoRA r32, 3 epoch:** `asr_phoft_all` (gần đủ train, 891 bước) mất 170 phút (2 giờ 50 phút). Bản Colab T4 của leader (582 bước) mất 163 phút.
+    - **Sau khi train:**
+      - Làm file public: khoảng 1 giờ 45 phút (ASR 15 phút, agent khoảng 95 phút với hạn 60 giây).
+      - Chấm dev_random + dev_lao bằng chữ ASR: khoảng 1 giờ 20 phút.
+    - Trong lúc train, laptop vẫn dùng được nhưng chậm; job có thể đóng băng khi Anh cần máy (entry 92).
+
 ---
 
 ## 8. Việc tiếp theo

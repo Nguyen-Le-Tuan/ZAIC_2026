@@ -66,9 +66,9 @@ Bước kiểm loại mẫu không theo khung, ngoài các bước kiểm cũ (c
 - **Dữ liệu:** train và public_test, không có audio; transcript ASR của train, trong đó có chữ PhoWhisper-ft của dev_lao.
 - **Dữ liệu sinh:** `gen/synth_lao_v2.jsonl` (202 mẫu) và `gen/sft_synth_lao_v2.jsonl` (652 dòng SFT).
 - Không có adapter hay lượt chạy cũ.
-- **Gói có dữ liệu thi có licence:** chỉ gửi riêng cho anh trai, không đưa lên git hay drive chia sẻ công khai.
+- **Gói có dữ liệu thi có licence:** chỉ để trong thư mục Google Drive riêng mà Anh chia sẻ cho anh trai (17:40 ngày 06/11; chế độ "Hạn chế", không bật "Bất kỳ ai có đường liên kết"). Không đưa lên git hay chỗ công khai. Link thư mục không ghi vào repo vì repo công khai.
 
-**Anh gửi anh trai:** file gói và file hướng dẫn [`BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md). File hướng dẫn viết cho AI trợ lý bên máy anh trai đọc: train gì, lệnh nào, kiểm gì, gửi lại gì.
+**Anh đã tải gói lên thư mục Drive** (17:40). Anh gửi anh trai link thư mục, kèm bản hướng dẫn có sẵn link: `cloud_results/anh_trai/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md` trên laptop, ngoài git. Bản trong repo là [`BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md), không có link. File hướng dẫn viết cho AI trợ lý bên máy anh trai đọc: train gì, lệnh nào, kiểm gì, gửi lại gì.
 
 Anh trai đặt gói vào thư mục home rồi chạy lệnh dưới (giống trong file hướng dẫn). Lệnh chạy xong thì tự áp luật bằng `scripts/pilot_rule.py`, ghi vào `lifemate/runs/pilot_v2_rule.txt`:
 
@@ -79,9 +79,9 @@ mkdir -p ~/zac_v4 && cd ~/zac_v4 && tar -xzf ~/zac_cloud_bundle_20261106_synthv2
 - Lệnh giải nén vào thư mục mới `~/zac_v4`, nên không đụng tới `~/ZAIC_2026` của lần v3.
 - **Thời gian:** cài đặt khoảng 15–30 phút (venv mới; model 4B đã có trong cache từ lần v3), rồi 4 lượt khoảng 5–6 giờ.
 - **Xem tiến độ:** `tail -f ~/zac_v4/ZAIC_2026/run.log`. Xong khi dòng cuối có `XONG`.
-- **Gửi về một file:** `~/zac_v4_results.tar.gz` (chỉ log và kết quả chấm, không có adapter; khoảng vài chục MB). Anh lưu vào `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
-- **Dừng sớm thì vẫn có kết quả:** cặp seed 0 chạy trước trên hai GPU. Nếu cần dừng, anh trai vẫn chạy dòng `tar -czf ~/zac_v4_results.tar.gz ...` trong `~/zac_v4/ZAIC_2026` rồi gửi.
-- **Sau khi đội không cần nữa:** nhờ anh trai xoá `~/zac_v4`, `~/ZAIC_2026`, hai gói và các file kết quả.
+- **Nộp kết quả lên chính thư mục Drive đó** (17:40): `~/zac_v4_results.tar.gz` (chỉ log và kết quả chấm, không có adapter; khoảng vài chục MB) và báo cáo `ZAIC_pilot_v2_report_<ngày>.md`. Anh tải về `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
+- **Dừng sớm thì vẫn có kết quả:** cặp seed 0 chạy trước trên hai GPU. Nếu cần dừng, anh trai vẫn chạy dòng `tar -czf ~/zac_v4_results.tar.gz ...` trong `~/zac_v4/ZAIC_2026` rồi tải lên Drive.
+- **Sau khi đội không cần nữa:** nhờ anh trai xoá `~/zac_v4`, `~/ZAIC_2026`, hai gói và các file kết quả trên máy GPU. Anh xoá gói và kết quả trong thư mục Drive.
 
 ## Đã kiểm trên laptop (06/11)
 

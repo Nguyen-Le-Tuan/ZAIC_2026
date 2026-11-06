@@ -7,7 +7,8 @@
 #   train TAG=q4b_fit_random MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_random DEV=dev_random REF=runs/sft_q17b_fit_random
 #   eval  TAG=q17b_fit_lao_cloud ADAPTER=ckpt/q17b_fit_lao/final DEV=dev_lao REF=runs/sft_q17b_fit_lao
 # KEY=value pairs become the environment of train_local.sh / eval_ckpt.sh (TAG, MODEL, FIT, DEV, EPOCHS, ADAPTER,
-# EXTRA_SAMPLES, ASR_FIT, ASR_DEV, ASR_FILE, TRAIN_ARGS=--lr,1e-4 where commas become spaces...).
+# EXTRA_SAMPLES, EXTRA_SFT, ASR_FIT, ASR_DEV, ASR_FILE, EVAL_LOSS, TRAIN_ARGS=--lr,1e-4 and EVAL_ARGS=--load-4bit where
+# commas become spaces...).
 # REF: paired comparison with that run -> runs/compare_<TAG>_vs_ref.json. REF_ASR: the same for the ASR-text rollout
 # of a train arm with ASR_DEV (runs/sft_<TAG>_asr) -> runs/compare_<TAG>_asr_vs_ref.json.
 # MIN_GPUS=N: run the arm only when the machine gives the arms at least N GPUs; otherwise it is skipped (and logged)
@@ -61,7 +62,7 @@ run_arm() {   # gpu, line
   local -a kv
   read -ra kv <<< "$rest"
   local i
-  for i in "${!kv[@]}"; do [[ ${kv[$i]} == TRAIN_ARGS=* ]] && kv[$i]=${kv[$i]//,/ } || true; done   # commas -> spaces
+  for i in "${!kv[@]}"; do [[ ${kv[$i]} == TRAIN_ARGS=* || ${kv[$i]} == EVAL_ARGS=* ]] && kv[$i]=${kv[$i]//,/ } || true; done   # commas -> spaces
   local tag dev ref ref_asr log
   tag=$(get TAG "${kv[@]}"); dev=$(get DEV "${kv[@]}"); ref=$(get REF "${kv[@]}"); ref_asr=$(get REF_ASR "${kv[@]}")
   dev=${dev:-dev_random}

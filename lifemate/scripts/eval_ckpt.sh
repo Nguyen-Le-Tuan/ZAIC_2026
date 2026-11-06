@@ -4,7 +4,8 @@
 #   TAG=q17b_base bash scripts/eval_ckpt.sh                      # no ADAPTER = zero-shot (forces an empty <think>)
 # Env: TAG (required), ADAPTER, MODEL, DEV (split name, default dev_random), LOSS=1 (also teacher-forced loss on
 #      every dev row; needs sft/$DEV.jsonl), ASR_FILE=asr/x.jsonl (user turns from that ASR file instead of
-#      audio_text; the loss stays on sft/$DEV.jsonl).
+#      audio_text; the loss stays on sft/$DEV.jsonl), EVAL_ARGS (extra args for lifemate.infer, e.g.
+#      "--load-4bit --time-budget 60" for a QLoRA adapter).
 # Writes runs/{sft|zs}_$TAG{.jsonl,.meta.json,_trace.jsonl,_rows.jsonl,_score.json} (+ runs/loss_$TAG.json).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -33,8 +34,9 @@ done
 if [ "${LOSS:-0}" = 1 ] && [ -n "$ADAPTER" ]; then
   $PY -m lifemate.eval_loss --model "$MODEL" --adapter "$ADAPTER" --data "sft/$DEV.jsonl" --out "runs/loss_$TAG.json"
 fi
+# shellcheck disable=SC2086
 $PY -m lifemate.infer --split train --ids "splits/$DEV.txt" "${TEXT[@]}" --backend hf --model "$MODEL" "${EXTRA[@]}" \
-    --out "$P.jsonl" --trace "${P}_trace.jsonl"
+    ${EVAL_ARGS:-} --out "$P.jsonl" --trace "${P}_trace.jsonl"
 # --ids: a sample missing from the predictions counts as 0 instead of silently shrinking the denominator
 $PY -m lifemate.scorer "$P.jsonl" --split train --ids "splits/$DEV.txt" --rows "${P}_rows.jsonl" > "${P}_score.json"
 cat "${P}_score.json"

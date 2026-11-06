@@ -13,6 +13,9 @@ Commands (outputs go to gen/, which is git-ignored; the API key is read from MOD
   python -m lifemate.synth check --tag t20          # simulator checks + an independent re-derivation of the calls
   python -m lifemate.synth sft   --tag t20 --out sft/synth_t20.jsonl
   python -m lifemate.synth show  --tag t20          # accepted and rejected samples as text, for reading
+  python -m lifemate.synth stats --tag t20          # shape of the accepted samples next to the real fit samples
+Recipe v2 (--recipe v2 for gen and check, 06/11): each sample gets a shape drawn from the real fit_lao shares
+(history, an ID reused from a previous turn, two apps, no-call requests); the checks enforce it.
 Every API call is logged in gen/synth_<tag>_usage.jsonl; a call is refused once the tag reached --max-usd or all
 tags together reached --total-usd (default 30: Anh's limit for all synthetic data, raised from 10 on 02/11; more only after asking).
 
@@ -182,7 +185,7 @@ def pick_examples(fits: list[dict], rng: random.Random, k_exec: int = 3, k_ask: 
 
 
 def example_text(s: dict) -> str:
-    calls = "\n".join(json.dumps(c, ensure_ascii=False) for c in s["label"]["tool_calls"])
+    calls = "\n".join(json.dumps(c, ensure_ascii=False) for c in s["label"]["tool_calls"]) or "(không gọi tool nào)"
     return (f"- Thời điểm: {s['context']['current_time']}\n  Người dùng nói: \"{s['audio_text']}\"\n"
             f"  Các lời gọi đúng:\n" + "\n".join("    " + line for line in calls.splitlines()))
 
@@ -438,10 +441,374 @@ def solver_agrees(zt, g: dict, solved: list[dict], tools: dict, catalog: dict) -
     return None
 
 
+# ---------------------------------------------------------------- recipe v2 (06/11): the shape of real samples
+#
+# Pilot 1 (lao_w1) samples had no history, used one app and always made a call. Real fit_lao samples (1,283;
+# JOURNAL entry 104): 64% have history, 16% reuse an ID returned in it, 46% use two apps or more, 8% make no call,
+# 14% end with an ask, 8% only read. v2 asks the generator for each of these shapes per sample and checks them.
+# The same measurement showed that pilot-1 calls were not the problem one might expect: optional parameters filled
+# per write call 0.31 vs 0.32 real, and executes without history start with a read 89% vs 90% real.
+
+V2_CATEGORY = (("none", 0.07), ("ask_missing", 0.14), ("lookup", 0.08), ("execute", 0.71))
+V2_HIST_REF = 0.20       # a previous turn on the app returns the object the request then refers to (not for none)
+V2_HIST_DISTRACT = 0.45  # an unrelated real conversation (the template's own history) comes before the request
+V2_REF_DISTRACT = 0.5    # a ref sample also gets the unrelated conversation before its previous turn
+V2_MULTI = 0.40          # of execute / ask samples: the request also needs one more installed app
+V2_MAX_HIST = 8          # history entries of a distractor conversation (real: 2-24, most <= 8)
+COMBINE_APPS = ("contacts", "calendar", "reminders", "notes", "sms", "chat_ott", "email", "alarm", "tasks",
+                "banking", "ewallet", "maps", "shopping_list")
+
+HIST_TURN = {"type": "object", "additionalProperties": False, "required": ["request", "calls", "reply"],
+             "properties": {"request": {"type": "string"}, "calls": {"type": "array", "items": STRING_CALL},
+                            "reply": {"type": "string"}}}
+GEN_SCHEMA_V2 = {"type": "object", "additionalProperties": False, "required": ["samples"], "properties": {"samples": {
+    "type": "array", "items": {"type": "object", "additionalProperties": False,
+                               "required": ["context_index", "category", "scenario", "state_json", "history_turns",
+                                            "request", "calls"],
+                               "properties": {
+                                   "context_index": {"type": "integer"},
+                                   "category": {"type": "string", "enum": ["execute", "lookup", "ask_missing", "none"]},
+                                   "scenario": {"type": "string"},
+                                   "state_json": {"type": "string"},
+                                   "history_turns": {"type": "array", "items": HIST_TURN},
+                                   "request": {"type": "string"},
+                                   "calls": {"type": "array", "items": STRING_CALL}}}}}}
+
+GEN_TASK_V2 = """Bạn tạo dữ liệu huấn luyện cho một trợ lý giọng nói tiếng Việt. Trợ lý nhận câu nói của người dùng và gọi tool của các app đã cài trên điện thoại. Điểm được chấm bằng cách so các lời gọi tool và trạng thái cuối của app với đáp án, nên đáp án phải đúng tuyệt đối và theo đúng quy ước của dữ liệu thật.
+
+Hãy viết {n} mẫu MỚI, khác nhau, đều dùng app `{app}` ({name_vi}: {desc}). Mẫu thứ i dùng context i và PHẢI theo đúng yêu cầu i trong danh sách "Yêu cầu từng mẫu" ở cuối.
+
+Các loại mẫu (`category`):
+- `execute`: người dùng nói đủ thông tin; đáp án là chuỗi lời gọi làm xong việc. Cần ID thì đọc trước (tìm/liệt kê) rồi mới ghi; ID đã có trong lượt trước thì dùng lại, không đọc lại.
+- `lookup`: người dùng chỉ hỏi thông tin (xem, kiểm tra, còn bao nhiêu...); đáp án chỉ gồm lời gọi đọc.
+- `ask_missing`: người dùng thiếu một tham số bắt buộc không suy ra được (hoặc nhiều đối tượng khớp mà không biết chọn cái nào); đáp án có thể đọc trước, rồi kết thúc bằng sys.ask_missing_info với tool_name và params còn thiếu (đúng tên trong schema). Không gọi chính tool đang thiếu tham số. Câu có nhiều việc thì làm xong các việc đủ thông tin trước rồi mới hỏi phần thiếu.
+- `none`: trợ lý không gọi tool nào (`calls` rỗng): người dùng huỷ hay đổi ý giữa câu ("à thôi khỏi"), dặn đừng làm gì, chỉ trò chuyện hay cảm ơn, hoặc nhờ việc liên quan tới app `{app}` mà không tool nào đã cài làm được.
+
+Yêu cầu "dùng thêm app B": câu nói có hai việc (hoặc một việc cần cả hai app); đáp án gọi tool của cả `{app}` và B. Viết state cho cả hai app.
+Yêu cầu "có lượt trước": `history_turns` có đúng 1 lượt trước đó trong cùng cuộc trò chuyện: người dùng hỏi hay nhờ một việc với app `{app}`, trợ lý gọi tool (thường là đọc) và trả lời một câu ngắn nêu kết quả (`reply`, ví dụ tên và thông tin chính của đối tượng, không đọc ID). Câu cuối (`request`) nhắc lại đối tượng đó ("cuốn đó", "cái lúc nãy", hoặc gọi tên), và đáp án cuối dùng lại ID có trong kết quả của lượt trước, KHÔNG gọi lại tool đọc để lấy ID đó. Lời gọi của lượt trước chạy trên state trước, rồi mới tới đáp án cuối. Không có yêu cầu này thì `history_turns` là danh sách rỗng.
+
+Yêu cầu với từng mẫu:
+1. `state_json`: chuỗi JSON của trạng thái ban đầu, dạng {{"<app id>": {{...}}}}, viết đúng cấu trúc mà code bộ giả lập bên dưới đọc (tên collection, tên trường, kiểu dữ liệu). Có 3-8 bản ghi hợp lý, có cả bản ghi gây nhiễu. ID theo kiểu ngắn như code dùng (ví dụ book_01). Chỉ viết state cho app có trong context.
+2. `request`: câu người dùng NÓI, tự nhiên như giọng nói thật, 8-40 từ. Người dùng không bao giờ đọc ID. Ngày giờ nói kiểu tương đối ("mai", "thứ sáu này", "chín giờ tối"). Phần lớn người dùng chỉ nói thông tin cần thiết; chỉ nói thêm chi tiết tuỳ chọn khi tự nhiên. Các câu trong lượt này phải KHÁC NHAU về cách nói: đổi cách mở đầu (có câu bắt đầu bằng "ừ,", "ờ", "thế", "nếu", hay vào thẳng động từ), đổi từ nhờ vả ("giúp" khoảng 1/4 số câu, "giùm" chỉ khoảng 1/8, còn lại "cho", "với", hoặc không dùng), có giọng miền; câu tự sửa giữa chừng ("à không...") và câu điều kiện ("nếu ... thì ...") mỗi loại chỉ khoảng 1/10 số câu như dữ liệu thật. Không câu nào được lặp khuôn của câu khác. Bắt chước phân bố cách nói của các câu thật dưới đây (chỉ học cách nói, không chép nội dung).
+3. `calls`: danh sách lời gọi tool đúng theo thứ tự; mỗi lời gọi có `name` và `arguments_json` (chuỗi JSON của tham số). ID phải lấy từ kết quả của lời gọi đọc trước đó hoặc của lượt trước (trợ lý không thấy state). Chỉ điền tham số tuỳ chọn khi người dùng nói rõ giá trị đó. Thời gian đầy đủ ISO-8601 có giây và +07:00, tính từ thời điểm của context.
+4. Chạy thử trong đầu từng lời gọi (cả của lượt trước) trên state bằng code bộ giả lập: không được có lời gọi trả về done=false hoặc lỗi.
+5. `scenario`: một câu mô tả ngắn mẫu này kiểm tra điều gì.
+
+Quy tắc của trợ lý (đáp án phải theo đúng các quy tắc này):
+{rules}
+
+Ví dụ đáp án đúng từ dữ liệu thật (app khác, chỉ để học quy ước):
+{examples}
+
+Các câu người dùng thật nói (chỉ để học cách nói):
+{styles}
+
+Các tool (JSON schema; `required` là tham số bắt buộc; `x-ref` là ID lấy từ kết quả tool khác):
+{tools}
+
+Tool hệ thống:
+{ask_tool}
+
+Code bộ giả lập của các app (cấu trúc state và cách mỗi tool chạy):
+{app_src}
+
+Các hàm dùng chung của bộ giả lập (read/find/create/patch...):
+```python
+{base_src}
+```
+
+Danh sách context (thời điểm, người dùng, app đã cài):
+{contexts}
+
+Yêu cầu từng mẫu:
+{specs}
+"""
+
+SOLVE_TASK_V2 = """Bạn là trợ lý giọng nói tiếng Việt. Hãy liệt kê các lời gọi tool mà trợ lý phải làm cho câu nói CUỐI của người dùng dưới đây, theo đúng thứ tự.
+Trợ lý KHÔNG thấy dữ liệu của app: muốn biết ID thì phải gọi tool đọc trước, trừ khi ID đã có trong kết quả của lượt trước. Dữ liệu app được đưa cho bạn chỉ để bạn biết các lời gọi đọc sẽ trả về gì.
+
+Quy tắc của trợ lý:
+{rules}
+
+Ví dụ đáp án đúng từ dữ liệu thật:
+{examples}
+
+Thời điểm: {now}
+Người dùng: {profile}
+Các tool có thể gọi (JSON schema):
+{tools}
+
+Dữ liệu app lúc này (chỉ để bạn biết kết quả các lời gọi đọc):
+{state}
+
+Các lượt trước trong cuộc trò chuyện:
+{history}
+
+Câu người dùng nói cuối cùng: "{request}"
+
+Trả về `calls`: mỗi lời gọi có `name` và `arguments_json` (chuỗi JSON của tham số). Không cần gọi tool nào thì trả về danh sách rỗng."""
+
+
+def _pick_weighted(rng: random.Random, pairs) -> str:
+    r, acc = rng.random(), 0.0
+    for k, p in pairs:
+        acc += p
+        if r < acc:
+            return k
+    return pairs[-1][0]
+
+
+def _history_apps(history: list[dict]) -> set[str]:
+    return {c["name"].split(".", 1)[0] for h in history for c in (h.get("tool_calls") or [])}
+
+
+def history_ref_examples(fits: list[dict], tools: dict) -> list[tuple[dict, int]]:
+    """(sample, index of the assistant turn) where the final calls reuse an x-ref ID that turn returned."""
+    out = []
+    for s in fits:
+        if not s["history"]:
+            continue
+        own, ids = set(), []
+        for i, c in enumerate(s["label"]["tool_calls"]):
+            props = tools.get(c["name"], {}).get("parameters", {}).get("properties", {})
+            ids += [v for k, v in c["arguments"].items() if props.get(k, {}).get("x-ref") and isinstance(v, str) and v not in own]
+            if i < len(s["label"].get("tool_results") or []):
+                _strings(s["label"]["tool_results"][i], own)
+        for j in range(len(s["history"]) - 1, -1, -1):
+            h = s["history"][j]
+            if h["role"] == "assistant" and j > 0 and set(ids) & _strings(h.get("tool_results") or [], set()):
+                out.append((s, j))
+                break
+    return out
+
+
+def pick_examples_v2(fits: list[dict], refs: list[tuple[dict, int]], tools: dict, rng: random.Random) -> str:
+    """New gold examples for every call: 3 executes (one with two apps), an ask, a lookup, a no-call request,
+    and a request that reuses an ID from the previous turn (shown with that turn only)."""
+    no_hist = [s for s in fits if not s["history"]]
+
+    def kind(s):
+        c = s["label"]["tool_calls"]
+        if not c:
+            return "none"
+        if c[-1]["name"] == ASK:
+            return "ask"
+        if all(tools.get(x["name"], {}).get("kind") == "read" for x in c):
+            return "lookup"
+        return "multi" if len({x["name"].split(".", 1)[0] for x in c}) > 1 else "execute"
+    by = {}
+    for s in no_hist:
+        by.setdefault(kind(s), []).append(s)
+    chosen = rng.sample(by.get("execute", []), 2) + rng.sample(by.get("multi", []), 1)
+    for k in ("ask", "lookup", "none"):
+        chosen += rng.sample(by.get(k, []), 1) if by.get(k) else []
+    texts = [example_text(s) for s in chosen]
+    if refs:
+        s, j = rng.choice(refs)
+        u, a = s["history"][j - 1], s["history"][j]
+        calls = "\n".join("    " + json.dumps(c, ensure_ascii=False) for c in a.get("tool_calls") or [])
+        res = json.dumps(a.get("tool_results") or [], ensure_ascii=False)[:600]
+        final = "\n".join("    " + json.dumps(c, ensure_ascii=False) for c in s["label"]["tool_calls"])
+        texts.append(f"- Thời điểm: {s['context']['current_time']}\n  Lượt trước, người dùng nói: \"{u.get('audio_text')}\"\n"
+                     f"  Trợ lý gọi:\n{calls}\n  Kết quả: {res}\n  Trợ lý trả lời: \"{a.get('text')}\"\n"
+                     f"  Người dùng nói tiếp: \"{s['audio_text']}\"\n  Các lời gọi đúng:\n{final}")
+    rng.shuffle(texts)
+    return "\n".join(texts)
+
+
+def make_specs_v2(n: int, app: str, fits: list[dict], apps_by_id: dict, drop: set[str], zt, rng: random.Random):
+    """(context, spec, distractor history) for each sample of one generation call."""
+    with_hist = [s for s in fits if 0 < len(s["history"]) <= V2_MAX_HIST and not (_history_apps(s["history"]) & drop)]
+    out = []
+    for _ in range(n):
+        cat = _pick_weighted(rng, V2_CATEGORY)
+        r = rng.random()
+        hist = "ref" if cat != "none" and r < V2_HIST_REF else ("distract" if r < V2_HIST_REF + V2_HIST_DISTRACT else "")
+        distract = hist == "distract" or (hist == "ref" and rng.random() < V2_REF_DISTRACT)
+        tpl = rng.choice(with_hist if distract else fits)
+        ctx = copy.deepcopy(tpl["context"])
+        apps = {a: v for a, v in ctx["installed_apps"].items() if a not in drop and a in apps_by_id}
+        items = list(apps.items())
+        items.insert(rng.randint(0, len(items)), (app, {"tools": [t["name"] for t in apps_by_id[app]["tools"]]}))
+        ctx["installed_apps"] = dict(items)
+        other = None
+        if cat in ("execute", "ask_missing") and rng.random() < V2_MULTI:
+            cands = [a for a in COMBINE_APPS if a != app and a in apps_by_id and a in zt.executor.APPS and a not in drop]
+            installed = [a for a in cands if a in ctx["installed_apps"]]
+            other = rng.choice(installed or cands)
+            if other not in ctx["installed_apps"]:
+                ctx["installed_apps"][other] = {"tools": [t["name"] for t in apps_by_id[other]["tools"]]}
+        spec = {"category": cat, "other_app": other, "history": hist}
+        out.append((ctx, spec, copy.deepcopy(tpl["history"]) if distract else []))
+    return out
+
+
+def spec_text(i: int, spec: dict) -> str:
+    parts = [f"loại `{spec['category']}`"]
+    if spec.get("other_app"):
+        parts.append(f"dùng thêm app `{spec['other_app']}`")
+    parts.append("có lượt trước (history_turns 1 lượt)" if spec.get("history") == "ref" else "history_turns rỗng")
+    return f"[{i}] " + "; ".join(parts)
+
+
+def simulate_v2(zt, ctx: dict, state: dict, turns: list[list[dict]], calls: list[dict], catalog: dict):
+    """Run the previous turns' calls, then the final calls, on one simulator.
+    Returns (results of each previous turn, final results, state after the previous turns, simulator)."""
+    apps = {a: {"tools": v["tools"], "state": copy.deepcopy(state.get(a, {}))} for a, v in ctx["installed_apps"].items()}
+    sim = zt.executor.Simulator({"context": {"current_time": ctx["current_time"], "installed_apps": apps}}, catalog)
+    turn_results = [[sim.call(c["name"], c["arguments"]) for c in t] for t in turns]
+    before = copy.deepcopy(sim.states)
+    results = [sim.call(c["name"], c["arguments"]) for c in calls]
+    return turn_results, results, before, sim
+
+
+def _arg_strings(x) -> set[str]:
+    return {v for v in _strings(x, set()) if isinstance(v, str)}
+
+
+def _call_errors(calls, results, tools, seen: set, installed: set, where: str, ids: set[str] = frozenset()) -> str | None:
+    """ids: the IDs of the state. An argument equal to one of them must come from an earlier result (many schemas
+    do not mark their ID parameters with x-ref, e.g. loyalty.redeem.reward_id)."""
+    for c in calls:
+        if c["name"] not in installed:
+            return f"{where}schema: {c['name']} not installed"
+    for c, r in zip(calls, results):
+        if isinstance(r, dict) and r.get("ok") is False:
+            return f"{where}schema: {c['name']}: {str(r.get('error'))[:100]}"
+        if isinstance(r, dict) and r.get("done") is False:
+            return f"{where}noop: {c['name']}: {str(r.get('message'))[:100]}"
+        props = tools.get(c["name"], {}).get("parameters", {}).get("properties", {})
+        for k, v in c["arguments"].items():
+            if props.get(k, {}).get("x-ref") and isinstance(v, str) and v not in seen:
+                return f"{where}invented_id: {c['name']}.{k}={v}"
+            bad = sorted((_arg_strings(v) & ids) - seen)
+            if bad:
+                return f"{where}invented_id: {c['name']}.{k}={bad[0]}"
+        _strings(r, seen)
+    return None
+
+
+def check_sample_v2(zt, g: dict, tools: dict, catalog: dict) -> tuple[str | None, list, list]:
+    """Checks of one v2 sample. g: context, state, calls, category, request, turns (previous turns with parsed
+    calls), spec. Returns (reject reason or None, results of the previous turns, final results)."""
+    ctx, state, calls, spec, turns = g["context"], g["state"], g["calls"], g["spec"], g["turns"]
+    installed = {t for a in ctx["installed_apps"].values() for t in a["tools"]} | {ASK}
+    for app in state:
+        if app not in ctx["installed_apps"]:
+            return f"state_not_installed: {app}", [], []
+    if g["category"] != spec["category"]:
+        return f"spec_category: {g['category']} instead of {spec['category']}", [], []
+    want_turns = 1 if spec.get("history") == "ref" else 0
+    if len(turns) != want_turns:
+        return f"spec_history: {len(turns)} previous turns, wanted {want_turns}", [], []
+    ids = state_ids(state)
+    texts = [g["request"]] + [t["request"] for t in turns] + [t.get("reply", "") for t in turns]
+    for i in sorted(ids, key=len, reverse=True):
+        for text in texts:
+            if re.search(rf"(?<![\w]){re.escape(i)}(?![\w])", text, re.I):
+                return f"id_in_text: {i}", [], []
+    turn_results, results, before, sim = simulate_v2(zt, ctx, state, [t["calls"] for t in turns], calls, catalog)
+    seen: set = set()
+    for t, tr in zip(turns, turn_results):
+        if not t["calls"]:
+            return "spec_history: previous turn makes no call", turn_results, results
+        err = _call_errors(t["calls"], tr, tools, seen, installed, "history_", ids)
+        if err:
+            return err, turn_results, results
+    from_history = set(seen)
+    if g["category"] == "none":
+        return (None if not calls else "bad_none: calls a tool"), turn_results, results
+    if not calls:
+        return "no_calls", turn_results, results
+    err = _call_errors(calls, results, tools, seen, installed, "", ids)
+    if err:
+        return err, turn_results, results
+    kinds = [tools.get(c["name"], {}).get("kind") for c in calls]
+    if g["category"] in ("execute", "lookup") and calls[-1]["name"] == ASK:
+        return f"bad_{g['category']}: ends with ask", turn_results, results
+    if g["category"] == "execute":
+        if "write" not in kinds or sim.states == before:
+            return "no_write", turn_results, results
+    elif g["category"] == "lookup":
+        if any(k != "read" for k in kinds):
+            return "bad_lookup: not read-only", turn_results, results
+    elif g["category"] == "ask_missing":
+        last = calls[-1]
+        if last["name"] != ASK:
+            return "bad_ask: does not end with sys.ask_missing_info", turn_results, results
+        tname, params = last["arguments"].get("tool_name"), last["arguments"].get("params")
+        if tname not in installed or tname == ASK or not isinstance(params, list) or not params:
+            return f"bad_ask: tool {tname}", turn_results, results
+        if any(c["name"] == tname for c in calls[:-1]):
+            return f"bad_ask: {tname} already called before asking for it", turn_results, results
+        req = set(required(tools[tname]))
+        if not set(params) <= req:
+            return f"bad_ask: {sorted(set(params) - req)} not required by {tname}", turn_results, results
+    if spec.get("other_app"):
+        from .sft import used_apps
+        if not {g["app"], spec["other_app"]} <= used_apps(calls):
+            return f"spec_other_app: calls do not use both {g['app']} and {spec['other_app']}", turn_results, results
+    if spec.get("history") == "ref":
+        own, reused = set(), False
+        for c, r in zip(calls, results):
+            reused |= bool((_arg_strings(c["arguments"]) & ids & from_history) - own)
+            _strings(r, own)
+        if not reused:
+            return "spec_history: final calls do not reuse an ID from the previous turn", turn_results, results
+    if len(calls) > 8:
+        return "too_many_calls", turn_results, results
+    return None, turn_results, results
+
+
+def _norm_state(x):
+    """Final states compared up to case and spaces of free text ("Họp" vs "họp" in a title is not a wrong label)."""
+    if isinstance(x, dict):
+        return {k: _norm_state(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_norm_state(v) for v in x]
+    return " ".join(x.lower().split()) if isinstance(x, str) else x
+
+
+def solver_agrees_v2(zt, g: dict, solved: list[dict], tools: dict, catalog: dict) -> str | None:
+    turns = [t["calls"] for t in g["turns"]]
+    _, _, _, sim_gold = simulate_v2(zt, g["context"], g["state"], turns, g["calls"], catalog)
+    _, _, _, sim_solv = simulate_v2(zt, g["context"], g["state"], turns, solved, catalog)
+    if write_ask_names(g["calls"], tools) != write_ask_names(solved, tools):
+        return (f"solver: other writes/asks {dict(write_ask_names(solved, tools))} "
+                f"vs {dict(write_ask_names(g['calls'], tools))}")
+    if ask_key(g["calls"]) != ask_key(solved):
+        return f"solver: other ask {ask_key(solved)} vs {ask_key(g['calls'])}"
+    if _norm_state(sim_gold.states) != _norm_state(sim_solv.states):
+        return "solver: other final state"
+    return None
+
+
+def history_text(history: list[dict]) -> str:
+    """Previous turns as the solver reads them (results shortened)."""
+    lines = []
+    for h in history:
+        if h["role"] == "user":
+            lines.append(f"- Người dùng: \"{h.get('audio_text')}\"")
+            continue
+        for c, r in zip(h.get("tool_calls") or [], h.get("tool_results") or [{}] * 99):
+            lines.append(f"  Trợ lý gọi {c['name']} {json.dumps(c['arguments'], ensure_ascii=False)} -> "
+                         f"{json.dumps(r, ensure_ascii=False)[:800]}")
+        lines.append(f"  Trợ lý: \"{h.get('text') or ''}\"")
+    return "\n".join(lines) or "(không có)"
+
+
+def turns_as_history(turns: list[dict], turn_results: list[list]) -> list[dict]:
+    out = []
+    for t, r in zip(turns, turn_results):
+        out += [{"role": "user", "audio": None, "audio_text": t["request"]},
+                {"role": "assistant", "text": t.get("reply", ""), "tool_calls": t["calls"], "tool_results": r}]
+    return out
+
+
 # ---------------------------------------------------------------- sft
 
-def to_train_sample(g: dict, results: list) -> dict:
-    return {"id": g["id"], "audio": None, "audio_text": g["request"], "context": g["context"], "history": [],
+def to_train_sample(g: dict, results: list, history: list | None = None) -> dict:
+    return {"id": g["id"], "audio": None, "audio_text": g["request"], "context": g["context"], "history": history or [],
             "label": {"tool_calls": g["calls"], "tool_results": results}, "_src": SRC, "_app": g["app"]}
 
 
@@ -456,6 +823,8 @@ def _paths(tag: str, no_solver: bool = False) -> dict:
 
 
 def cmd_gen(a):
+    if a.recipe == "v2":
+        return cmd_gen_v2(a)
     P = _paths(a.tag)
     rng = random.Random(a.seed)
     zt = zaic_tools(a.split, a.root)
@@ -506,6 +875,8 @@ def cmd_gen(a):
 
 
 def cmd_check(a):
+    if a.recipe == "v2":
+        return cmd_check_v2(a)
     P = _paths(a.tag, a.no_solver)
     rng = random.Random(a.seed + 1)
     zt = zaic_tools(a.split, a.root)
@@ -584,6 +955,212 @@ def cmd_check(a):
     print(json.dumps(rep, ensure_ascii=False, default=str))
 
 
+def cmd_gen_v2(a):
+    P = _paths(a.tag)
+    rng = random.Random(a.seed)
+    zt = zaic_tools(a.split, a.root)
+    catalog = load_catalog(a.split, a.root)
+    tools, apps_by_id = catalog_tools(catalog), {x["id"]: x for x in catalog["apps"]}
+    drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
+    fits = fit_samples(a.root, a.fit, drop)
+    refs = [r for r in history_ref_examples(fits, tools) if not (_history_apps(r[0]["history"]) & drop)]
+    client = Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
+    done = Counter(r["app"] for r in load_jsonl(P["raw"])) if P["raw"].exists() else Counter()
+    n_out = sum(done.values())
+    for app in a.apps.split(","):
+        if app not in apps_by_id or app not in zt.executor.APPS:
+            raise SystemExit(f"app {app!r} not in the {a.split} catalog or simulator")
+        while done[app] < a.per_app:
+            n = min(a.batch, a.per_app - done[app])
+            triples = make_specs_v2(n, app, fits, apps_by_id, drop, zt, rng)
+            others = sorted({sp["other_app"] for _, sp, _ in triples if sp["other_app"]})
+            names = [t["name"] for x in [app] + others for t in apps_by_id[x]["tools"]]
+            src = "\n\n".join(f"App `{x}`:\n```python\n{app_source(zt, x)}\n```" for x in [app] + others)
+            styles = "\n".join(f'- "{s["audio_text"]}"' for s in rng.sample(fits, 12))
+            prompt = GEN_TASK_V2.format(
+                n=n, app=app, name_vi=apps_by_id[app].get("name_vi", ""), desc=apps_by_id[app].get("description", ""),
+                rules=SYSTEM_RULES, examples=pick_examples_v2(fits, refs, tools, rng), styles=styles,
+                tools=tools_json(names, tools), ask_tool=tools_json([ASK], tools), app_src=src, base_src=base_source(zt),
+                contexts="\n".join(context_text(i, c) for i, (c, _, _) in enumerate(triples)),
+                specs="\n".join(spec_text(i, sp) for i, (_, sp, _) in enumerate(triples)))
+            try:
+                out = client.chat([{"role": "user", "content": prompt}], GEN_SCHEMA_V2, "samples", a.effort, f"gen {app}")
+            except BudgetExceeded as e:
+                print(json.dumps({"stop": str(e)}))
+                return
+            except RuntimeError as e:
+                print(json.dumps({"app": app, "error": str(e)[:300]}), file=sys.stderr)
+                done[app] += n
+                continue
+            rows = []
+            for j, s in enumerate(out.get("samples", [])[:n]):
+                i = s.get("context_index")
+                i = i if isinstance(i, int) and 0 <= i < n else j
+                ctx, spec, dh = triples[i]
+                rows.append({"id": f"synth_{a.tag}_{n_out:04d}", "app": app, "model": a.model, "recipe": "v2",
+                             "context": ctx, "spec": spec, "distract_history": dh, **s})
+                n_out += 1
+            with open(P["raw"], "a", encoding="utf-8") as f:
+                for r in rows:
+                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            done[app] += n
+            print(json.dumps({"app": app, "got": len(rows), "spent_usd": round(client.spent(), 4),
+                              "all_tags_usd": round(total_spent(P["usage"].parent), 4)}))
+
+
+def cmd_check_v2(a):
+    P = _paths(a.tag, a.no_solver)
+    rng = random.Random(a.seed + 1)
+    zt = zaic_tools(a.split, a.root)
+    catalog = load_catalog(a.split, a.root)
+    tools = catalog_tools(catalog)
+    drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
+    fits = fit_samples(a.root, a.fit, drop)
+    refs = [r for r in history_ref_examples(fits, tools) if not (_history_apps(r[0]["history"]) & drop)]
+    examples = pick_examples_v2(fits, refs, tools, rng)
+    client = None if a.no_solver else Client(a.model, a.base_url, P["usage"], a.max_usd, a.total_usd)
+    cache = {}
+    for x in (load_jsonl(P["solver"]) if P["solver"].exists() else []):
+        try:
+            parse_calls(x["calls"])
+            cache[x["id"]] = x["calls"]
+        except ValueError:
+            pass
+    ok, rej, reasons, dropped = [], [], Counter(), 0
+    seen_by_app: dict[str, list[str]] = {}
+    for r in load_jsonl(P["raw"]):
+        g = {**r}
+        turn_results, results, history = [], [], []
+        try:
+            g["state"] = json.loads(r["state_json"])
+            if not isinstance(g["state"], dict):
+                raise ValueError("state is not an object")
+            g["calls"] = parse_calls(r["calls"])
+            g["turns"] = [{"request": t["request"], "reply": t.get("reply", ""), "calls": parse_calls(t["calls"])}
+                          for t in r.get("history_turns") or []]
+        except (ValueError, KeyError, TypeError) as e:
+            reason = f"parse: {e}"
+        else:
+            reason, turn_results, results = check_sample_v2(zt, g, tools, catalog)
+            dh = r.get("distract_history") or []
+            if dh and _strings([h.get("tool_results") for h in dh], set()) & state_ids(g["state"]):
+                dh, dropped = [], dropped + 1  # the unrelated conversation returned IDs this state also uses
+            history = dh + turns_as_history(g["turns"], turn_results)
+        if reason is None:
+            dup = near_duplicate(g["request"], seen_by_app.get(g["app"], []))
+            if dup:
+                reason = f"duplicate: {dup[:60]}"
+        if reason is None and (client is not None or g["id"] in cache):
+            used = {c["name"].split(".", 1)[0] for c in g["calls"]} | {g["app"]} | _history_apps(history)
+            if g["spec"].get("other_app"):
+                used.add(g["spec"]["other_app"])
+            names = [t for a_, v in g["context"]["installed_apps"].items() if a_ in used for t in v["tools"]] + [ASK]
+            _, _, before, _ = simulate_v2(zt, g["context"], g["state"], [t["calls"] for t in g["turns"]], [], catalog)
+            p = g["context"].get("user_profile", {})
+            prompt = SOLVE_TASK_V2.format(
+                rules=SYSTEM_RULES, examples=examples, now=g["context"]["current_time"],
+                profile=f"{p.get('name')}, {p.get('city')}, nhà {p.get('home_address')}, chỗ làm {p.get('work_address')}",
+                tools=tools_json(names, tools), state=json.dumps(before, ensure_ascii=False),
+                history=history_text(history), request=g["request"])
+            try:
+                if g["id"] in cache:
+                    solved = parse_calls(cache[g["id"]])
+                else:
+                    for attempt in range(2):
+                        raw_calls = client.chat([{"role": "user", "content": prompt}], SOLVE_SCHEMA, "calls",
+                                                a.solver_effort, f"solve {g['id']}")["calls"]
+                        try:
+                            solved = parse_calls(raw_calls)
+                            break
+                        except ValueError:
+                            if attempt:
+                                raise
+                    with open(P["solver"], "a", encoding="utf-8") as f:
+                        f.write(json.dumps({"id": g["id"], "calls": raw_calls}, ensure_ascii=False) + "\n")
+                g["solver_calls"] = solved
+                reason = solver_agrees_v2(zt, g, solved, tools, catalog)
+            except BudgetExceeded as e:
+                print(json.dumps({"stop": str(e)}))
+                break
+            except (RuntimeError, ValueError, KeyError, TypeError) as e:
+                reason = f"solver_error: {str(e)[:150]}"
+        reasons[(reason or "ok").split(":")[0]] += 1
+        row = {**g, "results": results, "history": history, "reason": reason}
+        (rej if reason else ok).append(row)
+        if reason is None:
+            seen_by_app.setdefault(g["app"], []).append(g["request"])
+    write_jsonl(P["ok"], [to_train_sample(r, r["results"], r["history"])
+                         | {"_scenario": r.get("scenario"), "_category": r.get("category"), "_spec": r.get("spec")}
+                         for r in ok])
+    write_jsonl(P["rej"], rej)
+    spent = client.spent() if client else (sum(x["usd"] for x in load_jsonl(P["usage"])) if P["usage"].exists() else 0)
+    rep = {"created": runinfo.now(), "tag": a.tag, "recipe": "v2", "raw": len(ok) + len(rej), "accepted": len(ok),
+           "reasons": reasons, "accepted_by_app": Counter(r["app"] for r in ok),
+           "accepted_by_category": Counter(r["category"] for r in ok),
+           "accepted_with_history": sum(1 for r in ok if r["history"]),
+           "accepted_history_ref": sum(1 for r in ok if r["spec"].get("history") == "ref"),
+           "accepted_two_apps": sum(1 for r in ok if r["spec"].get("other_app")),
+           "distractor_history_dropped": dropped,
+           "spent_usd": round(spent, 4), "usd_per_accepted": round(spent / len(ok), 4) if ok else None,
+           "solver": not a.no_solver, "git": runinfo.git_state()}
+    runinfo.write_json(P["report"], rep)
+    print(json.dumps(rep, ensure_ascii=False, default=str))
+
+
+def shape_stats(samples: list[dict], tools: dict) -> dict:
+    """Shape of samples (real or synthetic), the numbers v2 matches: history, ID reuse from history, apps per
+    request, categories, calls per sample, optional parameters filled per write call."""
+    from .sft import used_apps
+    n = len(samples)
+    c = Counter()
+    for s in samples:
+        calls, res = s["label"]["tool_calls"], s["label"].get("tool_results") or []
+        hs = _strings([h.get("tool_results") for h in s["history"] if h["role"] == "assistant"], set())
+        c["history"] += bool(s["history"])
+        own, reuse = set(), False
+        for i, x in enumerate(calls):
+            props = tools.get(x["name"], {}).get("parameters", {}).get("properties", {})
+            reuse |= any(props.get(k, {}).get("x-ref") and isinstance(v, str) and v in hs and v not in own
+                         for k, v in x["arguments"].items())
+            if i < len(res):
+                _strings(res[i], own)
+        c["history_id_reuse"] += reuse
+        c["two_apps"] += len(used_apps(calls)) > 1
+        c[f"calls_{min(len(calls), 5)}"] += 1
+        if not calls:
+            c["cat_none"] += 1
+        elif calls[-1]["name"] == ASK:
+            c["cat_ask"] += 1
+        elif all(tools.get(x["name"], {}).get("kind") == "read" for x in calls):
+            c["cat_lookup"] += 1
+        else:
+            c["cat_execute"] += 1
+        for x in calls:
+            spec = tools.get(x["name"], {})
+            if x["name"] == ASK or spec.get("kind") == "read":
+                continue
+            props = spec.get("parameters", {}).get("properties", {})
+            req = set(required(spec))
+            c["writes"] += 1
+            c["optional_filled"] += sum(1 for k in props if k not in req and not props[k].get("x-ref") and k in x["arguments"])
+    out = {k: round(100 * v / n, 1) for k, v in sorted(c.items()) if k not in ("writes", "optional_filled")}
+    out["optional_filled_per_write"] = round(c["optional_filled"] / max(c["writes"], 1), 2)
+    out["n"] = n
+    return out
+
+
+def cmd_stats(a):
+    tools = catalog_tools(load_catalog(a.split, a.root))
+    drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
+    rows = {"real": shape_stats(fit_samples(a.root, a.fit, drop), tools)}
+    for tag in a.tag.split(","):
+        rows[tag] = shape_stats(load_jsonl(_paths(tag)["ok"]), tools)
+    keys = sorted({k for r in rows.values() for k in r})
+    print("| | " + " | ".join(rows) + " |\n|---|" + "---:|" * len(rows))
+    for k in keys:
+        print(f"| {k} | " + " | ".join(str(r.get(k, 0)) for r in rows.values()) + " |")
+
+
 def cmd_sft(a):
     from .sft import build_all
     P = _paths(a.tag)
@@ -613,6 +1190,15 @@ def cmd_show(a):
             calls = r["label"]["tool_calls"] if "label" in r else r.get("calls")
             print(f"\n[{r['id']}] {r.get('_app') or r.get('app')} / {r.get('_category') or r.get('category')}"
                   + (f"  -> {r['reason']}" if r.get("reason") else ""))
+            spec = r.get("_spec") or r.get("spec")
+            if spec:
+                print(f"  shape: {spec}")
+            for t in r.get("history_turns") or []:
+                print(f"  lượt trước: {t.get('request')} -> {[c.get('name') for c in t.get('calls') or []]} / {t.get('reply')}")
+            hist = r.get("history") or []
+            if hist and "label" in r:
+                print(f"  history: {sum(1 for h in hist if h['role'] == 'user')} user turns, last: "
+                      f"{next((h.get('audio_text') for h in reversed(hist) if h['role'] == 'user'), '')}")
             print(f"  nói: {r.get('audio_text') or r.get('request')}")
             print(f"  ({r.get('_scenario') or r.get('scenario')})")
             for c in calls or []:
@@ -640,6 +1226,7 @@ def main():
 
     p = sub.add_parser("gen")
     common(p)
+    p.add_argument("--recipe", default="v1", choices=["v1", "v2"], help="v2: history, two apps, no-call requests (06/11)")
     p.add_argument("--apps", required=True, help="comma-separated app ids")
     p.add_argument("--per-app", type=int, default=4)
     p.add_argument("--batch", type=int, default=4, help="samples per LLM call")
@@ -649,6 +1236,7 @@ def main():
 
     p = sub.add_parser("check")
     common(p)
+    p.add_argument("--recipe", default="v1", choices=["v1", "v2"])
     p.add_argument("--no-solver", action="store_true", help="simulator checks only (no API call)")
     p.add_argument("--solver-effort", default="low", choices=["minimal", "low", "medium", "high", "xhigh"],
                    help="reasoning effort of the re-derivation (its reasoning tokens were half the t20 cost)")
@@ -667,6 +1255,10 @@ def main():
     p = sub.add_parser("show")
     common(p, llm=False)
     p.set_defaults(func=cmd_show)
+
+    p = sub.add_parser("stats", help="shape of accepted samples (comma-separated tags) next to the real fit samples")
+    common(p, llm=False)
+    p.set_defaults(func=cmd_stats)
 
     a = ap.parse_args()
     if a.cmd in ("gen", "check") and not getattr(a, "no_solver", False) and a.max_usd is None:

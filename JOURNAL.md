@@ -2010,6 +2010,15 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - Chấm dev_random + dev_lao bằng chữ ASR: khoảng 1 giờ 20 phút.
     - Trong lúc train, laptop vẫn dùng được nhưng chậm; job có thể đóng băng khi Anh cần máy (entry 92).
 
+97. **Anh: "train đi nhưng nhớ lưu checkpoint". Claude chưa bật lượt nào, vì chưa có lượt train có bằng chứng tăng điểm; hỏi Anh muốn train gì** (06/11, 01:14).
+    - **Checkpoint:** code train agent (`lifemate/train.py`, từ commit `9de4e1a`) có `--state-every N`, lưu `state.pt` gồm LoRA, optimizer, scheduler và RNG. Dừng bằng `systemctl stop` sẽ lưu sau bước đang chạy; `--resume` chạy tiếp đúng chỗ. Code train ASR (`asr_train.py`) chưa có chế độ này: dừng giữa chừng là train lại từ đầu.
+    - **Các hướng đã xét:**
+      - **Train lại agent 4B, 2 epoch:** loss dev của hai lượt 4B đã phẳng ở cuối epoch 1 (fit_random 0,0509 → 0,0503 từ bước 200 tới 260; fit_lao thấp nhất ở bước 150, rồi nhích lên 0,1074). Khó tăng điểm; tốn khoảng 11,5 giờ, và chỉ đo được bằng public.
+      - **Agent học chữ PhoWhisper-ft:** PhoWhisper-ft đã học audio của fit, nên chữ nó nghe lại trên fit sạch hơn lúc thi thật. Muốn làm đúng phải có chữ k-fold (fine-tune ASR nhiều lần). Lượt chữ trộn với turbo trước đó không qua luật gộp (entry 68).
+      - **Fine-tune ASR thêm:** vừa thử, public 49,65 < 51,16 (entry 95).
+      - **Dữ liệu SFT nhiều vế (P1 của Codex), model Thinking, thầy API:** chưa có dữ liệu hoặc cần A30 / API, không phải việc bật được ngay.
+    - **Đề xuất:** dùng laptop cho B28 (chạy thử image Docker) nếu không thuê GPU; image chưa ai chạy trọn, hạn Docker 16/11.
+
 ---
 
 ## 8. Việc tiếp theo

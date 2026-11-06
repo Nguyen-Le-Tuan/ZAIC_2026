@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 12:47 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:20 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:20 ngày 06/11:** **File hướng dẫn cho AI bên máy anh trai đã xong:** [`docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md). File nói train gì, lệnh nào, lấy file ở đâu, gửi lại gì. Lệnh nay tự áp luật ghi trước khi chạy xong. Anh gửi file này kèm gói (B33; JOURNAL entry 105).
 > - **12:47 ngày 06/11:** **Gói pilot v2 cho máy anh trai đã sẵn, sớm hơn lịch một ngày.** 202 mẫu sinh cho 6 app bị giấu, theo đúng tỉ lệ của mẫu thật (lịch sử, dùng lại ID, câu không gọi tool); 4 lượt 4-bit, mỗi bên 2 seed. Đã chạy thử và kiểm gói trên laptop. Chi 9,36 USD, tổng API 52,39/80. **Anh gửi gói và lệnh cho anh trai (B33), tối nay nếu được** (JOURNAL entry 104, [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md)).
 > - **11:45 ngày 06/11:** Máy anh trai chỉ chạy 1 lần mỗi ngày. **Vẫn đủ: dữ liệu sinh v2 cần 2 lần chạy** (pilot 2 seed tối 07/11; train đủ dữ liệu tối 08 hoặc 09/11), chốt model 13/11, API khoảng 25 USD. **Anh duyệt B32** (JOURNAL entry 103).
 > - **11:40 ngày 06/11:** Anh hỏi train ở máy nào. **Nếu train (chỉ còn hướng dữ liệu sinh v2) thì dùng máy anh trai:** nhanh gấp 3,7 lần, chạy 2 seed cùng lúc. Laptop để kiểm Docker (B31, L9). Cần biết anh trai cho dùng máy mấy lần trước 13/11 (JOURNAL entry 102).
@@ -226,8 +227,8 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(11:40) Nếu làm (2): train trên máy anh trai, dùng đúng công thức 4-bit, mỗi bên 2 seed. Claude làm gói mới từ code `q4b-laptop`. Anh hỏi anh trai: trước 13/11 cho dùng máy mấy lần (JOURNAL entry 102).*
 - [ ] **B33. (12:47 ngày 06/11)** (5 phút) **[Anh] Gửi anh trai gói pilot v2 và lệnh chạy; tối nay nếu anh trai rảnh.**
   - **Gói:** `~/zac_cloud_bundle_20261106_synthv2.tar.gz` (5,5 MB, sha256 `8314687a327301d30410549489644494250067d5522548d3b49c4accc5c0c6a3`). Gửi riêng, không qua chỗ công khai: gói có dữ liệu thi.
-  - **Lệnh:** chép nguyên khối lệnh ở mục "Lệnh cho anh trai" trong [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md). Lệnh chạy khoảng 6 giờ.
-  - **Anh trai gửi lại một file:** `~/zac_v4_results.tar.gz`. Anh lưu vào `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
+  - **Hướng dẫn:** gửi kèm file [`docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md) cho AI bên anh trai đọc (17:20). File có lệnh, cách kiểm, cách xử lý lỗi và mẫu báo cáo. Lệnh chạy khoảng 6 giờ.
+  - **Anh trai gửi lại:** `~/zac_v4_results.tar.gz` và báo cáo `ZAIC_pilot_v2_report_<ngày>.md`. Anh lưu cả hai vào `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.

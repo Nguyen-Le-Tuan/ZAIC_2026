@@ -68,10 +68,12 @@ Bước kiểm loại mẫu không theo khung, ngoài các bước kiểm cũ (c
 - Không có adapter hay lượt chạy cũ.
 - **Gói có dữ liệu thi có licence:** chỉ gửi riêng cho anh trai, không đưa lên git hay drive chia sẻ công khai.
 
-**Anh gửi anh trai:** file gói, và lệnh dưới đây. Anh trai đặt gói vào thư mục home rồi chạy:
+**Anh gửi anh trai:** file gói và file hướng dẫn [`BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md). File hướng dẫn viết cho AI trợ lý bên máy anh trai đọc: train gì, lệnh nào, kiểm gì, gửi lại gì.
+
+Anh trai đặt gói vào thư mục home rồi chạy lệnh dưới (giống trong file hướng dẫn). Lệnh chạy xong thì tự áp luật bằng `scripts/pilot_rule.py`, ghi vào `lifemate/runs/pilot_v2_rule.txt`:
 
 ```bash
-mkdir -p ~/zac_v4 && cd ~/zac_v4 && tar -xzf ~/zac_cloud_bundle_20261106_synthv2.tar.gz && cd ZAIC_2026 && nohup bash -c 'if nvidia-smi --query-gpu=compute_cap --format=csv,noheader | awk -F. "\$1<8{bad=1} END{exit bad}"; then SMOKE_MODELS=Qwen/Qwen3-4B-Instruct-2507 SMOKE_TRAIN_ARGS="--load-4bit --optim adamw8bit --max-len 6144" SMOKE_INFER_ARGS=--load-4bit bash lifemate/scripts/cloud_setup.sh && PACK=0 bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-11-07_synth_v2.txt; else echo "DUNG: GPU khong co bf16"; nvidia-smi -L; fi; tar -czf ~/zac_v4_results.tar.gz run.log lifemate/runs; echo "XONG $(date)"' > run.log 2>&1 &
+mkdir -p ~/zac_v4 && cd ~/zac_v4 && tar -xzf ~/zac_cloud_bundle_20261106_synthv2.tar.gz && cd ZAIC_2026 && nohup bash -c 'if nvidia-smi --query-gpu=compute_cap --format=csv,noheader | awk -F. "\$1<8{bad=1} END{exit bad}"; then SMOKE_MODELS=Qwen/Qwen3-4B-Instruct-2507 SMOKE_TRAIN_ARGS="--load-4bit --optim adamw8bit --max-len 6144" SMOKE_INFER_ARGS=--load-4bit bash lifemate/scripts/cloud_setup.sh && PACK=0 bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-11-07_synth_v2.txt; (cd lifemate && .venv/bin/python scripts/pilot_rule.py --base runs/sft_q4b4_lao_base_s0 runs/sft_q4b4_lao_base_s1 --new runs/sft_q4b4_lao_v2_s0 runs/sft_q4b4_lao_v2_s1 --ids splits/dev_lao.txt --json runs/pilot_v2_rule.json > runs/pilot_v2_rule.txt 2>&1); else echo "DUNG: GPU khong co bf16"; nvidia-smi -L; fi; tar -czf ~/zac_v4_results.tar.gz run.log lifemate/runs; echo "XONG $(date)"' > run.log 2>&1 &
 ```
 
 - Lệnh giải nén vào thư mục mới `~/zac_v4`, nên không đụng tới `~/ZAIC_2026` của lần v3.

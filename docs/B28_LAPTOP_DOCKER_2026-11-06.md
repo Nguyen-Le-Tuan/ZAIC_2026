@@ -2,6 +2,52 @@
 
 *Claude viết lúc 02:04 ngày 06/11/2026 (giờ máy). Anh chọn dùng laptop thay vì thuê GPU (JOURNAL entry 98, HUMAN_TODO B28).*
 
+## Cập nhật 09:40 ngày 06/11: leader đã gửi; Anh mang máy đi lúc 11:00, chạy tối nay
+
+**Leader trả lời (L8):**
+- Giữ nguyên image 05/11 (PhoWhisper-ft + `q4b4_all/final`), không build lại.
+- File `zac_lifemate_2026-11-05.tar` nằm trên Google Drive, chỉ chia sẻ riêng cho tài khoản Google của Anh:
+  - 12.635.573.248 byte;
+  - sha256 `190bdeeb6157708d7e851c7f508ba2c583f22a15c939354d55d7753fd4f166a8`;
+  - tên image `zaic-lifemate`.
+- **Thiếu ID của image:** tin nhắn chỉ ghi "sha256", không có mã. Claude sẽ ghi ID sau khi nạp image và gửi lại leader để so.
+- Leader đã chạy 3 mẫu trên RTX 3050 4 GB, phải mount driver thủ công:
+  - chữ ASR khớp nguyên văn;
+  - agent hết VRAM ở bước khởi động, nên chưa có `"ok"`.
+- **Lệnh chạy:**
+  - mount dữ liệu vào `/app/data/train+public_test` và `runs/` vào `/app/lifemate/runs`;
+  - đặt các biến `SPLIT`, `DATA`, `ASR_MODEL=ckpt/asr_phoft/merged`, `ADAPTER=ckpt/q4b4_all/final`, `OUT`, `IDS`;
+  - chạy `bash scripts/predict.sh`;
+  - 4-bit, `TIME_BUDGET=25` và bước khởi động để mặc định.
+  - Trên laptop, nhóm `--device`/driver được thay bằng `--gpus all`.
+- **Hướng dẫn Docker của BTC:** máy chấm là RTX 5090 32 GB, giao diện nộp cuối khác image này. Tóm tắt và bảng việc còn thiếu: [`BTC_DOCKER_GUIDE_2026-11-06.md`](BTC_DOCKER_GUIDE_2026-11-06.md).
+
+**Trước 11:00, Anh làm (B30):**
+1. `sudo bash ~/zac-c3/b28_setup_docker.sh`: gồm đúng các lệnh ở mục 1 bên dưới, chạy trong một lần (khoảng 10–15 phút). Dòng cuối phải là `B28 SETUP OK`.
+2. Mở link Drive của leader trong Chrome (đăng nhập tài khoản Google mà leader đã chia sẻ file), bấm Tải xuống rồi "Vẫn tải xuống", lưu vào `~/Downloads`. File này là file riêng, phải đăng nhập mới tải được, nên Claude không tải hộ.
+3. Tuỳ Anh: `sudo usermod -aG docker $USER`, để Claude tự nạp image và chạy.
+
+**Nếu kịp trước 11:00, Claude làm:** kiểm số byte và sha256, nạp image (`docker load`, khoảng 5–10 phút), chạy bước `info` rồi 3 mẫu (khoảng 3 phút). Tối nay khỏi phải chờ phần này.
+
+**Tối nay (B31), khoảng 4 giờ:**
+- **Laptop:** cắm sạc, tắt bớt app nặng (RAM 14 GB; container bị giới hạn 9 GB). Gập máy không sao, vì lệnh chặn ngủ cả khi gập.
+- **Lệnh chạy:**
+  - Nếu Anh đã vào nhóm `docker`, Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, nên vẫn chạy tiếp nếu app Claude bị tắt.
+  - Nếu chưa vào nhóm, Anh chạy lệnh dưới và để nguyên cửa sổ terminal:
+    ```bash
+    sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all
+    ```
+- **`b28_run.sh` chạy lần lượt các bước,** bước nào đã xong thì bỏ qua:
+  - `load`: kiểm số byte, sha256, rồi `docker load`;
+  - `info`: ID image, CUDA, torch, có sm_120 cho RTX 5090 không, có jupyter không;
+  - `smoke`: 3 mẫu, khoảng 3 phút;
+  - `full1`: đủ 634 mẫu, khoảng 1 giờ 45 phút;
+  - `full2`: đủ 634 mẫu lần nữa, khoảng 1 giờ 45 phút.
+  - Bước nào hỏng hoặc `ok` không đúng thì script dừng luôn.
+- **Cách chạy container:** `--network none --gpus all --memory 9g`, dữ liệu mount chỉ-đọc. Kết quả nằm ở `lifemate/runs/b28_docker_2026-11-06/` (không commit).
+- **Tạm dừng:** `docker pause b28_full1`, chạy tiếp bằng `docker unpause b28_full1`. Mẫu đang chạy lúc dừng sẽ chạm hạn 25 giây.
+- **Đã thử bằng một lệnh `docker` giả** (09:34): script chạy đủ các bước; chạy lại thì bỏ qua bước đã xong; `ok` sai thì dừng.
+
 ## Vì sao làm
 
 - ASR đã chốt (B29: 49,65 < 51,16, giữ `ckpt/asr_phoft/merged`). Image leader build ngày 05/11 (12,6 GB) là bản cuối về model.

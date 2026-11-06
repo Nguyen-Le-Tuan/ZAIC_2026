@@ -13,9 +13,14 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:40 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 12:47 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **12:47 ngày 06/11:** **Gói pilot v2 cho máy anh trai đã sẵn, sớm hơn lịch một ngày.** 202 mẫu sinh cho 6 app bị giấu, theo đúng tỉ lệ của mẫu thật (lịch sử, dùng lại ID, câu không gọi tool); 4 lượt 4-bit, mỗi bên 2 seed. Đã chạy thử và kiểm gói trên laptop. Chi 9,36 USD, tổng API 52,39/80. **Anh gửi gói và lệnh cho anh trai (B33), tối nay nếu được** (JOURNAL entry 104, [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md)).
+> - **11:45 ngày 06/11:** Máy anh trai chỉ chạy 1 lần mỗi ngày. **Vẫn đủ: dữ liệu sinh v2 cần 2 lần chạy** (pilot 2 seed tối 07/11; train đủ dữ liệu tối 08 hoặc 09/11), chốt model 13/11, API khoảng 25 USD. **Anh duyệt B32** (JOURNAL entry 103).
+> - **11:40 ngày 06/11:** Anh hỏi train ở máy nào. **Nếu train (chỉ còn hướng dữ liệu sinh v2) thì dùng máy anh trai:** nhanh gấp 3,7 lần, chạy 2 seed cùng lúc. Laptop để kiểm Docker (B31, L9). Cần biết anh trai cho dùng máy mấy lần trước 13/11 (JOURNAL entry 102).
+> - **11:35 ngày 06/11:** **Kết quả gói v3 từ máy anh trai đã về (2× RTX 4090): không có adapter nào tốt hơn để thay vào image.** 4B bf16 so với 4B 4-bit đang nộp (chữ chuẩn): dev_random +5,70, dev_lao −2,12, gộp +1,56. Cùng một công thức train trên hai máy đã lệch tới 4,21 điểm, nên các mức chênh này chưa nói được gì. **B32:** hướng (1) xong; Claude không đề xuất bf16; còn hướng (2) dữ liệu sinh v2 (JOURNAL entry 101).
+> - **09:50 ngày 06/11:** **Đã tải xong file image (09:47, đủ byte, sha256 khớp); Docker 29.1.3 và NVIDIA toolkit 1.20.1 đã cài; Anh chưa vào nhóm `docker`.** Anh hỏi có phải nộp luôn bản này, không cải tiến nữa không. **Trả lời: đóng gói bản này là để có sẵn một bản chạy được; có model tốt hơn thì chỉ thay một thư mục trong image.** Nhưng hiện chưa có cải tiến nào có bằng chứng; **Anh chọn hướng ở B32** (JOURNAL entry 100).
 > - **09:40 ngày 06/11:** **Leader đã gửi image (L8 xong) và đã đọc hướng dẫn Docker của BTC (L4 xong).** Anh mang máy đi lúc 11:00, nên **B28 chạy tối nay (B31, khoảng 4 giờ)**. **Trước 11:00, Anh chạy `sudo bash ~/zac-c3/b28_setup_docker.sh` và tải file image từ Drive (B30).** **Theo hướng dẫn BTC, máy chấm là RTX 5090 32 GB, CUDA 13.2; gói nộp cuối phải theo giao diện `/code/predict.sh` → `/data` → `/result/submission.jsonl`, có notebook đo thời gian, trường `time`, README và code train.** Image 05/11 chưa theo giao diện này; việc mới cho leader là L9: [`docs/BTC_DOCKER_GUIDE_2026-11-06.md`](docs/BTC_DOCKER_GUIDE_2026-11-06.md) (JOURNAL entry 99).
 > - **02:04 ngày 06/11:** **B28: Anh chọn kiểm image Docker trên laptop** (không thuê GPU). **Anh cài Docker + NVIDIA toolkit (B30, 15 phút)** và gửi leader tin nhắn có sẵn; **leader gửi file image và lệnh `docker run` (L8)**. Hướng dẫn: [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md) (JOURNAL entry 98).
 > - **00:47 ngày 06/11:** **B29 xong: public 49,65, thấp hơn 51,16. Docker giữ `ckpt/asr_phoft/merged`**; không phải gửi leader thư mục mới. Image leader đã build là bản cuối về model. **Việc còn lại cho Docker: B28** (kiểm image trên GPU 24 GB) (JOURNAL entry 95).
@@ -102,7 +107,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 |---|---|---|---|---|
 | Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); 23:30 ngày 04/11 – 06:38 ngày 05/11 lượt prompt `xref` (không qua cửa 1). Từ 09:18 ngày 05/11 fine-tune lại PhoWhisper trên gần đủ train (B27); kiểm WER qua; đóng băng 13:38–17:45 vì Anh cần dùng máy; file public xong 18:09 (B29). Rảnh từ 18:14.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
-| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
+| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* *(06/11 11:23: xong; máy là 2× RTX 4090, chạy 22:21–01:04; báo cáo ở `cloud_results/anh_trai/`; không có adapter tốt hơn, JOURNAL entry 101.)* *(06/11 12:47: gói pilot v2 sẵn, chờ Anh gửi (B33); chạy 1 lần mỗi ngày.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
 - **Laptop:**
   - Chấm 4B với chữ PhoWhisper fine-tune xong 16:06 (qua luật).
@@ -188,6 +193,44 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Tải:** mở link Drive leader gửi trong Chrome (đăng nhập tài khoản Google mà leader đã chia sẻ file), bấm Tải xuống rồi "Vẫn tải xuống", lưu vào `~/Downloads/zac_lifemate_2026-11-05.tar` (12.635.573.248 byte). File chia sẻ riêng, phải đăng nhập mới tải được, nên Claude không tải hộ.
   - **Tuỳ Anh:** `sudo usermod -aG docker $USER` để Claude chạy `docker` không cần sudo. Nhóm này có quyền tương đương root. Không thêm thì tối nay Anh tự chạy một lệnh sudo (B31).
   - Xong thì báo Claude. Nếu còn kịp trước 11:00, Claude kiểm sha256, nạp image và chạy 3 mẫu.
+- [x] **B32. (09:50 ngày 06/11)** *(11:50: Anh chọn (2), "Làm theo lịch"; train trên máy anh trai; JOURNAL entry 104.)* (5 phút quyết) **Trong 10 ngày còn lại, thử cải tiến model theo hướng nào?** Bản 05/11 vẫn đóng gói trước. Có model tốt hơn thì chỉ thay thư mục adapter hoặc ASR trong image, chạy lại B28, và phải chốt trước khoảng 13/11 để kịp L9.
+  - **Đã thử sau 51,16 và không qua luật ghi trước:**
+    - prompt `xref`: dev_lao chữ ASR −1,02;
+    - PhoWhisper-ft-all: public 49,65;
+    - chữ trộn trên fit_lao: gộp −0,69;
+    - dữ liệu sinh pilot 1: dev_lao −2,09;
+    - train thêm epoch: loss dev đã phẳng.
+  - **Chỗ mất điểm lớn nhất (đã đo):**
+    - app chưa thấy: 65% mẫu public; 4B kém 12–15 điểm;
+    - ASR: khoảng 13 điểm;
+    - quyết định làm / hỏi / bỏ qua, và chọn ID.
+  - **(1) Hỏi anh trai kết quả gói v3** (4B train trên A100, bắt đầu từ 04/11). Không tốn tiền; Anh chỉ cần nhắn.
+    - *(11:35 ngày 06/11) Xong (máy thật là 2× RTX 4090). Không có adapter nào tốt hơn để thay:*
+      - *4B bf16 so với 4B 4-bit đang nộp, chữ chuẩn: dev_random 65,61 → 71,31; dev_lao 53,40 → 51,28; gộp 59,15 → 60,71;*
+      - *cùng công thức train trên hai máy lệch tới 4,21 điểm, lớn hơn các mức chênh trên;*
+      - *agent học trên chữ ASR: chữ chuẩn −7,97, bỏ (JOURNAL entry 101).*
+  - **(2) Dữ liệu sinh v2 cho app chưa thấy:**
+    - Sửa hai lý do pilot 1 thất bại: call lệch quy ước của nhãn, và 90% mẫu mở đầu bằng call đọc.
+    - Chi phí: Claude viết khoảng 1 ngày; API dưới 15 USD (còn 36,97 trong trần 80); laptop train + chấm khoảng 7 giờ, chạy ban đêm.
+    - Qua pilot thì sinh cho 11 app public, train lại, nộp public, rồi thay vào Docker.
+    - Rủi ro cao: pilot 1 làm giảm điểm.
+  - **(3) Nạp model ở bf16 thay vì 4-bit:**
+    - Máy chấm có 32 GB, nên không còn bắt buộc 4-bit.
+    - Adapter được train trên nền 4-bit, nên điểm có thể tăng hoặc giảm chút ít; tốc độ thì nhanh hơn.
+    - Cần GPU từ 16 GB để đo (1–2 giờ); laptop 8 GB không làm được.
+  - **Claude đề xuất:** làm (1) ngay hôm nay; làm (2) nếu Anh chấp nhận rủi ro và chi phí; làm (3) chỉ khi có GPU lớn, ví dụ máy anh trai.
+  - *(11:35 ngày 06/11) **Claude đề xuất mới:** không làm (3), vì trên dev_lao (tập giống public nhất) bf16 kém 2,12. Còn hai lựa chọn:*
+    - *giữ bản 05/11 và dồn sức vào đóng gói (B31, L9);*
+    - *làm (2). Nếu anh trai cho dùng máy thêm, mỗi vòng train + chấm còn khoảng 2 giờ thay vì 7 giờ.*
+  - *(11:45) Máy anh trai 1 lần mỗi ngày: vẫn đủ. Cần 2 lần chạy, lịch và luật ở JOURNAL entry 103. Anh báo nếu mỗi lần bị giới hạn giờ (giả định 6–7 giờ trên 2 GPU).*
+  - *(11:40) Nếu làm (2): train trên máy anh trai, dùng đúng công thức 4-bit, mỗi bên 2 seed. Claude làm gói mới từ code `q4b-laptop`. Anh hỏi anh trai: trước 13/11 cho dùng máy mấy lần (JOURNAL entry 102).*
+- [ ] **B33. (12:47 ngày 06/11)** (5 phút) **[Anh] Gửi anh trai gói pilot v2 và lệnh chạy; tối nay nếu anh trai rảnh.**
+  - **Gói:** `~/zac_cloud_bundle_20261106_synthv2.tar.gz` (5,5 MB, sha256 `8314687a327301d30410549489644494250067d5522548d3b49c4accc5c0c6a3`). Gửi riêng, không qua chỗ công khai: gói có dữ liệu thi.
+  - **Lệnh:** chép nguyên khối lệnh ở mục "Lệnh cho anh trai" trong [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md). Lệnh chạy khoảng 6 giờ.
+  - **Anh trai gửi lại một file:** `~/zac_v4_results.tar.gz`. Anh lưu vào `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
+  - **Sau đó:**
+    - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
+    - Không đạt thì dừng, giữ bản 05/11.
 - [ ] **B31. (09:40 ngày 06/11)** (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
   - Nếu Anh đã vào nhóm `docker`, Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy.
   - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.
@@ -273,7 +316,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - seed cố định;
   - `README.md` và `training_code/`, kèm URL tải dữ liệu và model. **Anh và leader quyết:** dữ liệu train là của BTC, `gen/` sinh từ train, repo đang public;
   - khi nộp: `docker save | gzip`, `md5sum`, Drive "Anyone with the link".
-  - Claude viết được phần code (script bọc `/code`, trường `time`, notebook) thành PR nếu Anh hoặc leader muốn.
+  - *(10:07 ngày 06/11) Phần code đã có ở [PR #15](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/15) (nhánh `docker-submit` → `q4b-laptop`, chưa merge): script bọc `/code/predict.sh`, notebook đo thời gian, `start_jupyter.sh`, trường `time`, seed cố định. Test CPU đạt; chưa chạy trên GPU, nên chưa kiểm notebook có cùng điểm với `predict.sh` không. Anh hoặc leader review trước khi merge.*
 - [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR), #9 (giới hạn 30 giây, chốt chặn ID; nên xem trước khi đóng Docker) khi tới lượt. #12 (sẵn sàng Docker) đã merge vào `q4b-laptop` lúc 17:22 (B18).
 
 **Claude** (Anh không cần nhắc):

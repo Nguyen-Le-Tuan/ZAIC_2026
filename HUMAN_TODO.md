@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:47 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 02:04 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **02:04 ngày 06/11:** **B28: Anh chọn kiểm image Docker trên laptop** (không thuê GPU). **Anh cài Docker + NVIDIA toolkit (B30, 15 phút)** và gửi leader tin nhắn có sẵn; **leader gửi file image và lệnh `docker run` (L8)**. Hướng dẫn: [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md) (JOURNAL entry 98).
 > - **00:47 ngày 06/11:** **B29 xong: public 49,65, thấp hơn 51,16. Docker giữ `ckpt/asr_phoft/merged`**; không phải gửi leader thư mục mới. Image leader đã build là bản cuối về model. **Việc còn lại cho Docker: B28** (kiểm image trên GPU 24 GB) (JOURNAL entry 95).
 > - **18:15 ngày 05/11:** **B27 xong. Anh hoặc leader nộp B29:** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (PhoWhisper-ft học thêm dev; WER 54 mẫu 7,65 → 7,08). ≥ 51,16 thì Docker đổi ASR. `predict.sh` 3 mẫu trên laptop đạt `"ok": true`, giống hệt file 51,16 (JOURNAL entry 94).
 > - **17:45 ngày 05/11:** **B27 chạy tiếp** (đóng băng 13:38–17:45). File public dự kiến xong khoảng 18:10–18:15 (JOURNAL entry 93).
@@ -109,7 +110,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **09:18 ngày 05/11:** fine-tune lại PhoWhisper (B27). Train xong 12:08; kiểm WER qua (7,65 → 7,08); chữ ASR public xong 12:25.
   - 13:38–17:45 đóng băng vì Anh cần dùng máy. **File public xong 18:09** (B29); chạy lại riêng `public_0497` lúc 18:10.
   - 18:12–18:14: `predict.sh` 3 mẫu (nhánh `q4b-laptop`, không Docker) đạt `"ok": true`.
-  - **Rảnh từ 18:14 ngày 05/11.**
+  - **Rảnh từ 18:14 ngày 05/11.** Khi có image (B30, L8): chạy thử image Docker (B28), khoảng 5 giờ: 3 mẫu, rồi đủ 634 mẫu hai lần.
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -181,7 +182,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Khác file 51,16 ở đâu:** chỉ ASR (PhoWhisper-ft học thêm 495 mẫu dev). Cùng code, adapter `q4b4_all/final` và hạn 60 giây. 274/634 dòng trả lời khác. WER trên 54 mẫu kiểm: 7,65 → 7,08.
   - **Lưu ý:** nộp file `_fix0497`, không nộp `e2e_public_q4b_all_phoftall.jsonl`. File kia có dòng `public_0497` rỗng vì mẫu này đang chạy lúc đóng băng 13:38; Claude đã chạy lại riêng mẫu đó (JOURNAL entry 94).
   - **Luật ghi trước (B27):** ≥ 51,16 thì Docker đổi sang `ckpt/asr_phoft_all/merged`: Anh gửi leader thư mục này (2,9 GB, 6 file; sha256 `model.safetensors`: `478866317dfe91945ad3bc3fc1ed5da9d58ea8b2e66b1eb6256646afb3959d98`), leader thay thư mục `ckpt/asr_phoft/merged` trong image. Thấp hơn thì giữ bản hiện tại.
-- [ ] **B28. (10:24 ngày 05/11)** (1 phút quyết; thuê khoảng 2–3 giờ) **Thuê một GPU 24 GB (tốt nhất A30) để chạy đúng image Docker?**
+- [ ] **B30. (02:04 ngày 06/11)** (15 phút, cần sudo) **Cài Docker và NVIDIA Container Toolkit trên laptop**, theo mục 1 của [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md).
+  - Kiểm: `sudo docker run --rm --gpus all ubuntu:24.04 nvidia-smi` in ra bảng GPU.
+  - Tuỳ Anh: `sudo usermod -aG docker $USER` để Claude chạy `docker` không cần sudo (nhóm này có quyền tương đương root). Không thêm thì Claude soạn lệnh để Anh tự chạy.
+  - Gửi leader tin nhắn ở cuối file hướng dẫn (L8). Khi có file image: báo Claude đường dẫn.
+- [x] **B28. (10:24 ngày 05/11)** *Anh chọn dùng laptop lúc khoảng 01:15 ngày 06/11 (không thuê GPU); việc tiếp theo ở B30 và L8. Laptop không đo được thời gian trên A30.* (1 phút quyết; thuê khoảng 2–3 giờ) **Thuê một GPU 24 GB (tốt nhất A30) để chạy đúng image Docker?**
   - **Vì sao:** máy leader 4 GB không chạy nổi bước agent. Chưa ai chạy image trọn từ đầu tới cuối, và thời gian trên GPU giống máy chấm chưa đo. Đây là rủi ro mất bài lớn nhất còn lại.
   - **Làm gì:** leader đẩy image lên registry riêng, chạy trên máy thuê:
     - 3 mẫu để có `"ok": true`;
@@ -239,6 +244,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [ ] **L4.** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1 (so khớp tham số). Xem bảng xếp hạng public: điểm cao nhất, số đội. Ghi vào mục 4.
 - [ ] **L5.** (cùng B5) Nghe 18 câu ASR sai cùng Anh. Lập danh sách "cụm từ nguy hiểm" (số, giờ, tên người, từ phủ định, tự sửa giữa câu).
 - [ ] **L6.** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh`, lấy từ nhánh `time-budget` ([PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9)) để có giới hạn thời gian mỗi mẫu (tính cả ASR). *(16:27 ngày 03/11, cập nhật 17:22: nên lấy từ nhánh `q4b-laptop`, đã có PR #12 sau khi merge ([PR #12](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/12)), có thêm 4B 4-bit, hạn 25 giây và bước khởi động; lệnh mẫu ở đầu `predict.sh`.)* Dựng trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU. Hạn Docker là 16/11. *(12:22 ngày 04/11: dùng adapter `ckpt/q4b4_all/final` (public 46,29), Anh gửi riêng; truyền `ADAPTER=ckpt/q4b4_all/final`.)*
+- [ ] **L8. (02:04 ngày 06/11)** (30 phút + thời gian tải lên) **Gửi Anh image Docker đã build ngày 05/11** để chạy thử trên laptop (B28), theo mục 2 của [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md):
+  - file `docker save` (khoảng 12–13 GB) kèm `sha256sum`, gửi riêng qua Google Drive;
+  - đúng lệnh `docker run` đã dùng để chạy 3 mẫu khi tắt mạng (mount dữ liệu, chỗ ghi kết quả, biến môi trường);
+  - tên, tag và ID của image.
 - [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR), #9 (giới hạn 30 giây, chốt chặn ID; nên xem trước khi đóng Docker) khi tới lượt. #12 (sẵn sàng Docker) đã merge vào `q4b-laptop` lúc 17:22 (B18).
 
 **Claude** (Anh không cần nhắc):
@@ -294,6 +303,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 16:45–18:40 ngày 04/11 | Laptop ghép PhoWhisper-ft, kiểm chữ dev (779/784 câu giống Colab), làm file nộp public bằng PhoWhisper-ft (B24). Anh hoặc leader nộp (B25) |
 | 23:30 ngày 04/11 – 06:38 ngày 05/11 | Laptop tự train lượt prompt `xref` trên fit_lao rồi chấm dev_lao ([PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14), B23): không qua cửa 1 |
 | 09:18 – 18:14 ngày 05/11 | Laptop fine-tune lại PhoWhisper trên gần đủ train, kiểm WER trên 54 mẫu (qua), làm file public (B27; đóng băng 13:38–17:45 vì Anh cần dùng máy); `predict.sh` 3 mẫu đạt `"ok"`. Anh hoặc leader nộp (B29) |
+| Khi Anh cài xong Docker (B30) và có image từ leader (L8) | Laptop chạy thử image Docker (B28): 3 mẫu để có `"ok"`, rồi đủ 634 mẫu hai lần (khoảng 5 giờ) |
 | **11:59 ngày 16/11 (giờ máy)** | **Hạn nộp Docker** (23:59 GMT+7) |
 | Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |

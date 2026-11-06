@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:15 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 00:47 ngày 06/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **00:47 ngày 06/11:** **B29 xong: public 49,65, thấp hơn 51,16. Docker giữ `ckpt/asr_phoft/merged`**; không phải gửi leader thư mục mới. Image leader đã build là bản cuối về model. **Việc còn lại cho Docker: B28** (kiểm image trên GPU 24 GB) (JOURNAL entry 95).
 > - **18:15 ngày 05/11:** **B27 xong. Anh hoặc leader nộp B29:** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (PhoWhisper-ft học thêm dev; WER 54 mẫu 7,65 → 7,08). ≥ 51,16 thì Docker đổi ASR. `predict.sh` 3 mẫu trên laptop đạt `"ok": true`, giống hệt file 51,16 (JOURNAL entry 94).
 > - **17:45 ngày 05/11:** **B27 chạy tiếp** (đóng băng 13:38–17:45). File public dự kiến xong khoảng 18:10–18:15 (JOURNAL entry 93).
 > - **13:38 ngày 05/11:** **Anh cần dùng máy: B27 đóng băng** ở bước agent làm file public (còn khoảng 25 phút). Kiểm WER đã qua (7,65 → 7,08). Chạy tiếp: `systemctl --user thaw lifemate-asr-phoft-all` (JOURNAL entry 92).
@@ -176,7 +177,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Vì sao:** bản hiện tại (public 51,16) chỉ học 1.033 mẫu. Bản mới học thêm 495 mẫu dev, như cách agent học đủ 1.545 mẫu (public 45,39 → 46,29). ASR vẫn là chỗ mất nhiều điểm nhất đã đo.
   - **Claude làm:** cùng công thức Colab, giữ riêng 54 mẫu kiểm cũ để so WER với bản hiện tại. Đạt thì làm file nộp public. Laptop khoảng 4–6 giờ, vẫn dùng máy được nhưng chậm hơn. 0 USD.
   - **Luật ghi trước:** WER trên 54 mẫu kiểm không tệ hơn quá 0,5 điểm thì làm file public. Public ≥ 51,16 thì Docker đổi sang bản mới (leader thay một thư mục); thấp hơn thì giữ bản hiện tại.
-- [ ] **B29. (18:15 ngày 05/11)** (5 phút) **Nộp file public bằng PhoWhisper-ft-all** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (sha256 `4d7e1cf4c80f…`; cột SLM). Báo lại điểm cho Claude.
+- [x] **B29. (18:15 ngày 05/11)** *Anh nộp, được **49,65** (báo lúc khoảng 00:45 ngày 06/11); thấp hơn 51,16 nên Docker giữ `ckpt/asr_phoft/merged`.* (5 phút) **Nộp file public bằng PhoWhisper-ft-all** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (sha256 `4d7e1cf4c80f…`; cột SLM). Báo lại điểm cho Claude.
   - **Khác file 51,16 ở đâu:** chỉ ASR (PhoWhisper-ft học thêm 495 mẫu dev). Cùng code, adapter `q4b4_all/final` và hạn 60 giây. 274/634 dòng trả lời khác. WER trên 54 mẫu kiểm: 7,65 → 7,08.
   - **Lưu ý:** nộp file `_fix0497`, không nộp `e2e_public_q4b_all_phoftall.jsonl`. File kia có dòng `public_0497` rỗng vì mẫu này đang chạy lúc đóng băng 13:38; Claude đã chạy lại riêng mẫu đó (JOURNAL entry 94).
   - **Luật ghi trước (B27):** ≥ 51,16 thì Docker đổi sang `ckpt/asr_phoft_all/merged`: Anh gửi leader thư mục này (2,9 GB, 6 file; sha256 `model.safetensors`: `478866317dfe91945ad3bc3fc1ed5da9d58ea8b2e66b1eb6256646afb3959d98`), leader thay thư mục `ckpt/asr_phoft/merged` trong image. Thấp hơn thì giữ bản hiện tại.
@@ -187,6 +188,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - đủ 634 mẫu public để đo thời gian mỗi mẫu và đếm số mẫu dừng vì hết giờ;
     - chạy lại lần nữa để kiểm kết quả giống nhau.
   - **Khi nào:** sau khi B27 có kết quả (tối 05/11 hoặc 06/11), để chỉ test image cuối một lần.
+  - *(00:47 ngày 06/11) ASR đã chốt (B29: 49,65, giữ bản hiện tại), nên image leader đã build là bản cuối về model. **Làm được ngay.***
   - *(18:15 ngày 05/11) B27 đã có kết quả; chờ điểm B29 để chốt ASR rồi test image cuối. `predict.sh` 3 mẫu trên laptop (không Docker) đạt `"ok": true`, nên đường code đã đúng; B28 chỉ còn kiểm chính image và đo thời gian.*
   - **Tiền:** của Anh hoặc leader, không tính vào trần API. Claude không thuê.
   - **Nếu không thuê:** Anh tự cài Docker + NVIDIA Container Toolkit trên laptop (cần sudo) rồi chạy image trên RTX 4070. Cách này kiểm được `"ok"` nhưng không đo được thời gian trên A30.
@@ -352,6 +354,7 @@ Không đổi tổng quát hoá lấy điểm public. Cụ thể:
    - 02/11: `e2e_public_q4b.jsonl` (Whisper-turbo fine-tune, agent `q4b4_fit_random` nạp 4-bit), dev 39–54 (gộp 46,17), public 45,39.
    - 04/11: `e2e_public_q4b_all.jsonl` (Whisper-turbo fine-tune, agent `q4b4_all` học đủ 1.545 mẫu nên không có điểm dev riêng), public 46,29.
    - 05/11: `e2e_public_q4b_all_phoft.jsonl` (PhoWhisper-large fine-tune, agent `q4b4_all`), dev với adapter fit 41–55 (gộp 47,88), public 51,16.
+   - 05/11: `e2e_public_q4b_all_phoftall_fix0497.jsonl` (PhoWhisper-large fine-tune học thêm 495 mẫu dev, agent `q4b4_all`; WER 54 mẫu kiểm 7,65 → 7,08), public 49,65: giữ bản 51,16.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

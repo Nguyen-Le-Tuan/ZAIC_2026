@@ -296,7 +296,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - seed cố định;
   - `README.md` và `training_code/`, kèm URL tải dữ liệu và model. **Anh và leader quyết:** dữ liệu train là của BTC, `gen/` sinh từ train, repo đang public;
   - khi nộp: `docker save | gzip`, `md5sum`, Drive "Anyone with the link".
-  - Claude viết được phần code (script bọc `/code`, trường `time`, notebook) thành PR nếu Anh hoặc leader muốn.
+  - *(10:07 ngày 06/11) Phần code đã có ở [PR #15](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/15) (nhánh `docker-submit` → `q4b-laptop`, chưa merge): script bọc `/code/predict.sh`, notebook đo thời gian, `start_jupyter.sh`, trường `time`, seed cố định. Test CPU đạt; chưa chạy trên GPU, nên chưa kiểm notebook có cùng điểm với `predict.sh` không. Anh hoặc leader review trước khi merge.*
 - [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR), #9 (giới hạn 30 giây, chốt chặn ID; nên xem trước khi đóng Docker) khi tới lượt. #12 (sẵn sàng Docker) đã merge vào `q4b-laptop` lúc 17:22 (B18).
 
 **Claude** (Anh không cần nhắc):

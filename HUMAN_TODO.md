@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 16:45 ngày 08/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:57 ngày 08/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:57 ngày 08/11:** **Anh nhờ làm một file public để nộp thử.** Claude chạy đúng cấu hình nộp cuối (giao diện BTC của PR #15, hạn 25 giây, có trường `time`) trên laptop, ngoài Docker. 3 mẫu thử giống hệt file 51,16. Đủ 634 mẫu xong khoảng 20:00, rồi Anh nộp (B35; JOURNAL entry 108).
 > - **16:45 ngày 08/11:** **Pilot v2 không đạt luật ghi trước:** chữ ASR −0,46 (cần +2,0), kể cả trên đúng 6 app được sinh dữ liệu (−0,98). **Dừng hướng dữ liệu sinh, Docker giữ bản 05/11.** **Việc gấp còn lại là Docker:** B28 (B31) chưa chạy, L9 (hạn 11:59 ngày 16/11). **B34 [Anh]:** thư mục Drive đang mở cho bất kỳ ai có link, trong đó có dữ liệu thi; chuyển sang "Hạn chế" và nhờ anh trai xoá dữ liệu trên máy (JOURNAL entry 107).
 > - **17:25 ngày 06/11:** **Anh đã tải gói lên một thư mục Google Drive riêng; hướng dẫn đã sửa:** anh trai lấy gói từ thư mục đó và tải kết quả lên lại đúng thư mục đó. Bản có link nằm ngoài git (`cloud_results/anh_trai/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`); bản trong repo không ghi link. **Anh chia sẻ thư mục cho tài khoản của anh trai với quyền "Người chỉnh sửa", giữ chế độ "Hạn chế"** (B33; JOURNAL entry 106).
 > - **17:20 ngày 06/11:** **File hướng dẫn cho AI bên máy anh trai đã xong:** [`docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md). File nói train gì, lệnh nào, lấy file ở đâu, gửi lại gì. Lệnh nay tự áp luật ghi trước khi chạy xong. Anh gửi file này kèm gói (B33; JOURNAL entry 105).
@@ -239,6 +240,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B35. (17:57 ngày 08/11)** (2 phút, sau khi Claude báo file xong) **[Anh hoặc leader] Nộp thử file public làm bằng cấu hình nộp cuối.**
+  - **File:** `lifemate/runs/pub_trial_2026-11-08/full/submission.jsonl` (Claude báo đường dẫn và kết quả kiểm khi xong).
+  - **Ghi lại hai điều:**
+    - trang nộp có nhận dòng có trường `time` không;
+    - điểm so với 51,16. Hạn 25 giây có thể cắt vài mẫu chậm, nên điểm có thể thấp hơn một chút.
 - [ ] **B34. (16:45 ngày 08/11)** (5 phút) **[Anh] Khoá thư mục Drive và dọn dữ liệu trên máy anh trai.**
   - **Thư mục Drive `ZAIC_2026`:** đang xem được mà không cần đăng nhập, tức chế độ "Bất kỳ ai có đường liên kết". Trong đó có hai gói chứa dữ liệu thi có licence (`zac_cloud_bundle_20261031_v3.tar.gz`, `zac_cloud_bundle_20261106_synthv2.tar.gz`) và file image `gui_leader_phoft_2026-11-05.tar` (3,14 GB).
     - Chuyển thư mục sang "Hạn chế": Chia sẻ → Quyền truy cập chung → Hạn chế.

@@ -114,6 +114,44 @@ mkdir -p ~/zac_v4 && cd ~/zac_v4 && tar -xzf ~/zac_cloud_bundle_20261106_synthv2
   - Mẫu v2 vẫn ngắn hơn mẫu thật.
 - **SFT:** 652 dòng, 1,93 triệu token, khoảng 13% số dòng train (pilot 1: 924 dòng, 1,70 triệu token).
 
+## Kết quả (08/11; Claude kiểm lúc 16:41)
+
+**Luật ghi trước: không đạt (FAIL).** Dừng hướng dữ liệu sinh, giữ bản 05/11; không có lần chạy thứ hai.
+
+- **Nguồn:** báo cáo và file kết quả bên anh trai tải lên thư mục Drive lúc 15:55 ngày 08/11. Bản sao trên laptop: `cloud_results/anh_trai/pilot_v2_2026-11-08/` (ngoài git). Đủ 677.567 byte, sha256 khớp báo cáo.
+- **Máy:** 2× RTX 4090, chạy 19:22 ngày 07/11 – 02:36 ngày 08/11. Train 4B 4-bit 1.430 token/giây, đỉnh 5,1 GB.
+  - Lần thử đầu trên một máy 2× RTX 3090 (driver 570) hỏng ở bước cài torch 2.15.0, chưa train gì.
+
+| Lượt | Chữ chuẩn | Chữ PhoWhisper-ft |
+|---|---:|---:|
+| `q4b4_lao_base_s0` | 53,73 | 40,81 |
+| `q4b4_lao_base_s1` | 49,37 | 41,18 |
+| `q4b4_lao_v2_s0` | 52,13 | 39,33 |
+| `q4b4_lao_v2_s1` | 53,38 | 41,74 |
+
+**Trung bình 2 seed, chênh theo cặp trên dev_lao** (khoảng tin cậy 95% bootstrap theo mẫu):
+
+| | Chữ PhoWhisper-ft | Chữ chuẩn |
+|---|---|---|
+| Cả 262 mẫu | 40,99 → 40,54: **−0,46** [−4,03; +3,15] (luật cần ≥ +2,0) | 51,55 → 52,75: +1,20 [−3,01; +5,54] (luật cần ≥ −2,0) |
+| 183 mẫu có app bị giấu | 39,26 → 38,29: −0,98 | 49,99 → 52,38: +2,39 |
+| 79 mẫu chỉ có app đã thấy | 45,00 → 45,74: +0,74 | 55,17 → 53,63: −1,54 |
+
+**Đọc kết quả:**
+- **Trên chữ ASR (chữ của bản nộp):** dữ liệu sinh không giúp, kể cả trên đúng 6 app nó nhắm tới.
+- **Trên chữ chuẩn:** tăng nhẹ ở app bị giấu, nhưng nằm trong khoảng nhiễu.
+- **Hai seed của cùng công thức bản gốc lệch 4,36 điểm** trên chữ chuẩn (53,73 so với 49,37; [−8,77; −0,02]). Đây là một lần nữa đo được độ lệch giữa các lần train (entry 101).
+- **Parity:** `base_s0` (53,73 / 40,81) gần với lượt laptop `q4b4_fit_lao` cùng công thức (53,40 / 41,30).
+
+**Sự cố khi chạy:** `cloud_arms.sh` bị khởi động hai lần cùng lúc (19:26:14). `run.log` có hai dòng "setup done" và bảng điểm in hai lần.
+- **`v2_s0` và `base_s1`:** mỗi lượt chỉ chạy một lần. Hai dòng `FAILED` là của bản chạy thứ hai, dừng ngay vì lượt đó đã có bản kia chạy.
+- **`base_s0` và `v2_s1`:** mỗi lượt chạy hai lần song song trên GPU 0, ghi chung một thư mục. Bản ghi sau cùng được giữ lại.
+- **Kiểm lại:**
+  - Mọi file dự đoán đủ 262 dòng, không trùng id; trace đủ 262 dòng.
+  - Chấm lại bằng `lifemate.scorer` trên laptop ra đúng từng số như báo cáo.
+  - Dữ liệu sinh đã dùng khớp sha256 bản laptop (`4fe71e59…`).
+- **Hai bản chạy đôi** cùng seed, cùng dữ liệu, nên adapter gần như giống nhau. Số liệu vẫn dùng được, nhưng không chắc adapter dùng để chấm là của bản nào.
+
 ## Chưa kiểm
 
 - **Tốc độ train 4-bit trên RTX 4090:** chưa đo. Bước cài đặt tự đo trước khi chạy và ghi vào `runs/cloud_setup.json`. Ước tính khoảng 2 giờ train và 30 phút chấm mỗi lượt, vậy mỗi GPU khoảng 5 giờ.

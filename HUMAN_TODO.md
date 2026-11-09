@@ -13,9 +13,16 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:20 ngày 08/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:22 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
+> - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
+> - **17:25 ngày 09/11:** **Public có bật D5: 52,68 (+1,61 so với 51,07). Giữ D5** theo luật viết trước; Leader đổi mặc định `SEARCH_GUARD=1` và build L9 từ bản có D5. **Leader đồng ý D1; trần API bỏ giới hạn; Claude bắt đầu cửa 0 (CPU).** Máy anh trai chạy từ khoảng 12:00, giai đoạn 1 xong khoảng 05:00–06:00 ngày 10/11 (JOURNAL entry 119).
+> - **17:15 ngày 09/11:** **Anh muốn làm D1 (sinh dữ liệu) bằng key Claude và Meta; chờ Anh quyết B38.** Đợt chạy trên máy anh trai gồm 9–10 lượt train, 22–26 giờ, nên trước 13/11 chỉ còn chỗ cho khoảng một đợt nữa (JOURNAL entry 118; sửa entry 117).
+> - **15:45 ngày 09/11:** **Anh đã gửi gói cho anh trai chạy giai đoạn 1 (7 lượt train, kết quả khoảng 10/11).** Claude đánh giá phương án và phân rã chỗ mất điểm (JOURNAL entry 117): mất nhiều nhất ở quyết định làm / hỏi lại / dừng (khoảng 27 điểm) và ghi sai tham số hoặc tool (khoảng 28 điểm); ASR khoảng 10,5. **Chờ Anh quyết B37.** B36 (nộp file D5) vẫn chờ.
+> - **04:02 ngày 09/11:** **File public có bật D5 đã xong, Anh nộp được ngay (B36):** `lifemate/runs/pub_d5_2026-11-09/full/submission.jsonl`. 634 dòng, kiểm định dạng đạt, có `time`. 603/634 dòng giống file thử 51,07; 30 dòng khác do guard tìm lại. Guard làm mất 9 lệnh hỏi lại, nên điểm có thể lên hoặc xuống. **Giữ D5 nếu điểm ≥ 50,77** (JOURNAL entry 116).
+> - **02:13 ngày 09/11:** **B28 xong: image Docker 05/11 chạy đúng trên GPU, cho cùng kết quả với lúc chạy ngoài Docker** (627/634 dòng giống file 51,16; hai lượt chỉ khác 1 dòng, do hạn 25 giây). Còn L9 (image chưa có `/code`, notebook). **D5 (search guard của Leader) đang chạy trên public, xong khoảng 04:10. Anh nộp file khi Claude báo; giữ D5 nếu điểm ≥ 50,77 (B36).** File gửi anh trai bản tiếng Anh có link Drive đã xong, còn chờ Leader gửi kích thước và sha256 của gói (JOURNAL entry 112–115).
 > - **22:20 ngày 08/11:** **B28 đang chạy trong Docker trên laptop.** Image của leader nạp được và chạy được trên GPU; torch trong image có hỗ trợ RTX 5090; 3 mẫu giống hệt file 51,16. Hai lượt 634 mẫu xong khoảng 02:40 ngày 09/11. **Anh để máy cắm sạc, đừng tắt máy** (gập nắp được) (B31; JOURNAL entry 111).
 > - **20:54 ngày 08/11:** **Anh đã vào nhóm `docker`, nhưng phải đăng xuất rồi đăng nhập lại (hoặc khởi động lại máy) thì B28 mới chạy được.** Ubuntu 26.04 không có `sg`/`newgrp` như Claude ghi ngày 06/11 (đã sửa). Sau đó Anh mở lại phiên này, nhắn "chạy B28" (B31; JOURNAL entry 110).
 > - **20:25 ngày 08/11:** **B35 xong: file public thử bằng cấu hình nộp cuối được 51,07** (file 05/11: 51,16; −0,09, đúng phần hạn 25 giây cắt 9 dòng). Trang nộp nhận trường `time`. **Cấu hình nộp cuối đã chốt; việc còn lại là Docker (B28/B31, L9), hạn 11:59 ngày 16/11.** B34 (khoá Drive) vẫn chờ Anh (JOURNAL entry 109).
@@ -244,6 +251,29 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B39. (17:32 ngày 09/11)** (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
+  - Chạy trong terminal, dán key khi được hỏi (key không hiện lên màn hình, không dán vào chat):
+    `read -rs -p "Anthropic API key: " K; echo; printf 'export ANTHROPIC_API_KEY=%s\n' "$K" > ~/.zac_anthropic_env; chmod 600 ~/.zac_anthropic_env; unset K`
+  - Key Meta đã có ở `~/.zac_meta_env` (tạo 02/11). Nếu Anh muốn dùng key Meta mới (90 USD) thì chạy lại lệnh tương tự với `META_API_KEY` và `~/.zac_meta_env`.
+  - Cửa 1 chi tối đa 5 USD cho cả hai nhà cung cấp.
+- [x] **B38. (17:15 ngày 09/11)** *(17:25: Anh duyệt; Leader đồng ý; trần API bỏ giới hạn; anh trai chạy từ khoảng 12:00; JOURNAL entry 119.)* (5 phút đọc; JOURNAL entry 118) **[Anh, bàn với Leader] Duyệt D1 theo ba cửa.**
+  - **Cửa 0** (CPU, 0 USD): code tự sinh lại nhãn train từ catalog; khớp ≥ 80% thì đi tiếp, dưới 60% thì dừng D1.
+  - **Cửa 1** (API tối đa 5 USD): 50 mẫu cho 3 app public; Anh đọc 20 câu.
+  - **Cửa 2** (API tối đa 35 USD): sinh đủ; laptop đo trên dev_lao (2 seed, khoảng 16 giờ), máy anh trai train bản cuối sau đợt hiện tại.
+  - **Anh trả lời:** trần API mới là bao nhiêu (ghi nhớ hiện tại: 80 USD tổng, đã chi 52,39); Leader có đồng ý đưa D1 lên trước không; anh trai bắt đầu chạy lúc mấy giờ.
+- [ ] **B37. (15:45 ngày 09/11)** (5 phút đọc; JOURNAL entry 117) **[Anh, bàn với Leader] Quyết hai việc trong lúc chờ máy anh trai.**
+  - **Việc 1: chạy D5 trên dev có nhãn bằng laptop.** Khoảng 1,5 giờ GPU, 0 USD; laptop đang rảnh.
+    - Câu hỏi: D5 tăng hay giảm điểm trên 495 mẫu có nhãn; luật "lặp 3 bước thì dừng" có cắt lệnh hỏi lại đúng không.
+    - Kết quả không đổi luật public 50,77; chỉ dùng để sửa luật dừng nếu cần.
+  - **Việc 2: gửi Leader ba luật bổ sung, viết trước khi có kết quả train.**
+    - Nhánh thắng không được làm số mẫu vượt 25 giây trên laptop tăng quá 1% số mẫu.
+    - Nhánh nằm trong khoảng +1,5 tới +3,0 thì chạy thêm 2 seed, không loại ngay.
+    - Bản giai đoạn 2 chỉ thay bản 05/11 khi trung bình public 2 seed ≥ bản cùng trạng thái D5 + 1,5.
+  - **Kèm theo:** cho Claude push nhật ký 112–117 lên `main` hay chưa.
+- [x] **B36. (02:13 ngày 09/11)** *(17:25: Anh nộp, được **52,68**; bản thử 51,07; +1,61; giữ D5; JOURNAL entry 119.)* (2 phút) **[Anh hoặc leader] Nộp file public có bật D5 (search guard).**
+  - **File:** `lifemate/runs/pub_d5_2026-11-09/full/submission.jsonl`. Chỉ khác lượt thử 51,07 ở chỗ bật `SEARCH_GUARD=1`.
+  - **Luật viết trước (RANKING §5 của Leader):** điểm ≥ 50,77 (51,07 − 0,3) thì giữ D5 và bật mặc định trong `docker/predict.sh` và `lifemate/submit.py`; thấp hơn thì bỏ.
+  - Ghi điểm vào đây và báo Claude.
 - [x] **B35. (17:57 ngày 08/11)** *(20:25: Anh nộp, được 51,07; file 05/11 51,16; trang nhận trường `time`; JOURNAL entry 109.)* (2 phút, sau khi Claude báo file xong) **[Anh hoặc leader] Nộp thử file public làm bằng cấu hình nộp cuối.**
   - **File (xong 19:59, kiểm đạt):** `lifemate/runs/pub_trial_2026-11-08/full/submission.jsonl`, 634 dòng, có trường `time`.
   - **Ghi lại hai điều:**
@@ -256,7 +286,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Xoá hai gói, vì pilot đã xong và không có lần chạy 2.
     - Giữ file image nếu leader còn cần, nhưng chỉ chia sẻ cho người trong đội.
   - **Máy anh trai:** nhờ xoá `~/zac_v4`, `~/ZAIC_2026`, các file `zac_cloud_bundle_*.tar.gz`, `cloud_results_*.tar.gz`, `zac_logs.tar.gz`, `zac_v4_results.tar.gz` (theo mục 8 của file hướng dẫn).
-- [ ] **B31. (09:40 ngày 06/11)** (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
+- [x] **B31. (09:40 ngày 06/11)** *(02:09 ngày 09/11: xong. 3 mẫu và hai lượt 634 mẫu đều `ok`; lượt 1 giống file 51,16 ở 627/634 dòng; hai lượt khác nhau 1 dòng, do hạn 25 giây; lâu nhất 25,6 giây mỗi mẫu; JOURNAL entry 115.)* (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
   - **(22:20 ngày 08/11) Đang chạy từ 22:14, xong khoảng 02:40 ngày 09/11. Anh để máy cắm sạc, đừng tắt máy; gập nắp được.** 3 mẫu đã đạt.
   - Khi đó Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy, và tự dừng nếu chưa có quyền docker.
   - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.

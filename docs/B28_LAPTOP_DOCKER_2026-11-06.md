@@ -104,7 +104,7 @@ sudo usermod -aG docker $USER
 ```
 
 - Lưu ý: nhóm `docker` có quyền tương đương root trên máy.
-- Không cần đăng xuất: Claude chạy qua `sg docker -c …`.
+- **Phải đăng xuất rồi đăng nhập lại (hoặc khởi động lại máy) sau lệnh này**, rồi mở lại app Claude. *(Sửa 08/11 20:54: bản trước ghi "không cần đăng xuất, Claude chạy qua `sg docker -c …`". Ubuntu 26.04 trên laptop không có `sg` hay `newgrp`, nên nhóm mới chỉ có hiệu lực sau lần đăng nhập mới.)*
 - Nếu Anh không muốn thêm nhóm, Claude soạn sẵn từng lệnh để Anh tự chạy với sudo.
 
 ## 2. Leader gửi

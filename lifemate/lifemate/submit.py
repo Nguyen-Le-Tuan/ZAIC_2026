@@ -36,6 +36,7 @@ DEFAULTS = {
     "TIME_BUDGET": "25",                           # seconds per sample, ASR included
     "WARMUP": "1",                                 # untimed warm-up generation after loading
     "SEED": "0",                                   # = training seed
+    "SEARCH_GUARD": "0",                           # 1 = lifemate.infer --search-guard; flip only after a public run
 }
 MAX_TOKENS = 512  # per agent step; lifemate.infer --max-tokens default
 
@@ -45,14 +46,15 @@ def settings(env=None) -> dict:
     parsed and checked the way scripts/predict.sh checks them."""
     env = os.environ if env is None else env
     s = {k: env.get(k) or v for k, v in DEFAULTS.items()}
-    for k in ("LOAD_4BIT", "WARMUP"):
+    for k in ("LOAD_4BIT", "WARMUP", "SEARCH_GUARD"):
         if s[k] not in ("0", "1"):
             raise ValueError(f"{k} must be 0 or 1, got {s[k]!r}")
     budget = float(s["TIME_BUDGET"])
     if not 0 < budget < 30:
         raise ValueError(f"TIME_BUDGET must be above 0 and below 30, got {budget}")
     return {"asr_model": s["ASR_MODEL"], "adapter": s["ADAPTER"], "llm": s["LLM"], "load_4bit": s["LOAD_4BIT"] == "1",
-            "time_budget": budget, "warmup": s["WARMUP"] == "1", "seed": int(s["SEED"])}
+            "time_budget": budget, "warmup": s["WARMUP"] == "1", "seed": int(s["SEED"]),
+            "search_guard": s["SEARCH_GUARD"] == "1"}
 
 
 def split_candidates(root) -> list[str]:
@@ -91,11 +93,13 @@ class Runner:
     """Loaded ASR model + agent LLM; run() does one sample. Used by the notebook, which times each sample from
     before its ToolEnv and audio to its result (guide p. 17)."""
 
-    def __init__(self, split: str, root, asr, llm, time_budget: float = 25.0, id_guard: bool = True):
+    def __init__(self, split: str, root, asr, llm, time_budget: float = 25.0, id_guard: bool = True,
+                 search_guard: bool = False):
         cat = load_catalog(split, root)
         self.tools, self.apps = catalog_tools(cat), {x["id"]: x for x in cat["apps"]}
         self.split_dir = Path(root) / split
         self.asr, self.llm, self.time_budget, self.id_guard = asr, llm, time_budget, id_guard
+        self.search_guard = search_guard  # same switch as lifemate.infer --search-guard
 
     def warmup(self, item: dict) -> float:
         """Untimed, before the first sample (as predict.sh does): a short ASR decode of silence, then one short
@@ -120,7 +124,8 @@ class Runner:
         texts = self.transcribe(item)
         asr_s = time.monotonic() - ta
         user_text, hist = texts_for(item, "asr", texts)
-        agent = Agent(self.llm, self.tools, self.apps, time_budget=self.time_budget, id_guard=self.id_guard)
+        agent = Agent(self.llm, self.tools, self.apps, time_budget=self.time_budget, id_guard=self.id_guard,
+                      search_relax=self.search_guard, max_repeat_steps=3 if self.search_guard else 0)
         trace = agent.run(item, env, user_text, hist, t0=t0)
         return {"id": item["id"], "text": user_text, "asr_seconds": round(asr_s, 3), **trace}
 

@@ -12,12 +12,22 @@ Guardrails (pure code, no model):
     deadline still run, then the loop stops. The in-process vLLM backend cannot be stopped mid-generation, so there
     only the per-step token cap (max_tokens) bounds a step.
   * stop right after sys.ask_missing_info (always the last call in train gold), after max_steps, or when time runs out.
+  * search guard (off by default; search_relax / max_repeat_steps, `--search-guard` in infer.py), measured on the
+    05/11 public run (51,16; docs/SYNTH_DATA_PLAN_2026-11-08.md section 1):
+      - a READ call with arguments that comes back empty is retried once with looser arguments (relaxed_args). Train
+        gold filtered reads come back empty in 4/555 calls, so an empty result almost always means our own filter or
+        query was wrong; the public run had 98 such calls in 55 samples, mostly optional filters the model added on
+        unseen apps. The retry is a real env.call, so it is in the submission like any other call.
+      - after max_repeat_steps steps in a row that only repeat already answered reads, the loop stops. Those steps
+        reach no env.call, so the submission is unchanged; only the time is saved (18 public samples looped to
+        max_steps this way; no sample that later wrote or asked repeated more than 2 steps in a row).
 """
 from __future__ import annotations
 
 import json
 import re
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 
@@ -26,6 +36,52 @@ from .prompt import build_messages, render_calls, render_results, to_chatml
 
 _TOOL_CALL = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.S)
 _THINK = re.compile(r"<think>.*?</think>", re.S)
+
+
+def _fold(s: str) -> str:
+    """lower-case, diacritics removed, spaces collapsed: the same folding zaic_tools search uses (utils._fold)."""
+    t = unicodedata.normalize("NFD", str(s).lower()).replace("đ", "d")
+    return " ".join("".join(c for c in t if not unicodedata.combining(c)).split())
+
+
+# free-text argument names that the relaxer may shorten
+_QUERY_KEYS = {"query", "keyword", "keywords", "q", "search", "term", "name", "title"}
+# words dropped from the FRONT of a spoken query before retrying ("chị Lan" -> "Lan", "vé ca nhạc X" -> "ca nhạc X")
+_QUERY_FILLER = {_fold(w) for w in (
+    "tìm", "kiếm", "xem", "mua", "đặt", "vé", "cho", "tôi", "mình", "em", "anh", "chị", "cô", "chú", "bác", "ông",
+    "bà", "bạn", "cậu", "dì", "các", "những", "một", "cái", "chiếc", "món", "loại", "sản", "phẩm", "sự", "kiện",
+    "buổi", "the", "a", "an")}
+
+
+def empty_listing(result) -> bool:
+    """A read result that found nothing: not an error, at least one list field, and every list field empty."""
+    if not isinstance(result, dict) or result.get("ok") is False:
+        return False
+    lists = [v for v in result.values() if isinstance(v, list)]
+    return bool(lists) and all(len(v) == 0 for v in lists)
+
+
+def relaxed_args(tool: dict, args: dict) -> dict | None:
+    """Looser arguments for one retry of a read that came back empty, or None when there is nothing to loosen.
+    1) optional arguments were given -> keep only the required ones. This is the gold convention: 1.212/1.599 train
+       read calls carry exactly their required arguments.
+    2) otherwise, for the first free-text argument (_QUERY_KEYS) with two or more words, drop filler words from its
+       front. Nothing to drop -> None (no guessing which words matter)."""
+    params = tool.get("parameters", {})
+    required = set(params.get("required", []))
+    if set(args) - required:
+        return {k: v for k, v in args.items() if k in required}
+    props = params.get("properties", {})
+    for k, v in args.items():
+        if k not in _QUERY_KEYS or not isinstance(v, str) or "enum" in props.get(k, {}):
+            continue
+        words = v.split()
+        i = 0
+        while i < len(words) - 1 and _fold(words[i]) in _QUERY_FILLER:
+            i += 1
+        if i:
+            return {**args, k: " ".join(words[i:])}
+    return None
 
 
 def parse_tool_calls(text: str) -> tuple[list[dict], list[str]]:
@@ -173,10 +229,32 @@ class OracleBackend:
 
 class Agent:
     def __init__(self, llm, tools_by_name: dict, apps_by_id: dict, max_steps: int = 8, max_retries: int = 2,
-                 time_budget: float = 25.0, min_step_seconds: float = 1.0, id_guard: bool = True):
+                 time_budget: float = 25.0, min_step_seconds: float = 1.0, id_guard: bool = True,
+                 search_relax: bool = False, max_relax: int = 2, max_repeat_steps: int = 0):
+        """search_relax: retry an empty filtered read once with relaxed_args (at most max_relax retries per sample).
+        max_repeat_steps: stop after this many steps in a row that only repeat answered reads (0 = never)."""
         self.llm, self.tools, self.apps = llm, tools_by_name, apps_by_id
         self.max_steps, self.max_retries, self.time_budget = max_steps, max_retries, time_budget
         self.min_step_seconds, self.id_guard = min_step_seconds, id_guard
+        self.search_relax, self.max_relax, self.max_repeat_steps = search_relax, max_relax, max_repeat_steps
+
+    def _relax(self, env, c: dict, r, seen: dict, step: dict) -> tuple[dict, dict] | None:
+        """One looser retry of read call `c` whose result `r` was empty; (call, result) or None."""
+        tool = self.tools.get(c["name"], {})
+        if tool.get("kind") != "read" or not c["arguments"] or not empty_listing(r):
+            return None
+        args = relaxed_args(tool, c["arguments"])
+        if args is None or args == c["arguments"]:
+            return None
+        key = json.dumps([c["name"], args], sort_keys=True, ensure_ascii=False)
+        if key in seen or not env.validate(c["name"], args)["ok"]:
+            return None  # already shown to the model, or not a valid call on its own
+        call = {"name": c["name"], "arguments": args}
+        r2 = env.call(c["name"], args)
+        seen[key] = r2
+        found = sum(len(v) for v in r2.values() if isinstance(v, list)) if isinstance(r2, dict) else 0
+        step.setdefault("relaxed", []).append({"from": c["arguments"], "to": args, "found": found})
+        return call, r2
 
     def run(self, item: dict, env, user_text: str, history_texts: list[str], t0: float | None = None,
             spent: float = 0.0) -> dict:
@@ -189,7 +267,7 @@ class Agent:
         visible = "\n".join(m["content"] for m in msgs)  # what the model has been shown; its own calls excluded
         trace = {"steps": [], "stop": "max_steps"}
         seen: dict[str, dict] = {}
-        retries = 0
+        retries = relaxes = repeat_run = 0
         for _ in range(self.max_steps):
             if deadline - time.monotonic() < self.min_step_seconds:
                 trace["stop"] = "time"
@@ -204,6 +282,7 @@ class Agent:
                 trace["stop"] = "time" if late else "done"
                 break
             results, processed, stop = [], [], False
+            repeats = 0  # calls of this step answered from `seen` (no env.call)
             for c in calls:
                 processed.append(c)
                 # only reads are de-duplicated: repeating a write can be intended (redeem twice = two tickets)
@@ -211,6 +290,7 @@ class Agent:
                 key = json.dumps([c["name"], c["arguments"]], sort_keys=True, ensure_ascii=False) if is_read else None
                 if key in seen:
                     results.append(seen[key])
+                    repeats += 1
                     continue
                 v = env.validate(c["name"], c["arguments"])
                 if not v["ok"]:
@@ -232,6 +312,13 @@ class Agent:
                 if c["name"] == "sys.ask_missing_info":
                     stop = True
                     break
+                if self.search_relax and relaxes < self.max_relax:
+                    retry = self._relax(env, c, r, seen, step)
+                    if retry:  # shown to the model as its own next call, right after the empty one
+                        relaxes += 1
+                        processed.append(retry[0])
+                        results.append(retry[1])
+                        step["calls"].append(retry[0])
             results += [{"ok": False, "error": e} for e in errors]
             step["results"] = results  # what the model is shown next; kept so audits need no replay
             msgs.append({"role": "assistant", "content": render_calls(processed) if processed else out})
@@ -242,6 +329,10 @@ class Agent:
                 break
             if late:
                 trace["stop"] = "time"
+                break
+            repeat_run = repeat_run + 1 if calls and repeats == len(calls) and not step["errors"] else 0
+            if self.max_repeat_steps and repeat_run >= self.max_repeat_steps:
+                trace["stop"] = "repeat"
                 break
             if step["errors"]:
                 retries += 1

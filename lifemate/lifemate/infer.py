@@ -65,6 +65,9 @@ def main():
                     help="seconds per sample, ASR included (with --text asr, the ASR file's per-wav seconds count)")
     ap.add_argument("--max-tokens", type=int, default=512, help="cap on generated tokens per step (gold steps: max 200)")
     ap.add_argument("--no-id-guard", action="store_true", help="do not block write calls with IDs never shown")
+    ap.add_argument("--search-guard", action="store_true",
+                    help="retry an empty filtered read once with looser arguments, and stop after 3 steps in a row that "
+                         "only repeat answered reads (lifemate.agent docstring; off = the 05/11 system)")
     ap.add_argument("--no-warmup", action="store_true",
                     help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
@@ -115,7 +118,8 @@ def main():
         llm = OracleBackend(item["label"]["tool_calls"]) if a.backend == "oracle" else shared
         user_text, hist = texts_for(item, a.text, asr)
         spent = asr_seconds_for(item, asr_secs) if a.text == "asr" else 0.0
-        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard)
+        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard,
+                      search_relax=a.search_guard, max_repeat_steps=3 if a.search_guard else 0)
         trace = agent.run(item, env, user_text, hist, t0=t0, spent=spent)
         row = {"id": item["id"], "tool_calls": env.get_tool_calls(), "state_hash": env.get_state_hash()}
         # organisers' `time` (guide p. 6-7): integer ms of the sample, before its audio is read to its result;
@@ -146,6 +150,7 @@ def main():
         "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
         "timing": timing, "load_s": load_s, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
         "id_guard_blocked": sum(len(s.get("blocked", [])) for _, t in out for s in t["steps"]),
+        "search_relaxed": sum(len(s.get("relaxed", [])) for _, t in out for s in t["steps"]),
         "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit. "
                 "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget. "
                 "warmup_s: the one untimed generation after loading, counted in no sample. load_s: building the "

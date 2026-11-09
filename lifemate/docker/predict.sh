@@ -17,7 +17,7 @@
 #   PY            Python with torch & co. (default $LIFEMATE_DIR/.venv/bin/python when present, else python3)
 #   DATA_ROOT (/data)  RESULT_DIR (/result)  SPLIT (found under DATA_ROOT)  WORK (new folder under $TMPDIR or /tmp)
 #   IDS           file of sample ids: run only those (smoke tests)
-#   ASR_MODEL ADAPTER LLM LOAD_4BIT TIME_BUDGET WARMUP SEED   the system (do not change for the submission)
+#   ASR_MODEL ADAPTER LLM LOAD_4BIT TIME_BUDGET WARMUP SEED SEARCH_GUARD   the system (do not change for the submission)
 #   DRY_RUN=1     print the resolved settings and stop before loading any model
 set -euo pipefail
 T0=$(date +%s%N)
@@ -39,6 +39,9 @@ LOAD_4BIT=${LOAD_4BIT:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
+# search guard: flip the default to 1 here and in lifemate/submit.py only after a public run with it scores at least
+# the 05/11 system
+SEARCH_GUARD=${SEARCH_GUARD:-0}
 if [ -z "${PY:-}" ]; then
   if [ -x "$LIFEMATE_DIR/.venv/bin/python" ]; then PY=$LIFEMATE_DIR/.venv/bin/python; else PY=$(command -v python3); fi
 fi
@@ -54,7 +57,7 @@ for d in ${WORK:+"$WORK"} "$RESULT_DIR"; do
 done
 
 echo "lifemate predict: split $SPLIT from $DATA_ROOT/$SPLIT${IDS:+ (ids in $IDS)}"
-echo "system: ASR $ASR_MODEL | LLM $LLM + LoRA $ADAPTER (4-bit=$LOAD_4BIT) | budget ${TIME_BUDGET}s/sample | warm-up=$WARMUP | seed $SEED"
+echo "system: ASR $ASR_MODEL | LLM $LLM + LoRA $ADAPTER (4-bit=$LOAD_4BIT) | budget ${TIME_BUDGET}s/sample | warm-up=$WARMUP | seed $SEED | search guard=$SEARCH_GUARD"
 echo "code $LIFEMATE_DIR, python $PY, temp files in ${WORK:-a new folder under ${TMPDIR:-/tmp}}"
 echo "output will be saved in $RESULT_DIR/submission.jsonl"
 if [ "${DRY_RUN:-0}" = 1 ]; then
@@ -71,7 +74,7 @@ mkdir -p "$WORK" "$RESULT_DIR"
 OUT=$WORK/submission.jsonl
 rc=0
 SPLIT=$SPLIT DATA=$DATA_ROOT IDS=$IDS OUT=$OUT PY=$PY ASR_MODEL=$ASR_MODEL ADAPTER=$ADAPTER LLM=$LLM \
-  LOAD_4BIT=$LOAD_4BIT TIME_BUDGET=$TIME_BUDGET WARMUP=$WARMUP SEED=$SEED \
+  LOAD_4BIT=$LOAD_4BIT TIME_BUDGET=$TIME_BUDGET WARMUP=$WARMUP SEED=$SEED SEARCH_GUARD=$SEARCH_GUARD \
   bash scripts/predict.sh || rc=$?
 
 if [ -s "$OUT" ]; then

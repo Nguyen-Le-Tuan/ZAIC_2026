@@ -16,7 +16,9 @@
 #        cost; 0 skips it);
 #      ASR_REV, DATA (default the repo's data folder), IDS (subset), ASR_BATCH (default 1 = per-file latency),
 #      ASR_OUT (default ${OUT%.jsonl}_asr.jsonl), SEED (default 0, the training seed),
-#      PY (default .venv/bin/python, else python3).
+#      PY (default .venv/bin/python, else python3);
+#      SEARCH_GUARD (default 0 = the 05/11 system; 1 = retry empty filtered reads once with looser arguments and stop
+#        repeated-read loops, `lifemate.infer --search-guard`).
 # Rows carry the organisers' "time" (integer ms: the sample's ASR seconds + its agent seconds). The final Docker entry
 # point docker/predict.sh (copied to /code/predict.sh) calls this script with the submitted settings.
 # Models must already be in the Hugging Face cache or on disk: nothing is downloaded (HF_HUB_OFFLINE=1). Re-running
@@ -30,6 +32,7 @@ LOAD_4BIT=${LOAD_4BIT:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
+SEARCH_GUARD=${SEARCH_GUARD:-0}
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}
 IDS=${IDS:-}
@@ -42,6 +45,7 @@ export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandabl
 stamp() { echo "[$(date '+%F %T')] $*"; }
 case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
 case $WARMUP in 1) W=() ;; 0) W=(--no-warmup) ;; *) echo "WARMUP must be 0 or 1" >&2; exit 1 ;; esac
+case $SEARCH_GUARD in 1) G=(--search-guard) ;; 0) G=() ;; *) echo "SEARCH_GUARD must be 0 or 1" >&2; exit 1 ;; esac
 awk -v t="$TIME_BUDGET" 'BEGIN { exit !(t > 0 && t < 30) }' || { echo "TIME_BUDGET must be above 0 and below 30" >&2; exit 1; }
 
 if [ -e "$ASR_OUT" ]; then
@@ -51,9 +55,9 @@ else
   "$PY" -m lifemate.asr --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --model "$ASR_MODEL" \
       ${ASR_REV:+--revision "$ASR_REV"} --batch-size "$ASR_BATCH" "${W[@]}" --seed "$SEED" --out "$ASR_OUT"
 fi
-stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP, seed $SEED) -> $OUT"
+stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP, seed $SEED, search guard=$SEARCH_GUARD) -> $OUT"
 "$PY" -m lifemate.infer --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --text asr --asr-file "$ASR_OUT" \
-    --backend hf --model "$LLM" "${Q[@]}" --adapter "$ADAPTER" --time-budget "$TIME_BUDGET" "${W[@]}" \
+    --backend hf --model "$LLM" "${Q[@]}" --adapter "$ADAPTER" --time-budget "$TIME_BUDGET" "${W[@]}" "${G[@]}" \
     --seed "$SEED" --out "$OUT" --trace "$TRACE"
 stamp "check $OUT"
 "$PY" scripts/check_submission.py "$OUT" --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --require-time \

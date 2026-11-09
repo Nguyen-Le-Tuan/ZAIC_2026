@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:54 ngày 08/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:25 ngày 08/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **22:25 ngày 08/11:** **B28 đang chạy trong Docker trên laptop.** Image của leader nạp được và chạy được trên GPU; torch trong image có hỗ trợ RTX 5090; 3 mẫu giống hệt file 51,16. Hai lượt 634 mẫu xong khoảng 02:40 ngày 09/11. **Anh để máy cắm sạc, đừng tắt máy** (gập nắp được) (B31; JOURNAL entry 111).
 > - **20:54 ngày 08/11:** **Anh đã vào nhóm `docker`, nhưng phải đăng xuất rồi đăng nhập lại (hoặc khởi động lại máy) thì B28 mới chạy được.** Ubuntu 26.04 không có `sg`/`newgrp` như Claude ghi ngày 06/11 (đã sửa). Sau đó Anh mở lại phiên này, nhắn "chạy B28" (B31; JOURNAL entry 110).
 > - **20:25 ngày 08/11:** **B35 xong: file public thử bằng cấu hình nộp cuối được 51,07** (file 05/11: 51,16; −0,09, đúng phần hạn 25 giây cắt 9 dòng). Trang nộp nhận trường `time`. **Cấu hình nộp cuối đã chốt; việc còn lại là Docker (B28/B31, L9), hạn 11:59 ngày 16/11.** B34 (khoá Drive) vẫn chờ Anh (JOURNAL entry 109).
 > - **20:00 ngày 08/11:** **File public thử đã xong, Anh nộp được ngay (B35):** `lifemate/runs/pub_trial_2026-11-08/full/submission.jsonl`. 634 dòng, kiểm định dạng đạt, có trường `time`. 625/634 dòng giống hệt file 51,16; 9 dòng còn lại bị hạn 25 giây cắt các lời gọi cuối, nên điểm có thể thấp hơn 51,16 tối đa khoảng 1,4 (JOURNAL entry 108).
@@ -256,7 +257,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Giữ file image nếu leader còn cần, nhưng chỉ chia sẻ cho người trong đội.
   - **Máy anh trai:** nhờ xoá `~/zac_v4`, `~/ZAIC_2026`, các file `zac_cloud_bundle_*.tar.gz`, `cloud_results_*.tar.gz`, `zac_logs.tar.gz`, `zac_v4_results.tar.gz` (theo mục 8 của file hướng dẫn).
 - [ ] **B31. (09:40 ngày 06/11)** (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
-  - **(20:54 ngày 08/11) Anh đã vào nhóm `docker`. Còn: đăng xuất rồi đăng nhập lại (hoặc khởi động lại máy), cắm sạc, mở lại phiên này, nhắn "chạy B28".**
+  - **(22:25 ngày 08/11) Đang chạy từ 22:14, xong khoảng 02:40 ngày 09/11. Anh để máy cắm sạc, đừng tắt máy; gập nắp được.** 3 mẫu đã đạt.
   - Khi đó Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy, và tự dừng nếu chưa có quyền docker.
   - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.
   - **Thứ tự chạy:**

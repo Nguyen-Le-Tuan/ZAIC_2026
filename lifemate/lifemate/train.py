@@ -77,8 +77,9 @@ def build_model(a):
     model.config.use_cache = False
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.enable_input_require_grads()
+    targets = a.lora_targets.split(",") if getattr(a, "lora_targets", None) else LORA_TARGETS
     cfg = LoraConfig(r=a.lora_r, lora_alpha=a.lora_alpha, lora_dropout=a.lora_dropout,
-                     target_modules=LORA_TARGETS, task_type="CAUSAL_LM")
+                     target_modules=targets, task_type="CAUSAL_LM")
     model = get_peft_model(model, cfg)
     for p in model.parameters():
         if p.requires_grad:
@@ -122,6 +123,9 @@ def main():
     ap.add_argument("--lora-r", type=int, default=32)
     ap.add_argument("--lora-alpha", type=int, default=64)
     ap.add_argument("--lora-dropout", type=float, default=0.05)
+    ap.add_argument("--lora-targets", help="comma list of module names for LoRA (default: q,k,v,o,gate,up,down_proj). "
+                                           "Qwen3.5 (24 of 32 layers are linear attention) also needs "
+                                           "in_proj_qkv,in_proj_z,out_proj")
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--optim", choices=["adamw", "adamw8bit"], default="adamw",
                     help="adamw8bit: bitsandbytes 8-bit AdamW states, for QLoRA 4B on an 8GB GPU")

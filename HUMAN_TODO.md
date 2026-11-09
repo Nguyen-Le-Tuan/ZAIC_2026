@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:25 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:32 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
 > - **17:25 ngày 09/11:** **Public có bật D5: 52,68 (+1,61 so với 51,07). Giữ D5** theo luật viết trước; Leader đổi mặc định `SEARCH_GUARD=1` và build L9 từ bản có D5. **Leader đồng ý D1; trần API bỏ giới hạn; Claude bắt đầu cửa 0 (CPU).** Máy anh trai chạy từ khoảng 12:00, giai đoạn 1 xong khoảng 05:00–06:00 ngày 10/11 (JOURNAL entry 119).
 > - **17:15 ngày 09/11:** **Anh muốn làm D1 (sinh dữ liệu) bằng key Claude và Meta; chờ Anh quyết B38.** Đợt chạy trên máy anh trai gồm 9–10 lượt train, 22–26 giờ, nên trước 13/11 chỉ còn chỗ cho khoảng một đợt nữa (JOURNAL entry 118; sửa entry 117).
 > - **15:45 ngày 09/11:** **Anh đã gửi gói cho anh trai chạy giai đoạn 1 (7 lượt train, kết quả khoảng 10/11).** Claude đánh giá phương án và phân rã chỗ mất điểm (JOURNAL entry 117): mất nhiều nhất ở quyết định làm / hỏi lại / dừng (khoảng 27 điểm) và ghi sai tham số hoặc tool (khoảng 28 điểm); ASR khoảng 10,5. **Chờ Anh quyết B37.** B36 (nộp file D5) vẫn chờ.
@@ -249,6 +250,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B39. (17:32 ngày 09/11)** (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
+  - Chạy trong terminal, dán key khi được hỏi (key không hiện lên màn hình, không dán vào chat):
+    `read -rs -p "Anthropic API key: " K; echo; printf 'export ANTHROPIC_API_KEY=%s\n' "$K" > ~/.zac_anthropic_env; chmod 600 ~/.zac_anthropic_env; unset K`
+  - Key Meta đã có ở `~/.zac_meta_env` (tạo 02/11). Nếu Anh muốn dùng key Meta mới (90 USD) thì chạy lại lệnh tương tự với `META_API_KEY` và `~/.zac_meta_env`.
+  - Cửa 1 chi tối đa 5 USD cho cả hai nhà cung cấp.
 - [x] **B38. (17:15 ngày 09/11)** *(17:25: Anh duyệt; Leader đồng ý; trần API bỏ giới hạn; anh trai chạy từ khoảng 12:00; JOURNAL entry 119.)* (5 phút đọc; JOURNAL entry 118) **[Anh, bàn với Leader] Duyệt D1 theo ba cửa.**
   - **Cửa 0** (CPU, 0 USD): code tự sinh lại nhãn train từ catalog; khớp ≥ 80% thì đi tiếp, dưới 60% thì dừng D1.
   - **Cửa 1** (API tối đa 5 USD): 50 mẫu cho 3 app public; Anh đọc 20 câu.

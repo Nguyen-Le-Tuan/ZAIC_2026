@@ -80,21 +80,53 @@ def _chatml(role: str, content: str) -> str:
     return f"<|im_start|>{role}\n{content}<|im_end|>\n"
 
 
-def build_example(item, user_text, history_texts, calls, results, tools, apps, system_suffix="") -> list[list]:
-    """Segments [[text, loss], ...] for one request. Prompt text is identical to what Agent.run feeds the model."""
+# ---------------------------------------------------------------- thoughts (D2, lifemate.rationale)
+
+THOUGHT_REMOVED = "Không có app nào đã cài làm được yêu cầu này -> không gọi tool."  # the `remove` augmentation
+THOUGHT_FALLBACK_STEP = "Gọi tool cần cho yêu cầu."  # a sample the teacher wrote nothing for
+THOUGHT_FALLBACK_FINAL = "Xong, không cần gọi thêm tool."
+
+
+def clean_thought(text: str, mapping: dict | None = None) -> str:
+    """Teacher text -> training text: zero-width characters and a leading bullet removed; tool names renamed with the
+    sample's rename mapping (thoughts name tools as app.tool, like the calls)."""
+    t = re.sub(r"[​-‍﻿]", "", text or "").strip()
+    t = re.sub(r"^[-•*]\s*", "", t)
+    return _replace_names(t, mapping) if mapping else t
+
+
+def think_block(text: str) -> str:
+    """What the model writes before a step's calls. Agent.run keeps the block in the next prompts, as here."""
+    return f"<think>\n{text}\n</think>\n\n"
+
+
+def build_example(item, user_text, history_texts, calls, results, tools, apps, system_suffix="", thoughts=None,
+                  mapping=None) -> list[list]:
+    """Segments [[text, loss], ...] for one request. Prompt text is identical to what Agent.run feeds the model.
+    thoughts: {"thoughts": [one per step], "final": str} (lifemate.rationale) -> each assistant turn starts with a
+    <think> block; mapping: the rename augmentation's {old tool: new tool}, applied to the thoughts."""
     msgs = build_messages(item, user_text, history_texts, tools, apps)
     msgs[0]["content"] += system_suffix
     segs = [["".join(_chatml(m["role"], m["content"]) for m in msgs) + "<|im_start|>assistant\n", False]]
+    steps_th = [clean_thought(t, mapping) for t in thoughts.get("thoughts", [])] if thoughts else []
+    final_th = clean_thought(thoughts.get("final", ""), mapping) if thoughts else ""
+
+    def pre(k: int | None) -> str:  # <think> block before step k, or before the final answer (k None)
+        if not thoughts:
+            return ""
+        text = final_th if k is None else (steps_th[k] if k < len(steps_th) else "")
+        return think_block(text or (THOUGHT_FALLBACK_FINAL if k is None else THOUGHT_FALLBACK_STEP))
+
     if not calls:
-        segs.append([FINAL_NONE + "<|im_end|>", True])
+        segs.append([pre(None) + FINAL_NONE + "<|im_end|>", True])
         return segs
-    for step in group_steps(calls, results, tools):
+    for k, step in enumerate(group_steps(calls, results, tools)):
         step_calls = [calls[i] for i in step]
-        segs.append([render_calls(step_calls) + "<|im_end|>", True])
+        segs.append([pre(k) + render_calls(step_calls) + "<|im_end|>", True])
         if any(c["name"] == "sys.ask_missing_info" for c in step_calls):
             return segs
         segs.append(["\n" + _chatml("user", render_results([results[i] for i in step])) + "<|im_start|>assistant\n", False])
-    segs.append([FINAL_DONE + "<|im_end|>", True])
+    segs.append([pre(None) + FINAL_DONE + "<|im_end|>", True])
     return segs
 
 
@@ -269,8 +301,13 @@ def history_examples(s, user_text_list, tools, apps, tagged: bool):
 
 
 def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=0.5, p_lower=0.3,
-              history="off", drop_apps=(), asr=None, seed=0):
-    """pool: {app id: catalog app} for distractors (train + public_test catalogs; shared tools have identical schemas)."""
+              history="off", drop_apps=(), asr=None, seed=0, thoughts=None, stats=None):
+    """pool: {app id: catalog app} for distractors (train + public_test catalogs; shared tools have identical schemas).
+    thoughts: {sample id: lifemate.rationale row} -> every assistant turn starts with a <think> block (D2); a sample
+    without a row gets the fallback thoughts and is counted in stats["no_thoughts"]. None = the old format, byte for
+    byte (the random draws are the same either way)."""
+    if thoughts is not None and history != "off":
+        raise ValueError("thoughts are written for the final turn only; use --history off with --thoughts")
     rng = random.Random(seed)
     all_tools = {t["name"]: t for a in pool.values() for t in a["tools"]} | tools
     all_apps = pool | apps
@@ -282,25 +319,34 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
         calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
         src = s.get("_src", "gold")
         utext, htexts = user_texts(s, asr)
+        th = None
+        if thoughts is not None:
+            th = thoughts.get(s["id"])
+            if th is None and stats is not None:
+                stats["no_thoughts"] = stats.get("no_thoughts", 0) + 1
+            th = th or {"thoughts": [], "final": ""}  # build_example fills the fallback texts
 
         for k in range(1 + rename):
-            it, cl, tb, ab, aug = s, calls, tools, apps, []
+            it, cl, tb, ab, aug, mapping = s, calls, tools, apps, [], None
             # distractors first (original names), then rename everything installed, distractors included
             if calls and rng.random() < p_distract:
                 d = add_distractors(it, cl, all_apps, pool, rng)
                 if d is not None:
                     it, tb, ab, aug = d, all_tools, all_apps, ["distract"]
             if k > 0:
-                it, cl, tb, ab = apply_rename(it, cl, tb, ab, make_rename(it, rng))
+                mapping = make_rename(it, rng)
+                it, cl, tb, ab = apply_rename(it, cl, tb, ab, mapping)
                 aug = [f"rename{k}"] + aug
             low = rng.random() < p_lower
             u, h = (asr_style(utext), [asr_style(x) for x in htexts]) if low else (utext, htexts)
             out.append({"id": s["id"], "src": src, "aug": aug + (["lower"] if low else []),
-                        "segments": build_example(it, u, h, cl, results, tb, ab)})
+                        "segments": build_example(it, u, h, cl, results, tb, ab, thoughts=th, mapping=mapping)})
         if calls and rng.random() < p_remove:
             r = make_removal(s, calls, apps)
             if r is not None:
-                out.append({"id": s["id"], "src": src, "aug": ["remove"], "segments": build_example(r, utext, htexts, [], [], tools, apps)})
+                rth = {"thoughts": [], "final": THOUGHT_REMOVED} if th is not None else None
+                out.append({"id": s["id"], "src": src, "aug": ["remove"],
+                            "segments": build_example(r, utext, htexts, [], [], tools, apps, thoughts=rth)})
         if history != "off" and src == "gold":  # a synthetic sample shares its history with its origin
             out += history_examples(s, htexts + [utext], tools, apps, tagged=history == "tagged")
     return out
@@ -324,6 +370,8 @@ def main():
     ap.add_argument("--reuse", action="store_true",
                     help="keep an existing --out only if its manifest matches these settings and its sha256 "
                          "(a file without manifest is kept only if a rebuild is byte-identical); otherwise rebuild")
+    ap.add_argument("--thoughts", help="lifemate.rationale output (gen/rationale_<tag>.jsonl): start every assistant "
+                                       "turn with a <think> block (D2)")
     a = ap.parse_args()
 
     out = Path(a.out)
@@ -353,8 +401,13 @@ def main():
             sys.exit(f"{len(outside)} extra samples come from outside --fit, e.g. {outside[:5]}")
         samples = samples + extra
     asr = {r["audio"]: r["text"] for r in load_jsonl(a.asr_file)} if a.asr_file else None
+    thoughts = {r["id"]: r for r in load_jsonl(a.thoughts) if "error" not in r} if a.thoughts else None
+    stats: dict = {}
     rows = build_all(samples, tools, apps, pool, rename=a.rename, p_remove=a.p_remove, p_distract=a.p_distract,
-                     p_lower=a.p_lower, history=a.history, drop_apps=drop, asr=asr, seed=a.seed)
+                     p_lower=a.p_lower, history=a.history, drop_apps=drop, asr=asr, seed=a.seed, thoughts=thoughts,
+                     stats=stats)
+    if thoughts is not None:
+        print(json.dumps({"thoughts": len(thoughts), "samples_without_thoughts": stats.get("no_thoughts", 0)}))
     data = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows).encode()
     new_sha = runinfo.sha256_bytes(data)
     status = "new"
@@ -392,6 +445,7 @@ def _spec(a) -> dict:
         "drop_apps": sorted(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else [],
         "asr_sha256": runinfo.sha256_file(a.asr_file) if a.asr_file else None,
         "extra_samples_sha256": runinfo.sha256_file(a.extra_samples) if getattr(a, "extra_samples", None) else None,
+        "thoughts_sha256": runinfo.sha256_file(a.thoughts) if getattr(a, "thoughts", None) else None,
         "inputs_sha256": {k: runinfo.sha256_file(p) for k, p in files.items()},
         "code_sha256": runinfo.code_digest(("data.py", "prompt.py", "sft.py")),
     }

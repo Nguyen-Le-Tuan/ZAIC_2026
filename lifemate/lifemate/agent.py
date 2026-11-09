@@ -321,7 +321,12 @@ class Agent:
                         step["calls"].append(retry[0])
             results += [{"ok": False, "error": e} for e in errors]
             step["results"] = results  # what the model is shown next; kept so audits need no replay
-            msgs.append({"role": "assistant", "content": render_calls(processed) if processed else out})
+            # a model trained with thoughts (lifemate.sft --thoughts) wrote "<think>...</think>\n\n" before its calls;
+            # the training sequences keep that block in front of the step's calls, so the next prompts keep it too.
+            # Models trained without thoughts write none, and an empty block (zero-shot prefix) is dropped as before.
+            think = _THINK.search(out)
+            kept = think.group(0) + "\n\n" if think and think.group(0)[7:-8].strip() else ""
+            msgs.append({"role": "assistant", "content": kept + render_calls(processed) if processed else out})
             msgs.append({"role": "user", "content": render_results(results)})
             visible += "\n" + msgs[-1]["content"]
             if stop:

@@ -1,0 +1,34 @@
+# Cloud arms for 09-10/11/2026 (docs/RANKING_FINAL_WEEK_2026-11-08.md, leader's machine): which agent model and
+# whether D2 thoughts help on unseen apps. Every arm: the 4-bit recipe of the submitted adapter (QLoRA r32, lr 2e-4,
+# 1 epoch, 8-bit AdamW, max length 6144) on fit_lao -> dev_lao (262 samples, 6 held-out apps), rolled out on
+# audio_text (runs/sft_<TAG>) and on PhoWhisper-ft text (runs/sft_<TAG>_asr; asr/train_dev_union_phoft.jsonl, made on
+# the leader's RTX 3050 with the 05/11 image). Budget 60 s per sample (dev runs, as before); seeds vary only training.
+# Setup: MODELS="Qwen/Qwen3-4B-Thinking-2507 principled-intelligence/Qwen3.5-4B-text-only" \
+#        SMOKE_MODELS="principled-intelligence/Qwen3.5-4B-text-only Qwen/Qwen3-4B-Thinking-2507" \
+#        bash lifemate/scripts/cloud_setup.sh
+# Run:   nohup bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-11-09_models_d2.txt > arms.log 2>&1 &
+# Lines go round-robin over the GPUs (line 1 -> GPU 0, ...). With 4 GPUs: A0, A1 s0, A2 s0, A3 s0 first, then the s1
+# seeds, so after the first round every question already has one answer.
+# Rule written before the results (RANKING section 5): an arm wins when the mean of its 2 seeds on dev_lao
+# PhoWhisper-ft text is >= the C0 mark + 3.0 (C0: about 41.1 over 3 earlier runs, recalibrated with A0 on this
+# machine) and its audio_text score does not drop by more than 2.0.
+
+# A0. Parity: the submitted recipe itself (Qwen3-4B-Instruct-2507), seed 0. Earlier runs: laptop 53.40 / 41.30,
+#     2x4090 seed 0 53.73 / 40.81, seed 1 49.37 / 41.18 (audio_text / PhoWhisper-ft).
+train TAG=a0_q4b4_lao_s0 MODEL=Qwen/Qwen3-4B-Instruct-2507 LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl TRAIN_ARGS=--max-len,6144,--seed,0
+
+# A1. Qwen3.5-4B text-only (4.206B; hybrid: 24 Gated DeltaNet + 8 full-attention layers): LoRA also on the linear
+#     attention projections, otherwise 3 of 4 attention layers would get no adapter.
+train TAG=a1_q35t_lao_s0 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,0
+
+# A2. Qwen3-4B-Thinking-2507 (same architecture and size as A0) trained to write the D2 thought before each step.
+train TAG=a2_q4bthink_d2_lao_s0 MODEL=Qwen/Qwen3-4B-Thinking-2507 LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl THOUGHTS=gen/rationale_d2all.jsonl TRAIN_ARGS=--max-len,6144,--seed,0
+
+# A3. The submitted model (Qwen3-4B-Instruct-2507) with D2 thoughts: separates the effect of the thoughts from A2's
+#     change of base model.
+train TAG=a3_q4b4_d2_lao_s0 MODEL=Qwen/Qwen3-4B-Instruct-2507 LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl THOUGHTS=gen/rationale_d2all.jsonl TRAIN_ARGS=--max-len,6144,--seed,0
+
+# Second seeds (the rule needs 2 per arm; A0's second seed is the 3 earlier runs).
+train TAG=a1_q35t_lao_s1 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,1
+train TAG=a2_q4bthink_d2_lao_s1 MODEL=Qwen/Qwen3-4B-Thinking-2507 LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl THOUGHTS=gen/rationale_d2all.jsonl TRAIN_ARGS=--max-len,6144,--seed,1
+train TAG=a3_q4b4_d2_lao_s1 MODEL=Qwen/Qwen3-4B-Instruct-2507 LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft.jsonl THOUGHTS=gen/rationale_d2all.jsonl TRAIN_ARGS=--max-len,6144,--seed,1

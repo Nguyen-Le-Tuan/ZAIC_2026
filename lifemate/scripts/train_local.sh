@@ -10,7 +10,10 @@
 #   ASR_FIT=asr/x.jsonl (user turns of the SFT rows from that ASR file instead of audio_text; train file
 #   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr),
 #   LOAD_4BIT=1 (QLoRA: base in NF4 with 8-bit AdamW for training, and the same 4-bit load for every rollout; no
-#   teacher-forced loss pass, train.py logs the dev loss), TIME_BUDGET (rollout seconds per sample, default 25).
+#   teacher-forced loss pass, train.py logs the dev loss), TIME_BUDGET (rollout seconds per sample, default 25),
+#   THOUGHTS=gen/rationale_x.jsonl (D2: sft --thoughts for fit and dev; train file sft/${FIT}_$TAG.jsonl, dev loss
+#   file sft/${DEV}_thoughts.jsonl), LORA_TARGETS=a,b,c (lifemate.train --lora-targets; Qwen3.5 also needs
+#   in_proj_qkv,in_proj_z,out_proj).
 #   4B on the laptop (JOURNAL entries 55-58; about 5.5 h train + 1.2 h per rollout):
 #   MODEL=Qwen/Qwen3-4B-Instruct-2507 TAG=q4b4_x LOAD_4BIT=1 TIME_BUDGET=60 SKIP_ZS=1 EVAL_STEPS=0 \
 #     TRAIN_ARGS="--max-len 6144 --state-every 10" bash scripts/train_local.sh
@@ -29,6 +32,15 @@ case $LOAD_4BIT in 1) QTRAIN="--load-4bit --optim adamw8bit"; CK_LOSS=0 ;; 0) QT
 PY=.venv/bin/python
 case $FIT in fit_lao) FIT_SFT_ARGS=${FIT_SFT_ARGS:---drop-apps splits/heldout_apps.json} ;; *) FIT_SFT_ARGS=${FIT_SFT_ARGS:-} ;; esac
 SFT_FIT=sft/$FIT.jsonl
+SFT_DEV=sft/$DEV.jsonl
+DEV_SFT_ARGS=""
+if [ -n "${THOUGHTS:-}" ]; then
+  [ -f "$THOUGHTS" ] || { echo "no $THOUGHTS" >&2; exit 1; }
+  FIT_SFT_ARGS="$FIT_SFT_ARGS --thoughts $THOUGHTS"
+  SFT_FIT=sft/${FIT}_$TAG.jsonl
+  DEV_SFT_ARGS="--thoughts $THOUGHTS"
+  SFT_DEV=sft/${DEV}_thoughts.jsonl
+fi
 if [ -n "${EXTRA_SAMPLES:-}" ]; then
   [ -f "$EXTRA_SAMPLES" ] || { echo "no $EXTRA_SAMPLES" >&2; exit 1; }
   FIT_SFT_ARGS="$FIT_SFT_ARGS --extra-samples $EXTRA_SAMPLES"
@@ -67,16 +79,21 @@ overlap=$(comm -12 <(tr -s ' \n' '\n' < "splits/$FIT.txt" | sort -u) <(tr -s ' \
 # shellcheck disable=SC2086
 $PY -m lifemate.sft --reuse --fit "splits/$FIT.txt" $FIT_SFT_ARGS --out "$SFT_FIT"
 $PY -m lifemate.sft --reuse --fit "splits/$DEV.txt" --rename 0 --p-remove 0 --p-distract 0 --p-lower 0 --out "sft/$DEV.jsonl"
+if [ "$SFT_DEV" != "sft/$DEV.jsonl" ]; then   # dev loss in the same format as the training rows
+  # shellcheck disable=SC2086
+  $PY -m lifemate.sft --reuse --fit "splits/$DEV.txt" --rename 0 --p-remove 0 --p-distract 0 --p-lower 0 $DEV_SFT_ARGS \
+      --out "$SFT_DEV"
+fi
 
 if [ "${SKIP_ZS:-0}" != 1 ]; then
   stamp "zero-shot baseline on $DEV"
   TAG="$TAG" MODEL="$MODEL" DEV="$DEV" bash scripts/eval_ckpt.sh     # -> runs/zs_$TAG*
 fi
 
-stamp "training $MODEL on $SFT_FIT ($EPOCHS epoch), dev loss on every row of sft/$DEV.jsonl"
+stamp "training $MODEL on $SFT_FIT ($EPOCHS epoch), dev loss on every row of $SFT_DEV"
 # shellcheck disable=SC2086
-$PY -m lifemate.train --model "$MODEL" --data "$SFT_FIT" --eval-data "sft/$DEV.jsonl" \
-    --epochs "$EPOCHS" --out "ckpt/$TAG" $QTRAIN ${TRAIN_ARGS:-}
+$PY -m lifemate.train --model "$MODEL" --data "$SFT_FIT" --eval-data "$SFT_DEV" \
+    --epochs "$EPOCHS" --out "ckpt/$TAG" $QTRAIN ${LORA_TARGETS:+--lora-targets "$LORA_TARGETS"} ${TRAIN_ARGS:-}
 
 stamp "rollout eval on $DEV (oracle text) of the saved checkpoints"
 CKPTS=(final)

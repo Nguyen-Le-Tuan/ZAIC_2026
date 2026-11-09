@@ -32,7 +32,7 @@ mapfile -t LINES < <(sed -e 's/#.*//' -e 's/[[:space:]]*$//' "$ARMS" | grep -v '
 for l in "${LINES[@]}"; do   # validate everything before starting anything
   read -r kind rest <<< "$l"
   [[ $kind == train || $kind == eval ]] || { echo "bad kind in: $l" >&2; exit 1; }
-  for kv in $rest; do [[ $kv =~ ^[A-Z_]+=[^[:space:]]*$ ]] || { echo "bad KEY=value '$kv' in: $l" >&2; exit 1; }; done
+  for kv in $rest; do [[ $kv =~ ^[A-Z_][A-Z0-9_]*=[^[:space:]]*$ ]] || { echo "bad KEY=value '$kv' in: $l" >&2; exit 1; }; done
   [[ " $rest" == *" TAG="* ]] || { echo "no TAG in: $l" >&2; exit 1; }
 done
 

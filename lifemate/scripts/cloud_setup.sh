@@ -16,6 +16,14 @@ ROOT=$(cd .. && pwd)
 TORCH_VERSION=2.15.0
 declare -A REV=([Qwen/Qwen3-1.7B]=70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
                 [Qwen/Qwen3-4B-Instruct-2507]=cdbee75f17c01a7cc42f958dc650907174af0554)
+# extra base models for arms files that need them (MODELS="a b" downloads only those plus the two above), pinned
+# 08/11/2026: Thinking-2507 (A2), Qwen3.5-4B text-only = Qwen/Qwen3.5-4B without vision/MTP weights (A1)
+declare -A EXTRA_REV=([Qwen/Qwen3-4B-Thinking-2507]=768f209d9ea81521153ed38c47d515654e938aea
+                      [principled-intelligence/Qwen3.5-4B-text-only]=efe91c59becdb61ece99546002ab3ce51606ea1b)
+for m in ${MODELS:-}; do
+  [ -n "${EXTRA_REV[$m]:-}" ] || { echo "SETUP FAILED: no pinned revision for $m in EXTRA_REV" >&2; exit 1; }
+  REV[$m]=${EXTRA_REV[$m]}
+done
 SMOKE_MODELS=${SMOKE_MODELS:-"Qwen/Qwen3-4B-Instruct-2507 Qwen/Qwen3-1.7B"}
 stamp() { echo "[$(date '+%F %T')] $*"; }
 die() { echo "SETUP FAILED: $*" >&2; exit 1; }

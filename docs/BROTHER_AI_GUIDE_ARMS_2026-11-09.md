@@ -122,8 +122,8 @@ ls -l ~/zac_cloud_bundle_20261109_arms.tar.gz
 sha256sum ~/zac_cloud_bundle_20261109_arms.tar.gz
 ```
 
-- Kích thước phải là **KICH_THUOC** byte.
-- sha256 phải là `SHA256_GOI`.
+- Kích thước phải là **251610252** byte (240 MB; tạo từ commit `39f380a` của nhánh `search-guard`).
+- sha256 phải là `dae91476a09ef90380f3dbc3cdcc872164fedced41164d8eebc2eead1367be8f`.
 - Khác thì tải lại; vẫn khác thì dừng và báo.
 
 ## B4. Chạy, đúng một lệnh

@@ -42,7 +42,8 @@ case $WITH_AUDIO in
   0) skip=(--exclude='train+public_test/*/audio') ;;
   *) echo "WITH_AUDIO must be 0, 1 or train" >&2; exit 1 ;;
 esac
-(cd "$SRC/data" && tar -c "${skip[@]}" --exclude='.DS_Store' --exclude='__pycache__' train+public_test) | tar -x -C "$B/data"
+# -h: data/train+public_test may be a symlink (a git worktree that points at the main checkout's data)
+(cd "$SRC/data" && tar -ch "${skip[@]}" --exclude='.DS_Store' --exclude='__pycache__' train+public_test) | tar -x -C "$B/data"
 cp -a "$SRC/lifemate/gen" "$B/lifemate/gen"
 mkdir -p "$B/lifemate/asr"
 for f in "$SRC"/lifemate/asr/train_*; do

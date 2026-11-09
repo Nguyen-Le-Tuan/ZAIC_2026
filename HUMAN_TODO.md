@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:32 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:22 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
 > - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
 > - **17:25 ngày 09/11:** **Public có bật D5: 52,68 (+1,61 so với 51,07). Giữ D5** theo luật viết trước; Leader đổi mặc định `SEARCH_GUARD=1` và build L9 từ bản có D5. **Leader đồng ý D1; trần API bỏ giới hạn; Claude bắt đầu cửa 0 (CPU).** Máy anh trai chạy từ khoảng 12:00, giai đoạn 1 xong khoảng 05:00–06:00 ngày 10/11 (JOURNAL entry 119).
 > - **17:15 ngày 09/11:** **Anh muốn làm D1 (sinh dữ liệu) bằng key Claude và Meta; chờ Anh quyết B38.** Đợt chạy trên máy anh trai gồm 9–10 lượt train, 22–26 giờ, nên trước 13/11 chỉ còn chỗ cho khoảng một đợt nữa (JOURNAL entry 118; sửa entry 117).

@@ -22,6 +22,16 @@ from pathlib import Path
 from . import runinfo
 from .agent import Agent, HFBackend, OpenAICompletionsBackend, OracleBackend, PrefixBackend, VLLMBackend
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl, zaic_tools
+from .prompt import build_messages, to_chatml
+
+WARMUP_TEXT = "Xin chào."
+
+
+def warmup_prompt(item: dict, tools: dict, apps: dict) -> str:
+    """A full-length prompt for the untimed warm-up generation: the system prompt (rules, profile, calendar, tools)
+    built from the sample's `context` only, plus a fixed greeting. No audio, text, history or label of the sample
+    is used, and no ToolEnv is created, so the one-environment-per-sample rule is untouched."""
+    return to_chatml(build_messages({"context": item["context"], "history": []}, WARMUP_TEXT, [], tools, apps))
 
 
 def texts_for(item: dict, source: str, asr: dict | None) -> tuple[str, list[str]]:
@@ -55,6 +65,8 @@ def main():
                     help="seconds per sample, ASR included (with --text asr, the ASR file's per-wav seconds count)")
     ap.add_argument("--max-tokens", type=int, default=512, help="cap on generated tokens per step (gold steps: max 200)")
     ap.add_argument("--no-id-guard", action="store_true", help="do not block write calls with IDs never shown")
+    ap.add_argument("--no-warmup", action="store_true",
+                    help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
     ap.add_argument("--trace")
     ap.add_argument("--seed", type=int, default=0)
@@ -86,6 +98,12 @@ def main():
         shared = HFBackend(a.model, a.adapter, max_tokens=a.max_tokens, load_4bit=a.load_4bit)
     if shared is not None and a.assistant_prefix:
         shared = PrefixBackend(shared, a.assistant_prefix.encode().decode("unicode_escape"))
+    warmup_s = None
+    if shared is not None and hasattr(shared, "warmup") and items and not a.no_warmup:
+        tw = time.monotonic()
+        shared.warmup(warmup_prompt(items[0], tools, apps))
+        warmup_s = round(time.monotonic() - tw, 3)
+        print(json.dumps({"warmup_s": warmup_s}), flush=True)
 
     def infer(item):
         t0 = time.monotonic()
@@ -119,10 +137,11 @@ def main():
         "ids": runinfo.ids_digest(s["id"] for s in items), "ids_file_sha256": runinfo.sha256_file(a.ids) if a.ids else None,
         "model": a.model if a.backend != "oracle" else None, "adapter": adapter, "backend": a.backend,
         "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
-        "timing": timing, "stops": dict(Counter(t["stop"] for _, t in out)),
+        "timing": timing, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
         "id_guard_blocked": sum(len(s.get("blocked", [])) for _, t in out for s in t["steps"]),
         "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit. "
-                "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget"})
+                "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget. "
+                "warmup_s: the one untimed generation after loading, counted in no sample"})
     print(json.dumps({"n": len(out), "out": a.out, **timing}))
 
 

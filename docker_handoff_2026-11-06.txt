@@ -1,0 +1,53 @@
+ẢNH DOCKER ĐỂ KIỂM TRÊN LAPTOP RTX 4070 (CHƯA PHẢI GÓI NỘP BTC)
+
+Model giữ nguyên bản ngày 05/11: PhoWhisper-ft + q4b4_all/final.
+Image: zaic-lifemate:phoft-2026-11-05
+Image ID (docker inspect --format '{{.Id}}' zaic-lifemate:phoft-2026-11-05):
+sha256:a7f7905c5423128a69bd48ee8c6488665cd87491c05e915dc4fbf7dbf567a14a
+
+File: zac_lifemate_2026-11-05.tar
+Google Drive (chỉ chủ file và ttruyenanh@gmail.com được truy cập, quyền Viewer):
+https://drive.google.com/file/d/1oiyJsZP4UEkxAsi0m98FHkfYOQDJsp0B/view
+Kích thước: 12.635.573.248 byte
+SHA-256: 190bdeeb6157708d7e851c7f508ba2c583f22a15c939354d55d7753fd4f166a8
+Lệnh xuất: docker save zaic-lifemate:phoft-2026-11-05 -o zac_lifemate_2026-11-05.tar
+Lệnh nhận: docker load -i zac_lifemate_2026-11-05.tar
+
+LỆNH ĐÃ CHẠY TRÊN MÁY RTX 3050, TẮT MẠNG, 3 ID
+
+printf 'public_0002\npublic_0003\npublic_0004\n' > /tmp/zaic_ids_smoke.txt
+docker run --rm --network none \
+  --device=/dev/nvidia0 --device=/dev/nvidiactl --device=/dev/nvidia-uvm \
+  --mount type=bind,source=/usr/lib/x86_64-linux-gnu/libcuda.so.615.71.09,target=/usr/local/lib/libcuda.so.1,readonly \
+  --mount type=bind,source=/usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.615.71.09,target=/usr/local/lib/libnvidia-ptxjitcompiler.so.1,readonly \
+  --mount type=bind,source=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.615.71.09,target=/usr/local/lib/libnvidia-ml.so.1,readonly \
+  -e LD_LIBRARY_PATH=/usr/local/lib \
+  -v /home/nguyenletuan/Desktop/ZAIC_2026/data/train+public_test:/app/data/train+public_test:ro \
+  -v /home/nguyenletuan/Desktop/ZAIC_2026/lifemate/runs:/app/lifemate/runs \
+  -v /tmp/zaic_ids_smoke.txt:/app/lifemate/ids_smoke.txt:ro \
+  -e SPLIT=public_test -e DATA=/app/data/train+public_test \
+  -e ASR_MODEL=ckpt/asr_phoft/merged -e ADAPTER=ckpt/q4b4_all/final \
+  -e OUT=runs/submission.jsonl -e IDS=ids_smoke.txt \
+  zaic-lifemate:phoft-2026-11-05 bash scripts/predict.sh
+
+Mount dữ liệu: /app/data/train+public_test (read-only). Output: /app/lifemate/runs/submission.jsonl, /app/lifemate/runs/submission_check.json, cùng ASR và trace. Trên máy RTX 3050 thiếu NVIDIA Container Toolkit nên lệnh phải mount driver 615.71.09 thủ công; các đường dẫn thư viện này là riêng của máy đó. Nếu laptop RTX 4070 đã cài toolkit, thay toàn bộ --device/--mount thư viện/-e LD_LIBRARY_PATH bằng --gpus all và đổi các đường dẫn -v theo máy của Anh. Các biến khác dùng mặc định: LOAD_4BIT=1, TIME_BUDGET=25, WARMUP=1.
+
+Lệnh gọn cho RTX 4070 nếu đã có NVIDIA Container Toolkit (chạy từ thư mục lifemate/):
+printf 'public_0002\npublic_0003\npublic_0004\n' > ids_smoke.txt
+docker run --rm --gpus all --network none \
+  -v "$PWD/../data/train+public_test:/app/data/train+public_test:ro" \
+  -v "$PWD/runs:/app/lifemate/runs" \
+  -v "$PWD/ids_smoke.txt:/app/lifemate/ids_smoke.txt:ro" \
+  -e SPLIT=public_test -e DATA=/app/data/train+public_test \
+  -e ASR_MODEL=ckpt/asr_phoft/merged -e ADAPTER=ckpt/q4b4_all/final \
+  -e OUT=runs/submission.jsonl -e IDS=ids_smoke.txt \
+  zaic-lifemate:phoft-2026-11-05 bash scripts/predict.sh
+
+Để chạy 634 mẫu, bỏ mount file ids và -e IDS. Hai lượt đầy đủ nên đặt OUT khác nhau, ví dụ runs/public_run1.jsonl và runs/public_run2.jsonl; script không ghi đè output cũ và mỗi OUT có file ASR/trace/check riêng.
+
+Kết quả máy RTX 3050: ASR của 3 mẫu khớp nguyên văn tham chiếu; agent hết VRAM trong warmup, nên chưa có submission_check.json hoặc kết quả "ok". File ASR smoke đã được đổi tên thành runs/smoke_3050_asr.jsonl để không tái sử dụng nhầm khi chạy toàn bộ public.
+
+HƯỚNG DẪN DOCKER CHÍNH THỨC CỦA BTC
+https://dl-challenge.zalo.ai/2026/lifemate_argfzdgert/Docker_Guide_ZAC2026_LifeMate.pdf
+
+Guide ghi máy chấm 1 x RTX 5090 32 GB, driver 595.58.03, CUDA 13.2. Image nộp cuối phải dùng CUDA base không cao hơn 13.2, có /code/predict.sh, nhận /data, ghi /result/submission.jsonl (có trường time), có JupyterLab, /code/start_jupyter.sh, predict_notebook.ipynb, training_code/ và README mô tả training/inference. BTC yêu cầu nén image thành .tar.gz, tính MD5 và nộp link Drive ở chế độ Anyone with the link. Image hiện tại chưa được chỉnh theo giao diện/đầy đủ tài liệu này; chỉ dùng để kiểm nội bộ, không nộp nguyên trạng lên BTC.

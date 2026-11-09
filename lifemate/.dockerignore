@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.tar
+runs/
+asr/
+sft/
+gen/
+cloud_results/
+ckpt/asr_turboft/
+ckpt/q4b4_fit_random/

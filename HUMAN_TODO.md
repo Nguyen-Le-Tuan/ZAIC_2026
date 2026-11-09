@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:22 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:41 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
 > - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
 > - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
 > - **17:25 ngày 09/11:** **Public có bật D5: 52,68 (+1,61 so với 51,07). Giữ D5** theo luật viết trước; Leader đổi mặc định `SEARCH_GUARD=1` và build L9 từ bản có D5. **Leader đồng ý D1; trần API bỏ giới hạn; Claude bắt đầu cửa 0 (CPU).** Máy anh trai chạy từ khoảng 12:00, giai đoạn 1 xong khoảng 05:00–06:00 ngày 10/11 (JOURNAL entry 119).
@@ -280,7 +281,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - trang nộp có nhận dòng có trường `time` không;
     - điểm so với 51,16. 625/634 dòng giống hệt file 51,16; 9 dòng bị hạn 25 giây cắt các lời gọi cuối, nên điểm có thể thấp hơn tối đa khoảng 1,4.
   - **Điểm thấp hơn 51,16 quá 1,4 thì báo Claude:** khi đó có chỗ khác ngoài hạn 25 giây.
-- [ ] **B34. (16:45 ngày 08/11)** (5 phút) **[Anh] Khoá thư mục Drive và dọn dữ liệu trên máy anh trai.**
+- [ ] **B34. (16:45 ngày 08/11)** *(18:41 ngày 09/11: chưa làm. Gói train mới cũng nằm trong thư mục, quyền của gói vẫn là "ai có link đều sửa được". Leader là chủ thư mục; tài khoản của Anh cũng có nút "Manage access" nên có thể tự đổi; JOURNAL entry 122.)* (5 phút) **[Anh] Khoá thư mục Drive và dọn dữ liệu trên máy anh trai.**
   - **Thư mục Drive `ZAIC_2026`:** đang xem được mà không cần đăng nhập, tức chế độ "Bất kỳ ai có đường liên kết". Trong đó có hai gói chứa dữ liệu thi có licence (`zac_cloud_bundle_20261031_v3.tar.gz`, `zac_cloud_bundle_20261106_synthv2.tar.gz`) và file image `gui_leader_phoft_2026-11-05.tar` (3,14 GB).
     - Chuyển thư mục sang "Hạn chế": Chia sẻ → Quyền truy cập chung → Hạn chế.
     - Xoá hai gói, vì pilot đã xong và không có lần chạy 2.

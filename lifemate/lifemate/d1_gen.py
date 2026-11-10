@@ -101,6 +101,13 @@ class Intent:
     must: list = field(default_factory=list)    # words the request has to contain
     kind: str = "execute"                      # execute | lookup | ask
     hits: dict = field(default_factory=dict)    # call_key of a read -> how many results it must return (">=2", "1", ">=1")
+    prev_say: str | None = None                # follow-up scenarios: what the user asked in the turn before
+
+
+# How often a gold label fills an OPTIONAL argument, by the argument's type: measured on the fit_lao labels of the 40
+# apps that are not held out (JOURNAL entry 124), so the same numbers serve the held-out apps and the public-only ones.
+OPT = {"w_enum": 0.30, "w_text": 0.12, "w_int": 0.40, "w_datetime": 0.84, "w_array": 0.05, "r_search_extra": 0.10, "r_get_enum": 0.32}
+FOLLOWUP_SHARE = 0.23   # IDs of gold writes that come from the history, not from a read in the turn (249 of 1071)
 
 
 def call(tool: str, /, **args) -> dict:
@@ -312,7 +319,7 @@ def app_grocery(rng, now, profile):
         say = "thêm vào giỏ đi chợ: " + ", ".join(f"{q} {p['unit']} «{short[p['id']]}»" for p, q in zip(ps, qs))
         if checkout:
             when = None
-            if rng.random() < 0.35:
+            if rng.random() < OPT["w_datetime"]:
                 dt, ph = pick_datetime(rng, now, days=(0, 2), hours=(8, 20))
                 when = iso(dt)
                 say += f", rồi đặt hàng luôn, giao lúc {ph}"
@@ -402,7 +409,7 @@ def app_recipes(rng, now, profile):
 
     def look():
         r = rng.choice(recs)
-        if rng.random() < 0.4:
+        if rng.random() < OPT["r_search_extra"]:
             n = rng.choice([x for x in (2, 3, 5, 6, 8, 10) if x != r["servings"]])
             return Intent(f"hỏi nấu món «{r['name']}» cho {n} người thì cần những nguyên liệu gì", reads=[call("recipes.search", query=r["name"], servings=n)],
                           must=[r["name"]], kind="lookup")
@@ -456,7 +463,8 @@ def app_parking(rng, now, profile):
         dt, ph = pick_datetime(rng, now, days=(0, 3), hours=(7, 20))
         h = rng.choice([1, 2, 2, 3, 4])
         return Intent(f"đặt chỗ đỗ xe gần «{lot['area']}» từ {ph}, trong {h} tiếng", [call("parking.reserve", lot_id=lot["id"], from_time=iso(dt), hours=h)],
-                      refs={lot["id"]: {"mention": lot["area"], "slots": {"near": lot["area"]}}}, must=[lot["area"]])
+                      refs={lot["id"]: {"mention": lot["area"], "slots": {"near": lot["area"]}}}, must=[lot["area"]],
+                      prev_say=f"hỏi gần «{lot['area']}» có bãi đỗ xe nào")
 
     def end():
         if not sessions:
@@ -507,7 +515,8 @@ def app_train_bus_tickets(rng, now, profile):
         return Intent(f"đặt {seats} vé {kind} từ «{t['origin']}» đi «{t['destination']}» {day_phrase(now, _day(t))}, chuyến khởi hành lúc {time_phrase(hh, mm)}",
                       [call("train_bus_tickets.book", trip_id=t["id"], seats=seats)],
                       refs={t["id"]: {"mention": None, "slots": {"origin": t["origin"], "destination": t["destination"], "date": t["date"]}}},
-                      must=[t["origin"], t["destination"]])
+                      must=[t["origin"], t["destination"]],
+                      prev_say=f"hỏi {day_phrase(now, _day(t))} có những chuyến tàu xe nào từ «{t['origin']}» đi «{t['destination']}»")
 
     def cancel():
         if not bookings:
@@ -551,7 +560,7 @@ def app_ecommerce(rng, now, profile):
         ws = [call("ecommerce.add_to_cart", product_id=p["id"], quantity=q)]
         say = f"thêm {q} cái «{short[p['id']]}» vào giỏ hàng trên sàn mua sắm"
         if checkout:
-            pay = rng.choice([None, None, "ewallet", "bank"])
+            pay = rng.choice(["ewallet", "bank"]) if rng.random() < OPT["w_enum"] else None
             say += ", rồi đặt hàng luôn" + ({"ewallet": ", thanh toán bằng ví điện tử", "bank": ", thanh toán chuyển khoản ngân hàng"}.get(pay, ""))
             ws.append(call("ecommerce.checkout", payment=pay))
         return Intent(say, ws, refs={p["id"]: {"mention": short[p["id"]]}}, must=[short[p["id"]]])
@@ -577,7 +586,7 @@ def app_ecommerce(rng, now, profile):
         if rng.random() < 0.5:
             return Intent("hỏi các đơn hàng trên sàn mua sắm đang ở trạng thái nào", reads=[call("ecommerce.order_status")], kind="lookup")
         p = rng.choice(prods)
-        if rng.random() < 0.35:
+        if rng.random() < OPT["r_search_extra"]:
             cap = rng.choice([x for x in (300000, 500000, 1000000, 2000000, 3000000) if x >= p["price"]] or [10000000])
             return Intent(f"tìm «{p['category']}» trên sàn mua sắm giá dưới {money_phrase(cap)}", reads=[call("ecommerce.search", query=p["category"], max_price=cap)],
                           must=[p["category"]], kind="lookup")
@@ -608,7 +617,7 @@ def app_stocks(rng, now, profile):
             sym = rng.choice(quotes)["symbol"]; q = rng.choice([100, 200, 300, 500, 1000])
         price = None
         say = f"đặt lệnh {'mua' if side == 'buy' else 'bán'} {q} cổ phiếu mã «{sym}»"
-        if rng.random() < 0.3:
+        if rng.random() < OPT["w_int"]:
             base = next(x["price"] for x in quotes + holdings if x["symbol"] == sym)
             price = int(round(base * rng.choice([0.97, 0.99, 1.01, 1.03]), -2))
             say += f" với giá {price} đồng một cổ"
@@ -697,8 +706,8 @@ def app_robot_vacuum(rng, now, profile):
     words = {"vacuum": "hút bụi", "mop": "lau nhà", "both": "vừa hút bụi vừa lau"}
 
     def start():
-        mode = rng.choice([None, None, "mop", "both"])
-        if rng.random() < 0.45:
+        mode = rng.choice(["mop", "both"]) if rng.random() < OPT["w_enum"] else None
+        if rng.random() < 0.45:   # whole house; kept at the blind guess (the real share is lower: see scripts/d1_compare.py)
             return Intent(f"cho robot {words.get(mode, 'dọn')} cả nhà", [call("robot_vacuum.start", mode=mode)])
         rs = rng.sample(rooms, rng.choice([1, 1, 2]))
         return Intent(f"cho robot {words.get(mode, 'hút bụi')} ở " + " và ".join(f"«{r}»" for r in rs),
@@ -747,12 +756,16 @@ def app_medication(rng, now, profile):
     def add():
         name = rng.choice([m for m in MEDS if m not in rows])
         times = rng.choice([["07:00"], ["08:00"], ["21:30"], ["07:00", "19:00"], ["06:30", "12:00", "20:00"], ["22:00"]])
-        days = rng.choice([None, None, "weekdays"])
-        say = f"thêm lịch nhắc uống «{name}» lúc " + " và ".join(time_phrase(*map(int, x.split(":"))) for x in times) + (" các ngày trong tuần, trừ cuối tuần" if days else " mỗi ngày")
+        days = rng.choice(["weekdays", "daily"]) if rng.random() < OPT["w_enum"] else None
+        say = f"thêm lịch nhắc uống «{name}» lúc " + " và ".join(time_phrase(*map(int, x.split(":"))) for x in times) + ({"weekdays": " các ngày trong tuần, trừ cuối tuần", "daily": " tất cả các ngày"}.get(days, ""))
         return Intent(say, [call("medication.add", name=name, times=times, days=days)], must=[name])
 
     def taken():
         s = rng.choice(sch)
+        if rng.random() < OPT["w_datetime"]:
+            dt = (now - timedelta(minutes=rng.choice([0, 15, 30, 60, 90]))).replace(minute=rng.choice([0, 15, 30, 45]), second=0, microsecond=0)
+            return Intent(f"ghi nhận mình đã uống «{s['name']}» lúc {time_phrase(dt.hour, dt.minute)} {day_phrase(now, dt)}",
+                          [call("medication.log_taken", schedule_id=s["id"], time=iso(dt))], refs={s["id"]: {"mention": s["name"]}}, must=[s["name"]])
         return Intent(f"ghi nhận mình vừa uống «{s['name']}» rồi", [call("medication.log_taken", schedule_id=s["id"])], refs={s["id"]: {"mention": s["name"]}}, must=[s["name"]])
 
     def remove():
@@ -777,7 +790,7 @@ def app_video_meeting(rng, now, profile):
     def create():
         title = rng.choice([m for m in MEETINGS if m not in rows])
         dt, ph = pick_datetime(rng, now, days=(0, 5), hours=(8, 20))
-        if rng.random() < 0.5:
+        if rng.random() >= OPT["w_array"]:
             return Intent(f"tạo phòng họp trực tuyến «{title}» lúc {ph}", [call("video_meeting.create", title=title, start=iso(dt))], must=[title])
         who = rng.sample(contacts, rng.choice([1, 1, 2]))
         return Intent(f"tạo phòng họp trực tuyến «{title}» lúc {ph}, mời " + " và ".join(f"«{c['name']}»" for c in who),
@@ -925,6 +938,38 @@ def check(calls, results, hits, tools) -> str | None:
     return None
 
 
+LIST_SAY = {  # what a user asks when the previous turn only listed things (readers without arguments)
+    "pantry.list_items": "hỏi trong tủ bếp còn những gì", "habit_tracker.list_habits": "hỏi mình đang theo dõi những thói quen nào",
+    "ecommerce.order_status": "hỏi các đơn hàng trên sàn mua sắm đang thế nào", "parking.list_sessions": "hỏi mình đang đặt những chỗ đỗ xe nào",
+    "train_bus_tickets.my_bookings": "hỏi mình đã đặt những vé tàu xe nào", "medication.list": "hỏi mình đang có những lịch uống thuốc nào",
+    "video_meeting.list_meetings": "hỏi sắp tới có những cuộc họp trực tuyến nào", "home_security.list_alerts": "hỏi nhà mình vừa có cảnh báo an ninh gì",
+    "loyalty.get_points": "hỏi điểm thành viên của mình", "robot_vacuum.get_status": "hỏi robot hút bụi đang thế nào"}
+
+
+def followup_parts(main: Intent, calls: list[dict], results: list, tools: dict) -> dict | None:
+    """Split the label of an ID-needing intent into the turn before (its reads, asked as a question) and this turn (the
+    writes alone: gold takes an ID that is already in the history without reading again). None when nothing is read."""
+    reads = [(c, r) for c, r in zip(calls, results) if c["name"] != ASK and tools[c["name"]]["kind"] == "read"]
+    if not reads or len(reads) == len(calls) or main.reads or main.ask:
+        return None
+    if main.prev_say:
+        say = [main.prev_say]
+    else:
+        say = []
+        for c, _ in reads:
+            q = next((v for k, v in c["arguments"].items() if isinstance(v, str)), None)
+            say.append(f"hỏi thông tin về «{q}»" if q else LIST_SAY.get(c["name"], "hỏi trong app đang có những gì"))
+    names = []
+    for _, r in reads:
+        for it in list_items(r):
+            n = it.get("name") or it.get("title") or it.get("operator") or it.get("lot_name") if isinstance(it, dict) else None
+            if n and n not in names:
+                names.append(str(n))
+    reply = ("Dạ, em tìm thấy: " + ", ".join(names[:4]) + ("…" if len(names) > 4 else "") + ".") if names else "Dạ, em đã xem xong ạ."
+    return {"say": say, "must": [m.split("«")[1].split("»")[0] for s in say for m in ["«" + x for x in s.split("«")[1:]]],
+            "calls": [c for c, _ in reads], "results": [r for _, r in reads], "reply": reply}
+
+
 def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, tools: dict, idx: dict, zt, weights, registry=None) -> dict:
     apps_by_id = {a["id"]: a for a in cat["apps"]}
     ctx = copy.deepcopy(shell["context"])
@@ -932,9 +977,9 @@ def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, to
     built = (registry or APPS)[app](rng, now, ctx.get("user_profile", {}))
     state, makers = built[0], built[1]
     states = {app: state, **(built[2] if len(built) > 2 else {})}   # a builder may bring state for a second app (contacts)
-    kinds = [k for k in weights if makers.get(k.split("+")[0]) or k == "not_installed"]
+    kinds = [k for k in weights if makers.get(k.split("+")[0]) or k == "not_installed" or (k == "followup" and makers.get("execute"))]
     kind = rng.choices(kinds, [weights[k] for k in kinds])[0]
-    base = "execute" if kind == "not_installed" and makers["execute"] else ("lookup" if kind == "not_installed" else kind.split("+")[0])
+    base = "execute" if kind in ("not_installed", "followup") and makers["execute"] else ("lookup" if kind == "not_installed" else kind.split("+")[0])
     main = None
     for _ in range(20):
         main = rng.choice(makers[base])()
@@ -964,12 +1009,19 @@ def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, to
         err = check(calls, results, hits, tools)
         if err:
             raise ValueError(err)
+    prev = None
+    if kind == "followup":
+        prev = followup_parts(main, calls, results, tools)
+        if prev is None:
+            raise ValueError("followup: the intent reads nothing")
+        keep = [i for i, c in enumerate(calls) if c not in prev["calls"]]
+        calls, results = [calls[i] for i in keep], [results[i] for i in keep]
     return {"id": sid, "app": app, "kind": kind, "shell": shell["id"], "context": ctx, "history": shell.get("history", []),
             "state": states, "say": [it.say for it in intents], "must": [m for it in intents for m in it.must],
-            "calls": calls, "results": results}
+            "calls": calls, "results": results, **({"prev": prev} if prev else {})}
 
 
-WEIGHTS = {"execute": 36, "execute+side": 28, "lookup": 7, "lookup+side": 4, "ask": 10, "execute+askside": 6, "not_installed": 7}
+WEIGHTS = {"execute": 30, "execute+side": 24, "followup": 12, "lookup": 7, "lookup+side": 4, "ask": 10, "execute+askside": 6, "not_installed": 7}
 
 
 def shape(calls: list[dict], tools: dict) -> str:
@@ -1016,6 +1068,8 @@ def cmd_show(a):
     rng = random.Random(a.seed)
     for g in rng.sample(rows, min(a.n, len(rows))):
         print(f"\n## {g['id']} [{g['kind']}] now={g['context']['current_time']} history_turns={len(g['history'])} installed={len(g['context']['installed_apps'])}")
+        if g.get("prev"):
+            print("   lượt trước:", g["prev"]["say"], "->", [c["name"] for c in g["prev"]["calls"]], "|", g["prev"]["reply"][:80])
         for s in g["say"]:
             print("   muốn:", s)
         for c, r in zip(g["calls"], g["results"]):

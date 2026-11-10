@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 19:18 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:25 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **20:25 ngày 09/11:** **Model viết: `claude-opus-5-5` (B40 xong).** Sáu app của dev_lao đã vào bộ sinh; viết mù rồi so với nhãn thật: tool và ID đúng hết, bộ tham số khớp 0,845 → 0,902. **Nhánh D1 cho 46 app đã thấy đã ghi luật giữ/bỏ; một tiền đề của bản giao việc sai (`final_state` không chứa app không ghi), chờ Anh xác nhận cách thay thế (B41).** (JOURNAL entry 124)
 > - **19:18 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
 > - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
 > - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
@@ -253,7 +254,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B40. (19:18 ngày 09/11)** (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
+- [ ] **B41. (20:25 ngày 09/11)** (3 phút; JOURNAL entry 124) **[Anh] Xác nhận cách lấy state cho nhánh D1 của 46 app đã thấy.**
+  - Bản giao việc ghi: `final_state` của app mà mẫu không ghi là state ban đầu. Dữ liệu không như vậy: `final_state` chỉ có app mà nhãn đã ghi.
+  - **Claude đề xuất:** dùng `final_state` sau khi ghi làm state ban đầu cho kịch bản mới, cộng kết quả các lệnh đọc không tham số. Phủ 39/46 app; 4 app chỉ đọc (fuel_price, lottery, exchange_rate, calculator) phải tự dựng state.
+  - Anh trả lời: đồng ý, hoặc cách khác.
+- [x] **B40. (19:18 ngày 09/11)** *(20:25: Anh chọn `claude-opus-5-5`; JOURNAL entry 124.)* (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
   - **File:** `lifemate/gen/d1_t1_say_compare.md`. Mỗi kịch bản có dòng "muốn" (điều người dùng cần) và ba câu do ba model viết.
   - **Chấm ba điều:** câu có tự nhiên như người nói thật không; có nói đủ và đúng mọi con số, ngày giờ, tên không; có thêm việc hay thông tin ngoài dòng "muốn" không.
   - **Claude đề xuất:** `claude-opus-5-5` làm model chính (khoảng 7,7 USD mỗi 1.000 câu); có thể trộn `muse-spark-1.3` (3,5 USD) cho đa dạng, nhưng không cho nó viết câu tự sửa giữa chừng.

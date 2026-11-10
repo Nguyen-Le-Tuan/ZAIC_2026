@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 21:30 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 21:40 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **21:40 ngày 09/11:** **B42: Anh bỏ 4 lượt đo nhánh app đã thấy.** Đợt GPU còn lại trên máy anh trai chạy 2 lượt bản cuối (train đủ + dữ liệu 11 app public); Claude sinh dữ liệu public ngay. **Luật thay bản nộp: trung bình public 2 seed ≥ 54,18.** Leader đóng gói (L10). `d1_seen_v1.jsonl` giữ lại, không train (JOURNAL entry 127).
 > - **21:30 ngày 09/11:** **Nhánh app đã thấy: đã sinh 752 mẫu (hỏi lại + 6 app), khớp nhãn thật 0,965; bỏ `email` và `flights.cancel`. Chưa train: Anh quyết chạy 4 lượt đo ở đâu (B42).** Lượt dev_lao trên laptop: seed 0 có điểm khoảng 09:00 ngày 10/11, seed 1 khoảng 21:00. API: Anthropic 11,61/100 USD; Meta 6,38/81 USD (JOURNAL entry 126).
 > - **20:58 ngày 09/11:** **Laptop bắt đầu train lượt đo D1 trên dev_lao (2 seed, khoảng 21 giờ, xong khoảng 19:00 ngày 10/11). Anh để máy cắm sạc; cần dùng máy thì chạy `systemctl --user stop lifemate-d1lao` (lưu tiến độ), xong chạy lại `bash ~/zac-d1-job/start_d1lao.sh`.** Luật giữ/bỏ: chữ PhoWhisper-ft ≥ 44,1 và chữ chuẩn ≥ 50,2 (trung bình 2 seed). Hai trần API tách riêng: Anthropic 5,56/100 USD, Meta 3,14/81 USD. Máy anh trai chạy từ 18:30, giai đoạn 1 xong khoảng 12:00 ngày 10/11 (JOURNAL entry 125).
 > - **20:25 ngày 09/11:** **Model viết: `claude-opus-5-5` (B40 xong).** Sáu app của dev_lao đã vào bộ sinh; viết mù rồi so với nhãn thật: tool và ID đúng hết, bộ tham số khớp 0,845 → 0,902. **Nhánh D1 cho 46 app đã thấy đã ghi luật giữ/bỏ; một tiền đề của bản giao việc sai (`final_state` không chứa app không ghi), chờ Anh xác nhận cách thay thế (B41).** (JOURNAL entry 124)
@@ -256,7 +257,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B42. (21:30 ngày 09/11)** (3 phút; JOURNAL entry 126) **[Anh, bàn với Leader] Chạy 4 lượt đo nhánh app đã thấy ở đâu.**
+- [x] **B42. (21:30 ngày 09/11)** *(21:40: Anh quyết qua phiên phụ: "Bỏ 4 lượt đo app đã thấy"; máy anh trai chạy 2 lượt bản cuối; JOURNAL entry 127.)* (3 phút; JOURNAL entry 126) **[Anh, bàn với Leader] Chạy 4 lượt đo nhánh app đã thấy ở đâu.**
   - Cần 2 lượt mốc (`fit_random`) và 2 lượt có D1 (`fit_random` + `d1_seen_v1.jsonl`, 752 mẫu), cùng một máy, chấm dev_random.
   - **Máy anh trai** (rảnh khoảng 16:30–20:30 ngày 10/11): 4 lượt trên 2 card, khoảng 8–9 giờ; cần đóng một gói mới gửi sang.
   - **Laptop:** bận lượt dev_lao tới khoảng 21:00 ngày 10/11; sau đó 4 lượt mất khoảng 40–50 giờ, không kịp mốc 13/11.

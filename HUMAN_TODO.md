@@ -13,10 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 19:25 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 19:18 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
-> - **19:25 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
+> - **19:18 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
 > - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
 > - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
 > - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
@@ -253,12 +253,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B40. (19:25 ngày 09/11)** (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
+- [ ] **B40. (19:18 ngày 09/11)** (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
   - **File:** `lifemate/gen/d1_t1_say_compare.md`. Mỗi kịch bản có dòng "muốn" (điều người dùng cần) và ba câu do ba model viết.
   - **Chấm ba điều:** câu có tự nhiên như người nói thật không; có nói đủ và đúng mọi con số, ngày giờ, tên không; có thêm việc hay thông tin ngoài dòng "muốn" không.
   - **Claude đề xuất:** `claude-opus-5-5` làm model chính (khoảng 7,7 USD mỗi 1.000 câu); có thể trộn `muse-spark-1.3` (3,5 USD) cho đa dạng, nhưng không cho nó viết câu tự sửa giữa chừng.
   - Báo Claude: model chọn, và những câu Anh thấy sai để sửa prompt.
-- [x] **B39. (17:32 ngày 09/11)** *(19:25: Anh đã tạo `~/.zac_anthropic_env`.)* (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
+- [x] **B39. (17:32 ngày 09/11)** *(19:18: Anh đã tạo `~/.zac_anthropic_env`.)* (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
   - Chạy trong terminal, dán key khi được hỏi (key không hiện lên màn hình, không dán vào chat):
     `read -rs -p "Anthropic API key: " K; echo; printf 'export ANTHROPIC_API_KEY=%s\n' "$K" > ~/.zac_anthropic_env; chmod 600 ~/.zac_anthropic_env; unset K`
   - Key Meta đã có ở `~/.zac_meta_env` (tạo 02/11). Nếu Anh muốn dùng key Meta mới (90 USD) thì chạy lại lệnh tương tự với `META_API_KEY` và `~/.zac_meta_env`.

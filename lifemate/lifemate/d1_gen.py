@@ -34,7 +34,6 @@ from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_sp
 
 ASK = "sys.ask_missing_info"
 GEN_DIR = Path("gen")
-SPLIT = "public_test"      # whose catalog and simulator the scenarios use
 
 
 # ---------------------------------------------------------------- time
@@ -104,8 +103,8 @@ class Intent:
     hits: dict = field(default_factory=dict)    # call_key of a read -> how many results it must return (">=2", "1", ">=1")
 
 
-def call(name: str, **args) -> dict:
-    return {"name": name, "arguments": {k: v for k, v in args.items() if v is not None}}
+def call(tool: str, /, **args) -> dict:
+    return {"name": tool, "arguments": {k: v for k, v in args.items() if v is not None}}
 
 
 def ids(prefix: str, n: int, rng: random.Random) -> list[str]:
@@ -637,9 +636,200 @@ def app_stocks(rng, now, profile):
     return state, {"execute": [order, order, alert], "lookup": [look], "ask": [ask]}
 
 
+# ---- the 6 apps held out in dev_lao (train catalog and simulator). Written from the catalog and the simulator source
+# only, the way the public-only apps above were, so that scripts/d1_compare.py can score the guesses against the real
+# labels of these apps.
+
+BOOKS = [("Dế Mèn phiêu lưu ký", "Tô Hoài"), ("Số đỏ", "Vũ Trọng Phụng"), ("Tắt đèn", "Ngô Tất Tố"), ("Nhà giả kim", "Paulo Coelho"),
+         ("Tuổi thơ dữ dội", "Phùng Quán"), ("Mắt biếc", "Nguyễn Nhật Ánh"), ("Cho tôi xin một vé đi tuổi thơ", "Nguyễn Nhật Ánh"),
+         ("Tôi thấy hoa vàng trên cỏ xanh", "Nguyễn Nhật Ánh"), ("Đất rừng phương Nam", "Đoàn Giỏi"), ("Hoàng tử bé", "Antoine de Saint-Exupéry"),
+         ("Bố già", "Mario Puzo"), ("Nỗi buồn chiến tranh", "Bảo Ninh"), ("Cánh đồng bất tận", "Nguyễn Ngọc Tư"), ("Tư duy nhanh và chậm", "Daniel Kahneman"),
+         ("Sông Côn mùa lũ", "Nguyễn Mộng Giác"), ("Vang bóng một thời", "Nguyễn Tuân"), ("Bỉ vỏ", "Nguyên Hồng"), ("Chí Phèo", "Nam Cao"),
+         ("Lão Hạc", "Nam Cao"), ("Truyện Kiều", "Nguyễn Du")]
+ROOMS = ["phòng khách", "phòng ngủ", "bếp", "phòng làm việc", "phòng ăn", "hành lang", "phòng trẻ em", "ban công", "phòng thờ", "phòng tắm"]
+PROGRAMS = [("Highlands Rewards", "Highlands Coffee"), ("VinID", "Vincom"), ("Lotusmiles", "Vietnam Airlines"), ("The Coffee House Rewards", "The Coffee House"),
+            ("CGV Member", "CGV"), ("Shopee Xu", "Shopee"), ("Co.opmart Thành viên", "Co.opmart"), ("Phúc Long Card", "Phúc Long"),
+            ("Grab Rewards", "Grab"), ("Guardian Club", "Guardian")]
+REWARDS = ["Voucher 20.000 đồng", "Voucher 50.000 đồng", "Voucher 100.000 đồng", "Một ly nước miễn phí", "Vé xem phim 2D", "Giảm 10% hoá đơn",
+           "Combo bắp nước", "Phí giao hàng 0 đồng"]
+MEDS = ["Vitamin C", "Panadol", "Thuốc huyết áp Amlodipine", "Men tiêu hoá", "Thuốc dạ dày Omeprazole", "Canxi D3", "Thuốc bổ mắt", "Sắt và axit folic",
+        "Thuốc ho Prospan", "Omega 3", "Thuốc tiểu đường Metformin", "Kẽm"]
+MEETINGS = ["Họp giao ban tuần", "Review thiết kế", "Họp nhóm dự án Sao Mai", "Phỏng vấn ứng viên", "Họp phụ huynh trực tuyến", "Đào tạo sản phẩm mới",
+            "Họp khách hàng Minh Long", "Tổng kết quý", "Họp kế hoạch tháng", "Chia sẻ kiến thức nội bộ", "Họp lớp đại học", "Demo cuối sprint"]
+PEOPLE = [("Chị Ngọc", "đồng nghiệp"), ("Anh Khoa", "đồng nghiệp"), ("Cô Liên", "cô giáo"), ("Phúc", "bạn"), ("Em Vy", "em gái"), ("Chú Bảy", "chú"),
+          ("Sếp Thắng", "sếp"), ("Bác Tư", "bác"), ("Thầy Quân", "thầy giáo"), ("Dì Út", "dì"), ("Minh Anh", "bạn"), ("Quốc Bảo", "bạn"),
+          ("Anh Lâm", "anh trai"), ("Chị Diệp", "chị họ")]
+ALERTS = [("motion", "sân sau", "Phát hiện chuyển động ở sân sau"), ("doorbell", "cổng chính", "Có người bấm chuông cổng chính"),
+          ("door_open", "cửa ban công", "Cửa ban công đang mở"), ("motion", "nhà xe", "Phát hiện chuyển động ở nhà xe"),
+          ("window_open", "phòng ngủ", "Cửa sổ phòng ngủ đang mở"), ("smoke", "bếp", "Cảm biến khói ở bếp báo động"),
+          ("door_open", "cửa sau", "Cửa sau đang mở"), ("motion", "hành lang", "Phát hiện chuyển động ở hành lang")]
+
+
+def app_library(rng, now, profile):
+    rows = rng.sample(BOOKS, rng.randint(5, 9))
+    books = [{"id": i, "title": tt, "author": au, "available": rng.random() < 0.7} for i, (tt, au) in zip(ids("book", len(rows), rng), rows)]
+    state = {"books": books, "reservations": []}
+
+    def reserve(n=1):
+        bs = rng.sample(books, n)
+        return Intent("đặt giữ ở thư viện cuốn " + " và cuốn ".join(f"«{b['title']}»" for b in bs),
+                      [call("library.reserve", book_id=b["id"]) for b in bs], refs={b["id"]: {"mention": b["title"]} for b in bs}, must=[b["title"] for b in bs])
+
+    def look():
+        b = rng.choice(books)
+        key, what = rng.choice([(b["title"], f"thư viện có cuốn «{b['title']}» không, còn mượn được không"), (b["author"], f"thư viện có những sách nào của tác giả «{b['author']}»")])
+        return Intent(f"hỏi {what}", reads=[call("library.search", query=key)], must=[key], kind="lookup")
+
+    def ask():
+        au = collections.Counter(b["author"] for b in books)
+        a = next((x for x, n in au.items() if n >= 2), None)
+        if a is None:
+            return None
+        r = call("library.search", query=a)
+        return Intent(f"đặt giữ một cuốn sách của tác giả «{a}» ở thư viện (không nói cuốn nào)", reads=[r],
+                      ask=call(ASK, tool_name="library.reserve", params=["book_id"]), must=[a], kind="ask", hits={call_key(r): ">=2"})
+    return state, {"execute": [reserve, reserve, lambda: reserve(2)], "lookup": [look], "ask": [ask]}
+
+
+def app_robot_vacuum(rng, now, profile):
+    rooms = rng.sample(ROOMS, rng.randint(3, 6))
+    state = {"battery": rng.choice([35, 60, 80, 100]), "status": rng.choice(["docked", "docked", "cleaning"]), "mode": "vacuum", "rooms": rooms, "current_job": None}
+    words = {"vacuum": "hút bụi", "mop": "lau nhà", "both": "vừa hút bụi vừa lau"}
+
+    def start():
+        mode = rng.choice([None, None, "mop", "both"])
+        if rng.random() < 0.45:
+            return Intent(f"cho robot {words.get(mode, 'dọn')} cả nhà", [call("robot_vacuum.start", mode=mode)])
+        rs = rng.sample(rooms, rng.choice([1, 1, 2]))
+        return Intent(f"cho robot {words.get(mode, 'hút bụi')} ở " + " và ".join(f"«{r}»" for r in rs),
+                      [call("robot_vacuum.start", rooms=[r for r in rooms if r in rs], mode=mode)], reads=[call("robot_vacuum.get_status")], must=rs)
+
+    def stop():
+        return Intent("bảo robot hút bụi dừng lại, về đế sạc", [call("robot_vacuum.stop")])
+
+    def look():
+        return Intent(rng.choice(["hỏi robot hút bụi còn bao nhiêu pin", "hỏi robot hút bụi đang làm gì"]), reads=[call("robot_vacuum.get_status")], kind="lookup")
+    return state, {"execute": [start, start, stop], "lookup": [look], "ask": []}
+
+
+def app_loyalty(rng, now, profile):
+    rows = rng.sample(PROGRAMS, rng.randint(3, 5))
+    progs = []
+    for i, (name, merchant) in zip(ids("prog", len(rows), rng), rows):
+        rws = [{"id": f"{i}_rw{k}", "name": nm, "cost": rng.choice([200, 500, 800, 1000, 1500])} for k, nm in enumerate(rng.sample(REWARDS, rng.randint(2, 3)), 1)]
+        progs.append({"id": i, "name": name, "merchant": merchant, "points": rng.choice([300, 900, 1600, 2400, 5000]), "tier": rng.choice(["Bạc", "Vàng", "Kim cương"]), "rewards": rws})
+    vouchers = [{"id": i, "merchant": m, "name": rng.choice(REWARDS), "value": rng.choice([20000, 50000, 100000]),
+                 "expires": (now + timedelta(days=rng.randint(5, 60))).strftime("%Y-%m-%d"), "used": False} for i, (_, m) in zip(ids("vch", 2, rng), rng.sample(rows, 2))]
+    state = {"programs": progs, "vouchers": vouchers}
+
+    def redeem():
+        ok = [(p, r) for p in progs for r in p["rewards"] if r["cost"] <= p["points"]]
+        if not ok:
+            return None
+        p, r = rng.choice(ok)
+        return Intent(f"đổi điểm «{p['name']}» lấy «{r['name']}»", [call("loyalty.redeem", program=p["id"], reward_id=r["id"])],
+                      reads=[call("loyalty.get_points")], must=[p["name"], r["name"]])
+
+    def look():
+        p = rng.choice(progs)
+        if rng.random() < 0.5:
+            return Intent(rng.choice([f"hỏi mình còn bao nhiêu điểm «{p['name']}»", "hỏi điểm thành viên của mình ở các chương trình"]), reads=[call("loyalty.get_points")],
+                          kind="lookup")
+        return Intent("hỏi mình đang có những voucher nào", reads=[call("loyalty.list_vouchers")], kind="lookup")
+    return state, {"execute": [redeem], "lookup": [look, look], "ask": []}
+
+
+def app_medication(rng, now, profile):
+    rows = rng.sample(MEDS, rng.randint(2, 5))
+    sch = [{"id": i, "days": "daily", "name": n, "times": rng.choice([["08:00"], ["07:00", "19:00"], ["21:00"], ["08:00", "12:00", "20:00"]])} for i, n in zip(ids("med", len(rows), rng), rows)]
+    state = {"schedules": sch, "logs": []}
+
+    def add():
+        name = rng.choice([m for m in MEDS if m not in rows])
+        times = rng.choice([["07:00"], ["08:00"], ["21:30"], ["07:00", "19:00"], ["06:30", "12:00", "20:00"], ["22:00"]])
+        days = rng.choice([None, None, "weekdays"])
+        say = f"thêm lịch nhắc uống «{name}» lúc " + " và ".join(time_phrase(*map(int, x.split(":"))) for x in times) + (" các ngày trong tuần, trừ cuối tuần" if days else " mỗi ngày")
+        return Intent(say, [call("medication.add", name=name, times=times, days=days)], must=[name])
+
+    def taken():
+        s = rng.choice(sch)
+        return Intent(f"ghi nhận mình vừa uống «{s['name']}» rồi", [call("medication.log_taken", schedule_id=s["id"])], refs={s["id"]: {"mention": s["name"]}}, must=[s["name"]])
+
+    def remove():
+        s = rng.choice(sch)
+        return Intent(f"xoá lịch nhắc uống «{s['name']}»", [call("medication.remove", schedule_id=s["id"])], refs={s["id"]: {"mention": s["name"]}}, must=[s["name"]])
+
+    def look():
+        return Intent("hỏi hôm nay mình phải uống những thuốc gì, lúc mấy giờ", reads=[call("medication.list")], kind="lookup")
+    return state, {"execute": [add, add, taken, taken, remove], "lookup": [look], "ask": []}
+
+
+def app_video_meeting(rng, now, profile):
+    rows = rng.sample(MEETINGS, rng.randint(2, 4))
+    meets = []
+    for i, tt in zip(ids("meet", len(rows), rng), rows):
+        dt, _ = pick_datetime(rng, now, days=(0, 4), hours=(8, 20))
+        meets.append({"id": i, "title": tt, "start": iso(dt), "link": f"https://meet.example.test/{i}", "attendees": [], "status": "scheduled"})
+    people = rng.sample(PEOPLE, rng.randint(5, 8))
+    contacts = [{"id": i, "name": n, "relation": rel, "phone": "09" + "".join(rng.choice("0123456789") for _ in range(8))} for i, (n, rel) in zip(ids("c", len(people), rng), people)]
+    state = {"meetings": meets}
+
+    def create():
+        title = rng.choice([m for m in MEETINGS if m not in rows])
+        dt, ph = pick_datetime(rng, now, days=(0, 5), hours=(8, 20))
+        if rng.random() < 0.5:
+            return Intent(f"tạo phòng họp trực tuyến «{title}» lúc {ph}", [call("video_meeting.create", title=title, start=iso(dt))], must=[title])
+        who = rng.sample(contacts, rng.choice([1, 1, 2]))
+        return Intent(f"tạo phòng họp trực tuyến «{title}» lúc {ph}, mời " + " và ".join(f"«{c['name']}»" for c in who),
+                      [call("video_meeting.create", title=title, start=iso(dt), attendees=[c["id"] for c in who])],
+                      reads=[call("contacts.search", query=c["name"]) for c in who], must=[title] + [c["name"] for c in who])
+
+    def join():
+        m = rng.choice(meets)
+        return Intent(f"vào cuộc họp trực tuyến «{m['title']}»", [call("video_meeting.join", meeting_id=m["id"])], refs={m["id"]: {"mention": m["title"]}}, must=[m["title"]])
+
+    def look():
+        return Intent("hỏi sắp tới mình có những cuộc họp trực tuyến nào", reads=[call("video_meeting.list_meetings")], kind="lookup")
+
+    def ask():
+        title = rng.choice([m for m in MEETINGS if m not in rows])
+        return Intent(f"tạo phòng họp trực tuyến «{title}» (không nói họp lúc nào)", ask=call(ASK, tool_name="video_meeting.create", params=["start"]), must=[title], kind="ask")
+    return state, {"execute": [create, create, join], "lookup": [look], "ask": [ask]}, {"contacts": {"contacts": contacts}}
+
+
+def app_home_security(rng, now, profile):
+    rows = rng.sample(ALERTS, rng.randint(2, 4))
+    alerts = [{"id": i, "time": iso(now - timedelta(minutes=rng.randint(10, 600))), "type": ty, "location": loc, "message": msg, "acknowledged": False}
+              for i, (ty, loc, msg) in zip(ids("alert", len(rows), rng), rows)]
+    cams = [{"id": i, "name": f"Camera {loc}", "location": loc, "status": rng.choice(["online", "online", "offline"])}
+            for i, loc in zip(ids("cam", 3, rng), rng.sample(["cổng chính", "sân sau", "phòng khách", "nhà xe", "hành lang"], 3))]
+    state = {"mode": rng.choice(["off", "home", "away"]), "alerts": alerts, "cameras": cams}
+    modes = {"away": "bật chế độ bảo vệ khi cả nhà đi vắng", "home": "bật chế độ bảo vệ khi đang ở nhà", "off": "tắt chế độ bảo vệ an ninh"}
+
+    def arm():
+        m = rng.choice([x for x in modes if x != state["mode"]])
+        return Intent(modes[m], [call("home_security.arm", mode=m)])
+
+    def ack():
+        a = rng.choice(alerts)
+        return Intent(f"đánh dấu đã xem cảnh báo ở «{a['location']}»", [call("home_security.acknowledge_alert", alert_id=a["id"])],
+                      refs={a["id"]: {"mention": a["location"]}}, must=[a["location"]])
+
+    def look():
+        if rng.random() < 0.5:
+            return Intent("hỏi nhà mình vừa có những cảnh báo an ninh gì", reads=[call("home_security.list_alerts")], kind="lookup")
+        c = rng.choice(cams)
+        return Intent(f"hỏi camera ở «{c['location']}» có đang hoạt động không", reads=[call("home_security.get_camera", location=c["location"])], must=[c["location"]], kind="lookup")
+    return state, {"execute": [arm, arm, ack], "lookup": [look], "ask": []}
+
+
+LAO_APPS = {"library": app_library, "robot_vacuum": app_robot_vacuum, "loyalty": app_loyalty, "medication": app_medication,
+            "video_meeting": app_video_meeting, "home_security": app_home_security}
+
 APPS = {"event_tickets": app_event_tickets, "grocery": app_grocery, "pantry": app_pantry, "habit_tracker": app_habit_tracker,
         "translator": app_translator, "recipes": app_recipes, "public_transit": app_public_transit, "parking": app_parking,
         "train_bus_tickets": app_train_bus_tickets, "ecommerce": app_ecommerce, "stocks": app_stocks}
+APPS_BY_SPLIT = {"public_test": APPS, "train": LAO_APPS}
 
 
 # ---- side intents on apps the train labels already cover (their conventions are in the train labels)
@@ -735,11 +925,13 @@ def check(calls, results, hits, tools) -> str | None:
     return None
 
 
-def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, tools: dict, idx: dict, zt, weights) -> dict:
+def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, tools: dict, idx: dict, zt, weights, registry=None) -> dict:
     apps_by_id = {a["id"]: a for a in cat["apps"]}
     ctx = copy.deepcopy(shell["context"])
     now = parse_now(ctx)
-    state, makers = APPS[app](rng, now, ctx.get("user_profile", {}))
+    built = (registry or APPS)[app](rng, now, ctx.get("user_profile", {}))
+    state, makers = built[0], built[1]
+    states = {app: state, **(built[2] if len(built) > 2 else {})}   # a builder may bring state for a second app (contacts)
     kinds = [k for k in weights if makers.get(k.split("+")[0]) or k == "not_installed"]
     kind = rng.choices(kinds, [weights[k] for k in kinds])[0]
     base = "execute" if kind == "not_installed" and makers["execute"] else ("lookup" if kind == "not_installed" else kind.split("+")[0])
@@ -750,7 +942,7 @@ def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, to
             break
     if main is None:
         raise ValueError(f"{app}: no {base} intent")
-    intents, extra_apps = [main], []
+    intents, extra_apps = [main], [a for a in states if a != app]
     if "+" in kind:
         side_app, side = rng.choice(side_intents(rng, now)["ask" if kind.endswith("+askside") else "execute"])()
         extra_apps.append(side_app)
@@ -766,14 +958,14 @@ def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, to
         calls, hits, results = [], {}, []
     else:
         calls, hits = assemble(intents, tools, idx)
-        sim_apps = {a: {"tools": ctx["installed_apps"][a]["tools"], "state": copy.deepcopy(state) if a == app else {}} for a in [app] + extra_apps}
+        sim_apps = {a: {"tools": ctx["installed_apps"][a]["tools"], "state": copy.deepcopy(states.get(a, {}))} for a in [app] + extra_apps}
         sim = zt.executor.Simulator({"context": {"current_time": ctx["current_time"], "installed_apps": sim_apps}}, cat)
         results = [sim.call(c["name"], c["arguments"]) for c in calls]
         err = check(calls, results, hits, tools)
         if err:
             raise ValueError(err)
     return {"id": sid, "app": app, "kind": kind, "shell": shell["id"], "context": ctx, "history": shell.get("history", []),
-            "state": {app: state}, "say": [it.say for it in intents], "must": [m for it in intents for m in it.must],
+            "state": states, "say": [it.say for it in intents], "must": [m for it in intents for m in it.must],
             "calls": calls, "results": results}
 
 
@@ -789,21 +981,22 @@ def shape(calls: list[dict], tools: dict) -> str:
 
 def cmd_build(a):
     rng = random.Random(a.seed)
-    cat = load_catalog(SPLIT)
+    cat = load_catalog(a.split)
     tools, idx = catalog_tools(cat), reader_index(catalog_tools(cat))
-    zt = zaic_tools(SPLIT)
+    zt = zaic_tools(a.split)
+    registry = APPS_BY_SPLIT[a.split]
     shells = load_split("train")
     if a.shells:
         keep = {l.strip() for l in Path(a.shells).read_text().split() if l.strip()}
         shells = [s for s in shells if s["id"] in keep]
-    apps = a.apps.split(",") if a.apps else list(APPS)
+    apps = a.apps.split(",") if a.apps else list(registry)
     out, fails = [], collections.Counter()
     for app in apps:
         got = tries = 0
         while got < a.n and tries < a.n * 30:
             tries += 1
             try:
-                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(shells), cat, tools, idx, zt, WEIGHTS)
+                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(shells), cat, tools, idx, zt, WEIGHTS, registry)
             except ValueError as e:
                 fails[f"{app}: {str(e).split(':')[0]}"] += 1
                 continue
@@ -831,7 +1024,7 @@ def cmd_show(a):
 
 def cmd_stats(a):
     rows = load_jsonl(GEN_DIR / f"d1_{a.tag}_scen.jsonl")
-    tools = catalog_tools(load_catalog(SPLIT))
+    tools = catalog_tools(load_catalog(a.split))
     ttools = catalog_tools(load_catalog("train"))
     real = load_split("train")
     n = len(rows)
@@ -852,7 +1045,8 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build")
     b.add_argument("--n", type=int, default=20, help="scenarios per app")
-    b.add_argument("--apps", help="comma list (default: the 11 apps public_test adds)")
+    b.add_argument("--apps", help="comma list (default: every app written for --split)")
+    b.add_argument("--split", default="public_test", choices=sorted(APPS_BY_SPLIT), help="whose catalog and simulator: public_test (its 11 new apps) or train (the 6 apps held out in dev_lao)")
     b.add_argument("--shells", help="file of train ids whose context and history may be used (default: all train)")
     b.add_argument("--seed", type=int, default=0)
     b.add_argument("--tag", required=True)
@@ -864,6 +1058,7 @@ def main():
     s.set_defaults(fn=cmd_show)
     st = sub.add_parser("stats")
     st.add_argument("--tag", required=True)
+    st.add_argument("--split", default="public_test", choices=sorted(APPS_BY_SPLIT))
     st.set_defaults(fn=cmd_stats)
     a = ap.parse_args()
     a.fn(a)

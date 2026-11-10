@@ -260,6 +260,8 @@ def cmd_write(a):
                 continue
             g = next(x for x in rows if x["id"] == sid)
             done[sid] = {"id": sid, "request": text, "hint": hints[sid], "errors": check(text, g), "model": a.model}
+            if len(done) % 40 == 0:   # keep what is paid for if the run is cut
+                write_jsonl(out_path, [done[g["id"]] for g in rows if g["id"] in done])
     write_jsonl(out_path, [done[g["id"]] for g in rows if g["id"] in done])
     ok = sum(not r["errors"] for r in done.values())
     name = provider(a.model)
@@ -317,6 +319,8 @@ def cmd_judge(a):
                 fails.append((sid, err))
             else:
                 done[sid] = {"id": sid, "ok": bool(v["ok"]), "problems": v["problems"]}
+                if len(done) % 40 == 0:
+                    write_jsonl(out_path, [done[r["id"]] for r in rows if r["id"] in done])
     write_jsonl(out_path, [done[r["id"]] for r in rows if r["id"] in done])
     bad = [d for d in done.values() if not d["ok"]]
     print(f"judge {a.model} on {a.writer}: {len(done)}/{len(rows)} judged, {len(bad)} rejected, {len(fails)} calls failed; this run {ledger.spent():.3f} USD; "

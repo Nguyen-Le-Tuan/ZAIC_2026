@@ -73,7 +73,7 @@ Vài câu người dùng thật đã nói (chỉ để học giọng điệu, kh
 HINTS = ["vào thẳng việc, không rào đón", "vào thẳng việc, không rào đón", "mở đầu bằng \"ờ\" hoặc \"à\"", "gọi \"trợ lý ơi\" hoặc \"em ơi\" rồi mới nhờ",
          "giọng miền Nam (nha, giùm, hông, coi)", "giọng miền Nam (nha, giùm, hông, coi)", "giọng miền Trung nhẹ (chi, rứa, nghe)",
          "xưng \"mình\", nói ngắn gọn", "xưng \"anh\" hoặc \"chị\", gọi trợ lý là \"em\"", "nói hơi dài dòng, có một câu dẫn ngắn trước khi nhờ",
-         "tự sửa giữa câu một lần (\"à không\", \"à nhầm\")", "chêm một từ tiếng Anh thông dụng (book, check, order) nếu hợp"]
+         "tự sửa giữa câu một lần (\"à không\", \"à nhầm\")", "thay một động từ chính bằng từ tiếng Anh thông dụng (book, order, set) nếu hợp; không vì thế mà thêm việc"]
 
 
 def fold(s: str) -> str:

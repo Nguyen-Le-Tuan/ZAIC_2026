@@ -314,8 +314,9 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
     out = []
     for s in samples:
         s = copy.deepcopy(s)
-        for a in drop_apps:  # leave-apps-out: never show held-out schemas
-            s["context"]["installed_apps"].pop(a, None)
+        for a in drop_apps:  # leave-apps-out: never show held-out schemas (a D1 sample keeps the app it was made for)
+            if a not in s.get("_keep_apps", ()):
+                s["context"]["installed_apps"].pop(a, None)
         calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
         src = s.get("_src", "gold")
         utext, htexts = user_texts(s, asr)
@@ -367,6 +368,9 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--extra-samples", help="synthetic samples (lifemate.counterfactual build) appended after --fit; "
                                            "each _origin must be in --fit")
+    ap.add_argument("--d1-samples", help="D1 samples (lifemate.d1_say final): train-format samples for apps without train "
+                                         "labels, appended after --fit; tool schemas come from the train and the "
+                                         "public_test catalogs together; --drop-apps spares the app a sample was made for")
     ap.add_argument("--reuse", action="store_true",
                     help="keep an existing --out only if its manifest matches these settings and its sha256 "
                          "(a file without manifest is kept only if a rebuild is byte-identical); otherwise rebuild")
@@ -400,6 +404,13 @@ def main():
         if outside:
             sys.exit(f"{len(outside)} extra samples come from outside --fit, e.g. {outside[:5]}")
         samples = samples + extra
+    if a.d1_samples:
+        if a.asr_file:
+            sys.exit("--d1-samples have no audio: not combinable with --asr-file")
+        pub = load_catalog("public_test", a.root)   # shared tools have identical schemas in the two catalogs
+        tools = catalog_tools(pub) | tools
+        apps = {x["id"]: x for x in pub["apps"]} | apps
+        samples = samples + load_jsonl(a.d1_samples)
     asr = {r["audio"]: r["text"] for r in load_jsonl(a.asr_file)} if a.asr_file else None
     thoughts = {r["id"]: r for r in load_jsonl(a.thoughts) if "error" not in r} if a.thoughts else None
     stats: dict = {}
@@ -446,6 +457,7 @@ def _spec(a) -> dict:
         "asr_sha256": runinfo.sha256_file(a.asr_file) if a.asr_file else None,
         "extra_samples_sha256": runinfo.sha256_file(a.extra_samples) if getattr(a, "extra_samples", None) else None,
         "thoughts_sha256": runinfo.sha256_file(a.thoughts) if getattr(a, "thoughts", None) else None,
+        "d1_samples_sha256": runinfo.sha256_file(a.d1_samples) if getattr(a, "d1_samples", None) else None,
         "inputs_sha256": {k: runinfo.sha256_file(p) for k, p in files.items()},
         "code_sha256": runinfo.code_digest(("data.py", "prompt.py", "sft.py")),
     }

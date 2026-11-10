@@ -33,6 +33,27 @@ GEN_DIR = Path("gen")
 # USD per million tokens (input, output). Meta: standard tier, as in the earlier runs. Anthropic: first-party API.
 PRICES = {"muse-spark-1.3": (1.25, 4.25), "muse-wonder-1.0": (4.0, 20.0), "claude-opus-5-5": (4.0, 20.0)}
 META_URL = "https://api.meta.ai/v1/chat/completions"
+# Two prepaid credits, never pooled (Anh, 09/11/2026 20:35): Anthropic 100 USD in total; Meta 81 USD left at that moment.
+# Spending past a credit charges the team's card, and these ledgers are estimates from token counts, so each cap keeps a
+# 5 USD margin. Anthropic counts every d1 ledger row; Meta counts the rows written after the moment the 81 was stated.
+PROVIDER_CAP = {"anthropic": 95.0, "meta": 76.0}
+META_SINCE = "2026-11-09T20:25"
+
+
+def provider(model: str) -> str:
+    return "anthropic" if model.startswith("claude-") else "meta"
+
+
+def provider_spent(name: str) -> float:
+    total = 0.0
+    for path in sorted(GEN_DIR.glob("d1_*_usage.jsonl")):
+        for r in load_jsonl(path):
+            if provider(r["model"]) != name:
+                continue
+            if name == "meta" and r["time"][:16] < META_SINCE:
+                continue
+            total += r["usd"]
+    return total
 
 SYSTEM = """Bạn viết lời nói của người dùng cho dữ liệu huấn luyện một trợ lý giọng nói tiếng Việt trên điện thoại.
 
@@ -94,6 +115,15 @@ class Ledger:
     def spent(self) -> float:
         return sum(r["usd"] for r in load_jsonl(self.path)) if self.path.exists() else 0.0
 
+    def blocked(self) -> str | None:
+        """Why no further call may be made, or None."""
+        if self.spent() >= self.max_usd:
+            return f"budget: this run reached its cap of {self.max_usd} USD"
+        name = provider(self.model)
+        if provider_spent(name) >= PROVIDER_CAP[name]:
+            return f"budget: {name} reached {PROVIDER_CAP[name]} USD of its credit (hard cap, not pooled with the other platform)"
+        return None
+
     def add(self, pin: int, pout: int, seconds: float, purpose: str, extra: dict | None = None) -> None:
         usd = (pin * self.price[0] + pout * self.price[1]) / 1e6
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,9 +138,11 @@ def meta_writer(model: str):
     if not key:
         raise SystemExit("no Meta key: `set -a; . ~/.zac_meta_env; set +a` first")
 
-    def write(system: str, user: str) -> tuple[str, int, int, dict]:
-        body = {"model": model, "reasoning_effort": "low",
+    def write(system: str, user: str, schema: dict | None = None, effort: str = "low") -> tuple[str, int, int, dict]:
+        body = {"model": model, "reasoning_effort": effort,
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {"name": "verdict", "schema": schema, "strict": True}}
         req = urllib.request.Request(META_URL, json.dumps(body).encode(), {"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
         delay = 2.0
         for attempt in range(5):
@@ -183,8 +215,20 @@ def pick(rows: list[dict], n: int, seed: int) -> list[dict]:
     return out
 
 
+def items(rows: list[dict]) -> list[dict]:
+    """What has to be written: every scenario's request, and the request of the turn before for follow-ups."""
+    out = []
+    for g in rows:
+        out.append(g)
+        if g.get("prev"):
+            out.append({"id": g["id"] + "#prev", "say": g["prev"]["say"], "must": g["prev"]["must"], "context": g["context"],
+                        "kind": "prev", "app": g["app"]})
+    return out
+
+
 def cmd_write(a):
-    rows = pick(load_jsonl(GEN_DIR / f"d1_{a.tag}_scen.jsonl"), a.n, a.seed)
+    scen = load_jsonl(GEN_DIR / f"d1_{a.tag}_scen.jsonl")
+    rows = items(scen if a.n <= 0 else pick(scen, a.n, a.seed))
     rng = random.Random(a.seed)
     train = load_split("train")
     styles = "\n".join(f"- {s['audio_text']}" for s in rng.sample(train, 12))
@@ -197,8 +241,9 @@ def cmd_write(a):
     todo = [g for g in rows if g["id"] not in done]
 
     def one(g):
-        if ledger.spent() >= a.max_usd:
-            return g["id"], None, "budget"
+        why = ledger.blocked()
+        if why:
+            return g["id"], None, why
         t0 = time.time()
         try:
             text, pin, pout, extra = write(system, user_prompt(g, hints[g["id"]]))
@@ -217,9 +262,107 @@ def cmd_write(a):
             done[sid] = {"id": sid, "request": text, "hint": hints[sid], "errors": check(text, g), "model": a.model}
     write_jsonl(out_path, [done[g["id"]] for g in rows if g["id"] in done])
     ok = sum(not r["errors"] for r in done.values())
-    print(f"{a.model}: {len(done)}/{len(rows)} written, {ok} pass the checks, {len(fails)} calls failed; spent {ledger.spent():.3f} USD -> {out_path}")
+    name = provider(a.model)
+    print(f"{a.model}: {len(done)}/{len(rows)} written, {ok} pass the checks, {len(fails)} calls failed; this run {ledger.spent():.3f} USD; "
+          f"{name} so far {provider_spent(name):.2f} of {PROVIDER_CAP[name]} USD -> {out_path}")
     for sid, err in fails[:5]:
         print("  failed:", sid, err)
+
+
+JUDGE_SYSTEM = """Bạn kiểm tra dữ liệu huấn luyện cho một trợ lý giọng nói tiếng Việt. Bạn nhận: (1) danh sách những việc người dùng MUỐN, đã có giá trị chính xác; (2) câu người dùng NÓI. Trợ lý chỉ nghe câu nói. Hãy xét: một trợ lý cẩn thận nghe câu nói này có hiểu ra ĐÚNG các việc trong danh sách, không hơn không kém?
+
+Đánh dấu ok = false khi có bất kỳ điều nào sau:
+- thiếu một việc, hoặc thiếu một giá trị (số lượng, số tiền, ngày, giờ, tên) có trong danh sách;
+- một giá trị bị đổi (kể cả ngày giờ lệch nghĩa); câu tự sửa giữa chừng thì lấy giá trị nói SAU cùng;
+- câu nói huỷ hoặc phủ định một việc trong danh sách;
+- câu nói nhờ thêm một việc khác, hỏi thêm một thông tin khác, hoặc thêm một giá trị (số lượng, giờ, tên, địa chỉ) mà danh sách không có;
+- danh sách ghi "(không nói …)" mà câu nói lại nêu thông tin đó.
+
+KHÔNG coi là lỗi: lời chào, lời dẫn hay lý do không kèm việc mới; đọc số bằng chữ; đổi thứ tự từ; giọng vùng miền; viết hoa/thường; bỏ chữ "mã", "sự kiện", "món" trước tên.
+
+Trả về JSON: ok (true/false) và problems (danh sách ngắn, tiếng Việt; rỗng khi ok)."""
+JUDGE_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["ok", "problems"],
+                "properties": {"ok": {"type": "boolean"}, "problems": {"type": "array", "items": {"type": "string"}}}}
+
+
+def cmd_judge(a):
+    """A second model, from the other provider than the writer, checks that the request means what `say` says."""
+    scen = {g["id"]: g for g in items(load_jsonl(GEN_DIR / f"d1_{a.tag}_scen.jsonl"))}
+    src = GEN_DIR / f"d1_{a.tag}_say_{a.writer}.jsonl"
+    rows = [r for r in load_jsonl(src) if not r["errors"]]
+    out_path = GEN_DIR / f"d1_{a.tag}_judge_{a.writer}.jsonl"
+    done = {r["id"]: r for r in load_jsonl(out_path)} if out_path.exists() else {}
+    ledger = Ledger(GEN_DIR / f"d1_{a.tag}_judge_{a.writer}_usage.jsonl", a.model, a.max_usd)
+    ask = meta_writer(a.model)
+
+    def one(r):
+        why = ledger.blocked()
+        if why:
+            return r["id"], None, why
+        g = scen[r["id"]]
+        user = "Người dùng MUỐN:\n" + "\n".join(f"- {s}" for s in g["say"]) + f"\n\nThời điểm hiện tại: {g['context']['current_time']}\nCâu người dùng NÓI: {r['request']}"
+        t0 = time.time()
+        try:
+            text, pin, pout, _ = ask(JUDGE_SYSTEM, user, JUDGE_SCHEMA, "medium")
+            v = json.loads(text)
+        except (RuntimeError, json.JSONDecodeError) as e:
+            return r["id"], None, str(e)[:200]
+        ledger.add(pin, pout, time.time() - t0, "judge")
+        return r["id"], v, None
+
+    fails = []
+    with concurrent.futures.ThreadPoolExecutor(a.workers) as ex:
+        for sid, v, err in ex.map(one, [r for r in rows if r["id"] not in done]):
+            if err:
+                fails.append((sid, err))
+            else:
+                done[sid] = {"id": sid, "ok": bool(v["ok"]), "problems": v["problems"]}
+    write_jsonl(out_path, [done[r["id"]] for r in rows if r["id"] in done])
+    bad = [d for d in done.values() if not d["ok"]]
+    print(f"judge {a.model} on {a.writer}: {len(done)}/{len(rows)} judged, {len(bad)} rejected, {len(fails)} calls failed; this run {ledger.spent():.3f} USD; "
+          f"meta so far {provider_spent('meta'):.2f} of {PROVIDER_CAP['meta']} USD -> {out_path}")
+    req = {r["id"]: r["request"] for r in rows}
+    for d in bad[:a.show]:
+        print(f"  REJECT {d['id']}: {req[d['id']]}\n         {d['problems']}")
+    for sid, err in fails[:3]:
+        print("  failed:", sid, err)
+
+
+def cmd_final(a):
+    """Train-format samples from the scenarios whose request (and previous-turn request) passed both checks."""
+    scen = load_jsonl(GEN_DIR / f"d1_{a.tag}_scen.jsonl")
+    say = {r["id"]: r for r in load_jsonl(GEN_DIR / f"d1_{a.tag}_say_{a.writer}.jsonl")}
+    jpath = GEN_DIR / f"d1_{a.tag}_judge_{a.writer}.jsonl"
+    judge = {r["id"]: r for r in load_jsonl(jpath)} if jpath.exists() else None
+    if judge is None and not a.no_judge:
+        raise SystemExit(f"no {jpath}: run `judge` first (or pass --no-judge)")
+
+    def good(i: str) -> bool:
+        return i in say and not say[i]["errors"] and (judge is None or (i in judge and judge[i]["ok"]))
+
+    out, drop = [], {"no_request": 0, "code_check": 0, "judge": 0}
+    for g in scen:
+        need = [g["id"]] + ([g["id"] + "#prev"] if g.get("prev") else [])
+        if any(i not in say for i in need):
+            drop["no_request"] += 1
+            continue
+        if any(say[i]["errors"] for i in need):
+            drop["code_check"] += 1
+            continue
+        if not all(good(i) for i in need):
+            drop["judge"] += 1
+            continue
+        history = list(g["history"])
+        if g.get("prev"):
+            history += [{"role": "user", "audio": None, "audio_text": say[g["id"] + "#prev"]["request"]},
+                        {"role": "assistant", "text": g["prev"]["reply"], "tool_calls": g["prev"]["calls"], "tool_results": g["prev"]["results"]}]
+        used = sorted({c["name"].split(".")[0] for c in g["calls"] if c["name"] != "sys.ask_missing_info"} | set(g["state"]))
+        out.append({"id": g["id"], "audio": None, "audio_text": say[g["id"]]["request"], "context": g["context"], "history": history,
+                    "label": {"tool_calls": g["calls"], "tool_results": g["results"]}, "_src": "d1", "_app": g["app"], "_kind": g["kind"],
+                    "_keep_apps": used if g["kind"] != "not_installed" else []})
+    path = GEN_DIR / f"d1_{a.tag}.jsonl"
+    write_jsonl(path, out)
+    print(f"{len(out)}/{len(scen)} samples -> {path}; dropped {drop}")
 
 
 def cmd_report(a):
@@ -260,11 +403,24 @@ def main():
     w = sub.add_parser("write")
     w.add_argument("--tag", required=True)
     w.add_argument("--model", required=True, choices=sorted(PRICES))
-    w.add_argument("--n", type=int, default=30)
+    w.add_argument("--n", type=int, default=30, help="scenarios to write (spread over apps and kinds); 0 = all")
     w.add_argument("--seed", type=int, default=0)
     w.add_argument("--workers", type=int, default=4)
     w.add_argument("--max-usd", type=float, required=True)
     w.set_defaults(fn=cmd_write)
+    jd = sub.add_parser("judge")
+    jd.add_argument("--tag", required=True)
+    jd.add_argument("--writer", required=True, help="model whose requests are judged")
+    jd.add_argument("--model", default="muse-spark-1.3", choices=["muse-spark-1.3", "muse-wonder-1.0"])
+    jd.add_argument("--workers", type=int, default=6)
+    jd.add_argument("--show", type=int, default=12)
+    jd.add_argument("--max-usd", type=float, required=True)
+    jd.set_defaults(fn=cmd_judge)
+    fn = sub.add_parser("final")
+    fn.add_argument("--tag", required=True)
+    fn.add_argument("--writer", required=True)
+    fn.add_argument("--no-judge", action="store_true")
+    fn.set_defaults(fn=cmd_final)
     r = sub.add_parser("report")
     r.add_argument("--tag", required=True)
     r.add_argument("--models", required=True)

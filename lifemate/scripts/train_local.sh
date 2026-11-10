@@ -7,6 +7,7 @@
 # Env overrides: MODEL, FIT, DEV, TAG, EPOCHS, SKIP_ZS=1, TRAIN_ARGS (extra args for lifemate.train),
 #   FIT_SFT_ARGS (default: --drop-apps splits/heldout_apps.json for fit_lao), EVAL_STEPS=0 (only evaluate final),
 #   EXTRA_SAMPLES=gen/x.jsonl (appended with sft --extra-samples; the train file is then sft/${FIT}_$TAG.jsonl),
+#   D1_SAMPLES=gen/d1_x.jsonl (appended with sft --d1-samples; the train file is then sft/${FIT}_$TAG.jsonl),
 #   ASR_FIT=asr/x.jsonl (user turns of the SFT rows from that ASR file instead of audio_text; train file
 #   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr),
 #   LOAD_4BIT=1 (QLoRA: base in NF4 with 8-bit AdamW for training, and the same 4-bit load for every rollout; no
@@ -44,6 +45,11 @@ fi
 if [ -n "${EXTRA_SAMPLES:-}" ]; then
   [ -f "$EXTRA_SAMPLES" ] || { echo "no $EXTRA_SAMPLES" >&2; exit 1; }
   FIT_SFT_ARGS="$FIT_SFT_ARGS --extra-samples $EXTRA_SAMPLES"
+  SFT_FIT=sft/${FIT}_$TAG.jsonl
+fi
+if [ -n "${D1_SAMPLES:-}" ]; then   # lifemate.d1_say final: synthetic samples for apps without train labels
+  [ -f "$D1_SAMPLES" ] || { echo "no $D1_SAMPLES" >&2; exit 1; }
+  FIT_SFT_ARGS="$FIT_SFT_ARGS --d1-samples $D1_SAMPLES"
   SFT_FIT=sft/${FIT}_$TAG.jsonl
 fi
 if [ -n "${ASR_FIT:-}" ]; then

@@ -836,6 +836,20 @@ def app_home_security(rng, now, profile):
     return state, {"execute": [arm, arm, ack], "lookup": [look], "ask": []}
 
 
+def _extend_pools() -> None:
+    """Add the rows of d1_pools.json (scripts/d1_pools.py: invented names from an external LLM, checked by code)."""
+    path = Path(__file__).with_name("d1_pools.json")
+    if not path.exists():
+        return
+    single = {"HABITS", "PHRASES", "REMIND", "MEDS", "MEETINGS", "ROOMS"}
+    g = globals()
+    for name, rows in json.loads(path.read_text()).items():
+        if name in g:
+            g[name] = list(g[name]) + [r[0] if name in single else tuple(r) for r in rows]
+
+
+_extend_pools()
+
 LAO_APPS = {"library": app_library, "robot_vacuum": app_robot_vacuum, "loyalty": app_loyalty, "medication": app_medication,
             "video_meeting": app_video_meeting, "home_security": app_home_security}
 

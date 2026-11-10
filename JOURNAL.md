@@ -2589,6 +2589,7 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - 85 mẫu hỏi lại chưa phủ là các chương trình lẻ (mỗi loại 2–5 mẫu), nhiều cái cần state của app.
       - Chưa sinh câu nói cho phần này (chưa chi API). Còn phải viết: 7 app mất điểm nhiều nhất với state lấy từ `final_state`, rồi các app còn lại.
     - **Tổng chi API tới 20:58:** Anthropic 5,56 / 100 USD. Meta: 3,14 USD trong 81 USD còn lại (kiểm nghĩa 2,86 + kho tên 0,28).
+    - **Lượt đo đã chạy từ 20:56** (unit `lifemate-d1lao`, thư mục `~/zac-d1-job` ở commit `e6a32cb`, log `lifemate/runs/d1lao_2026-11-09.log`): 6.071 dòng train, 19,3 triệu token; máy đang cắm sạc. Dừng: `systemctl --user stop lifemate-d1lao` (train lưu tiến độ mỗi 10 bước); chạy tiếp: `bash ~/zac-d1-job/start_d1lao.sh`.
 
 ---
 

@@ -946,6 +946,8 @@ def check(calls, results, hits, tools) -> str | None:
                 return f"ambiguous_query: {c['name']} {c['arguments']} -> {len(items)} results"
             if want == ">=2" and len(items) < 2:
                 return f"not_ambiguous: {c['name']} {c['arguments']} -> {len(items)}"
+            if want == "==1" and len(items) != 1:
+                return f"not_unique: {c['name']} {c['arguments']} -> {len(items)}"
             if c["arguments"] and any(isinstance(v, list) for v in r.values()) and not items:
                 return f"empty_read: {c['name']} {c['arguments']}"
         atoms(r, shown)
@@ -1045,12 +1047,14 @@ def shape(calls: list[dict], tools: dict) -> str:
     return "".join(out) or "(rong)"
 
 
-def cmd_build(a):
+def cmd_build(a, registry=None, weights=None, counts=None):
+    """registry / weights / counts ({app: scenarios}) let lifemate.d1_seen reuse this loop with its own builders."""
     rng = random.Random(a.seed)
     cat = load_catalog(a.split)
     tools, idx = catalog_tools(cat), reader_index(catalog_tools(cat))
     zt = zaic_tools(a.split)
-    registry = APPS_BY_SPLIT[a.split]
+    registry = registry or APPS_BY_SPLIT[a.split]
+    weights = weights or WEIGHTS
     shells = load_split("train")
     if a.shells:
         keep = {l.strip() for l in Path(a.shells).read_text().split() if l.strip()}
@@ -1059,10 +1063,11 @@ def cmd_build(a):
     out, fails = [], collections.Counter()
     for app in apps:
         got = tries = 0
-        while got < a.n and tries < a.n * 30:
+        want = (counts or {}).get(app, a.n)
+        while got < want and tries < want * 30:
             tries += 1
             try:
-                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(shells), cat, tools, idx, zt, WEIGHTS, registry)
+                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(shells), cat, tools, idx, zt, weights, registry)
             except ValueError as e:
                 fails[f"{app}: {str(e).split(':')[0]}"] += 1
                 continue

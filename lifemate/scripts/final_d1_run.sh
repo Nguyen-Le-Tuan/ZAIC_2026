@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # The two final runs with D1 data on one GPU machine (JOURNAL entry 127): the submitted recipe (Qwen3-4B-Instruct-2507
-# NF4, QLoRA r32, lr 2e-4, 1 epoch, max length 6144) on ALL train samples plus gen/d1_pub_v1.jsonl (synthetic samples
+# NF4, QLoRA r32, lr 2e-4, 1 epoch, max length 6144) on ALL train samples plus the D1 file (synthetic samples
 # for the 11 apps only public_test has), seeds 0 and 1, one per GPU; then a public_test file from each (25 s budget,
 # search guard on). From the unpacked bundle folder ZAIC_2026/:
 #   nohup bash lifemate/scripts/final_d1_run.sh > run.log 2>&1 &
 # A restart (same command) resumes: a finished adapter or public file is kept (scripts/final_train.sh).
-# Env: D1 (default gen/d1_pub_v1.jsonl), SEEDS (default "0 1"), MIN_FREE_GB (default 40).
+# Env: D1 (default gen/d1_pub_v1_105.jsonl: 105 samples per app, the density the dev_lao pilot measured;
+#      gen/d1_pub_v1.jsonl has all 2,139), SEEDS (default "0 1"), MIN_FREE_GB (default 40).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(cd .. && pwd)
-D1=${D1:-gen/d1_pub_v1.jsonl}
+D1=${D1:-gen/d1_pub_v1_105.jsonl}
 SEEDS=${SEEDS:-"0 1"}
 stamp() { echo "[$(date '+%F %T')] $*"; }
 die() { stamp "DUNG: $*"; exit 1; }

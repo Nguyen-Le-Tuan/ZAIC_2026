@@ -5,12 +5,12 @@
 # search guard on). From the unpacked bundle folder ZAIC_2026/:
 #   nohup bash lifemate/scripts/final_d1_run.sh > run.log 2>&1 &
 # A restart (same command) resumes: a finished adapter or public file is kept (scripts/final_train.sh).
-# Env: D1 (default gen/d1_pub_v1_105.jsonl: 105 samples per app, the density the dev_lao pilot measured;
-#      gen/d1_pub_v1.jsonl has all 2,139), SEEDS (default "0 1"), MIN_FREE_GB (default 40).
+# Env: D1 (default gen/d1_pub_v1.jsonl: all 2,139 samples, Anh's choice on 09/11; gen/d1_pub_v1_105.jsonl is the
+#      105-per-app subset, the density the dev_lao pilot measured), SEEDS (default "0 1"), MIN_FREE_GB (default 40).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(cd .. && pwd)
-D1=${D1:-gen/d1_pub_v1_105.jsonl}
+D1=${D1:-gen/d1_pub_v1.jsonl}
 SEEDS=${SEEDS:-"0 1"}
 stamp() { echo "[$(date '+%F %T')] $*"; }
 die() { stamp "DUNG: $*"; exit 1; }

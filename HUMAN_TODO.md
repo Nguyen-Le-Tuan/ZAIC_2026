@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:35 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:42 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **22:42 ngày 09/11:** **Anh chọn cả 2.139 mẫu cho bản cuối. Gói đã đóng lại: `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte); gói `…_d1final.tar.gz` lúc 22:35 đã xoá, đừng dùng.** File hướng dẫn đã sửa theo; bản cuối ước 8–9 giờ trên máy anh trai (JOURNAL entry 130).
 > - **22:35 ngày 09/11:** **Gói 2 lượt bản cuối đã sẵn trên laptop** (`~/zac_cloud_bundle_20261110_d1final.tar.gz`, 268.666.315 byte) kèm file hướng dẫn tiếng Anh. **Anh tải gói lên Drive và gửi file cho anh trai; anh trai CHƯA chạy, chờ đợt cũ xong và Anh báo "go" sau khi seed 0 của lượt dev_lao đạt (khoảng 08:30 ngày 10/11) (B43).** Dữ liệu public: 2.139 mẫu, bản cuối mặc định dùng 1.155. API: Anthropic 30,12/100 USD; Meta 15,14/81 USD (JOURNAL entry 129).
 > - **21:45 ngày 09/11:** **Anh: "Seed 0 đạt là chạy".** Hai lượt bản cuối trên máy anh trai bắt đầu khi seed 0 của lượt dev_lao (khoảng 09:00 ngày 10/11) đạt cả hai ngưỡng 44,1 và 50,2; không chờ seed 1. Laptop này đóng gói, không cần Leader (JOURNAL entry 128).
 > - **21:40 ngày 09/11:** **B42: Anh bỏ 4 lượt đo nhánh app đã thấy.** Đợt GPU còn lại trên máy anh trai chạy 2 lượt bản cuối (train đủ + dữ liệu 11 app public); Claude sinh dữ liệu public ngay. **Luật thay bản nộp: trung bình public 2 seed ≥ 54,18.** Leader đóng gói (L10). `d1_seen_v1.jsonl` giữ lại, không train (JOURNAL entry 127).
@@ -260,7 +261,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
 - [ ] **B43. (22:35 ngày 09/11)** (10 phút; JOURNAL entry 129) **[Anh] Đưa gói bản cuối lên Drive và gửi file hướng dẫn cho anh trai.**
-  - **Gói:** `~/zac_cloud_bundle_20261110_d1final.tar.gz` (268.666.315 byte, sha256 `a199db3e…5f44eb`). Có dữ liệu thi: chỉ tải lên thư mục Drive của đội, để chế độ "Hạn chế".
+  - **Gói (đổi lúc 22:42, bản đủ 2.139 mẫu):** `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte, sha256 `d02a3c04…ca90fcc`). Có dữ liệu thi: chỉ tải lên thư mục Drive của đội, để chế độ "Hạn chế". Gói `…_d1final.tar.gz` đã xoá; nếu đã tải lên Drive thì xoá đi.
   - **File hướng dẫn:** `cloud_results/anh_trai/BROTHER_AI_GUIDE_D1FINAL_2026-11-10_EN.md` (đã có link Drive, kích thước và sha256).
   - **Dặn anh trai:** chưa chạy ngay. Chỉ chạy khi đợt đang chạy (`~/zac_v5`) đã xong **và** Anh nhắn "go".
   - **Anh nhắn "go" khi:** Claude báo seed 0 của lượt dev_lao đạt cả hai ngưỡng (44,1 và 50,2), khoảng 08:30 ngày 10/11. Không đạt thì không chạy.

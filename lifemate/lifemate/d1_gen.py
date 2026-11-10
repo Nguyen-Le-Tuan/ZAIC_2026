@@ -85,7 +85,7 @@ def money_phrase(v: int) -> str:
     if v % 1_000_000 == 0:
         return f"{v // 1_000_000} triệu"
     if v >= 1_000_000 and v % 100_000 == 0:
-        return f"{v // 1_000_000} triệu {(v % 1_000_000) // 100_000}"
+        return f"{v // 1_000_000} triệu {(v % 1_000_000) // 1000} nghìn"
     return f"{v // 1000} nghìn"
 
 
@@ -845,7 +845,10 @@ def _extend_pools() -> None:
     g = globals()
     for name, rows in json.loads(path.read_text()).items():
         if name in g:
-            g[name] = list(g[name]) + [r[0] if name in single else tuple(r) for r in rows]
+            rows = [r[0] if name in single else tuple(r) for r in rows]
+            if name == "REMIND":   # a reminder text that names a time of its own would contradict the time of the reminder
+                rows = [r for r in rows if not any(w in r.split() for w in ("sáng", "trưa", "chiều", "tối", "mai", "nay", "giờ", "mỗi", "hôm", "tuần", "lúc"))]
+            g[name] = list(g[name]) + rows
 
 
 _extend_pools()
@@ -879,9 +882,10 @@ def side_intents(rng, now):
 
 # ---------------------------------------------------------------- label + checks
 
-def assemble(intents: list[Intent], tools: dict, idx: dict) -> tuple[list[dict], dict]:
-    """The label: per intent its own reads, then per write the ID reads the policy adds, the clarification last."""
-    calls, seen, known, hits, ask = [], set(), set(), {}, None
+def assemble(intents: list[Intent], tools: dict, idx: dict, known0=None) -> tuple[list[dict], dict]:
+    """The label: per intent its own reads, then per write the ID reads the policy adds, the clarification last.
+    known0: values already shown in the history; an ID among them is used without reading again (the gold convention)."""
+    calls, seen, known, hits, ask = [], set(), set(known0 or ()), {}, None
 
     def add(c):
         k = call_key(c)
@@ -922,9 +926,9 @@ def list_items(result) -> list:
     return [x for v in result.values() if isinstance(v, list) for x in v] if isinstance(result, dict) else []
 
 
-def check(calls, results, hits, tools) -> str | None:
+def check(calls, results, hits, tools, shown0=None) -> str | None:
     """None when the label runs as a gold label does; otherwise why not."""
-    shown = set()
+    shown = set(shown0 or ())
     for c, r in zip(calls, results):
         if not isinstance(r, dict) or r.get("ok") is not True:
             return f"schema: {c['name']} -> {str(r)[:120]}"
@@ -986,11 +990,12 @@ def followup_parts(main: Intent, calls: list[dict], results: list, tools: dict) 
             "calls": [c for c, _ in reads], "results": [r for _, r in reads], "reply": reply}
 
 
-def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, tools: dict, idx: dict, zt, weights, registry=None) -> dict:
+def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, tools: dict, idx: dict, zt, weights, registry=None,
+              history_ids: bool = False) -> dict:
     apps_by_id = {a["id"]: a for a in cat["apps"]}
     ctx = copy.deepcopy(shell["context"])
     now = parse_now(ctx)
-    built = (registry or APPS)[app](rng, now, ctx.get("user_profile", {}))
+    built = (registry or APPS)[app](rng, now, {**ctx.get("user_profile", {}), "_shell": shell})
     state, makers = built[0], built[1]
     states = {app: state, **(built[2] if len(built) > 2 else {})}   # a builder may bring state for a second app (contacts)
     kinds = [k for k in weights if makers.get(k.split("+")[0]) or k == "not_installed" or (k == "followup" and makers.get("execute"))]
@@ -1018,11 +1023,16 @@ def build_one(rng: random.Random, sid: str, app: str, shell: dict, cat: dict, to
     if kind == "not_installed":
         calls, hits, results = [], {}, []
     else:
-        calls, hits = assemble(intents, tools, idx)
+        known0 = set()
+        if history_ids:
+            for h in shell.get("history", []):
+                if h["role"] != "user":
+                    atoms(h.get("tool_results") or [], known0)
+        calls, hits = assemble(intents, tools, idx, known0)
         sim_apps = {a: {"tools": ctx["installed_apps"][a]["tools"], "state": copy.deepcopy(states.get(a, {}))} for a in [app] + extra_apps}
         sim = zt.executor.Simulator({"context": {"current_time": ctx["current_time"], "installed_apps": sim_apps}}, cat)
         results = [sim.call(c["name"], c["arguments"]) for c in calls]
-        err = check(calls, results, hits, tools)
+        err = check(calls, results, hits, tools, known0)
         if err:
             raise ValueError(err)
     prev = None
@@ -1047,7 +1057,7 @@ def shape(calls: list[dict], tools: dict) -> str:
     return "".join(out) or "(rong)"
 
 
-def cmd_build(a, registry=None, weights=None, counts=None):
+def cmd_build(a, registry=None, weights=None, counts=None, shells_for=None, history_ids=False):
     """registry / weights / counts ({app: scenarios}) let lifemate.d1_seen reuse this loop with its own builders."""
     rng = random.Random(a.seed)
     cat = load_catalog(a.split)
@@ -1067,7 +1077,8 @@ def cmd_build(a, registry=None, weights=None, counts=None):
         while got < want and tries < want * 30:
             tries += 1
             try:
-                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(shells), cat, tools, idx, zt, weights, registry)
+                pool = shells_for(app, shells) if shells_for else shells
+                g = build_one(rng, f"d1_{a.tag}_{app}_{got:04d}", app, rng.choice(pool), cat, tools, idx, zt, weights, registry, history_ids)
             except ValueError as e:
                 fails[f"{app}: {str(e).split(':')[0]}"] += 1
                 continue

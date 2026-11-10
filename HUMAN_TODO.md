@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:25 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:58 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **20:58 ngày 09/11:** **Laptop bắt đầu train lượt đo D1 trên dev_lao (2 seed, khoảng 21 giờ, xong khoảng 19:00 ngày 10/11). Anh để máy cắm sạc; cần dùng máy thì chạy `systemctl --user stop lifemate-d1lao` (lưu tiến độ), xong chạy lại `bash ~/zac-d1-job/start_d1lao.sh`.** Luật giữ/bỏ: chữ PhoWhisper-ft ≥ 44,1 và chữ chuẩn ≥ 50,2 (trung bình 2 seed). Hai trần API tách riêng: Anthropic 5,56/100 USD, Meta 3,14/81 USD. Máy anh trai chạy từ 18:30, giai đoạn 1 xong khoảng 12:00 ngày 10/11 (JOURNAL entry 125).
 > - **20:25 ngày 09/11:** **Model viết: `claude-opus-5-5` (B40 xong).** Sáu app của dev_lao đã vào bộ sinh; viết mù rồi so với nhãn thật: tool và ID đúng hết, bộ tham số khớp 0,845 → 0,902. **Nhánh D1 cho 46 app đã thấy đã ghi luật giữ/bỏ; một tiền đề của bản giao việc sai (`final_state` không chứa app không ghi), chờ Anh xác nhận cách thay thế (B41).** (JOURNAL entry 124)
 > - **19:18 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
 > - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
@@ -254,7 +255,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B41. (20:25 ngày 09/11)** (3 phút; JOURNAL entry 124) **[Anh] Xác nhận cách lấy state cho nhánh D1 của 46 app đã thấy.**
+- [x] **B41. (20:25 ngày 09/11)** *(20:58: Anh đồng ý; JOURNAL entry 125.)* (3 phút; JOURNAL entry 124) **[Anh] Xác nhận cách lấy state cho nhánh D1 của 46 app đã thấy.**
   - Bản giao việc ghi: `final_state` của app mà mẫu không ghi là state ban đầu. Dữ liệu không như vậy: `final_state` chỉ có app mà nhãn đã ghi.
   - **Claude đề xuất:** dùng `final_state` sau khi ghi làm state ban đầu cho kịch bản mới, cộng kết quả các lệnh đọc không tham số. Phủ 39/46 app; 4 app chỉ đọc (fuel_price, lottery, exchange_rate, calculator) phải tự dựng state.
   - Anh trả lời: đồng ý, hoặc cách khác.

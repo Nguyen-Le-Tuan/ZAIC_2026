@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:34 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:45 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:45 ngày 11/11:** **Gói train lại đã sẵn và đã kiểm. Anh làm B49: tải `~/zac_cloud_bundle_20261111_v7.tar.gz` (4,5 MB) lên thư mục Drive, rồi gửi anh trai `cloud_results/anh_trai/BROTHER_AI_GUIDE_V7_2026-11-11_EN.md` kèm "go".** Code sửa ở [PR #17](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/17) (chờ Leader review). Laptop đang chạy thử Qwen3.5 qua `predict.sh` (JOURNAL entry 139).
 > - **17:34 ngày 11/11:** **FAQ của BTC: Qwen3.5-4B tính là 4B, nên A1 hợp lệ về số tham số. Nhưng cấm dùng dữ liệu public test để sinh dữ liệu hay train → huỷ hai lượt v6 (D1 cho app public). Anh báo anh trai KHÔNG chạy file `BROTHER_AI_GUIDE_V6_BOTH` (B47 huỷ).** Bộ dựng dữ liệu train cũ lấy app nhiễu từ cả catalog public_test (ít nhất 13% số dòng), nên bản đang nộp và A1 đều có rủi ro. **Đề xuất train lại với app nhiễu chỉ từ train (B48)** (JOURNAL entry 138).
 > - **17:21 ngày 11/11:** **Public: A1 (Qwen3.5) 57,03 và 56,39 (trung bình 56,71); file mốc cùng máy 52,43.** A1 qua luật (≥ 54,18), hơn bản đang nộp 4,03 điểm. **A1 thành bản nộp nếu BTC chấp nhận cách đếm tham số; Leader đang hỏi BTC.** Nếu dùng A1, gói Docker (L9) phải đổi model gốc, adapter và bật D5 mặc định. Run I cần ≥ 54,18; Run Q cần ≥ 58,21. Anh đang gửi hướng dẫn cho anh trai (B47) (JOURNAL entry 137).
 > - **15:51 ngày 11/11:** **Anh chọn chạy cả hai hướng trên máy anh trai.** Hướng dẫn mới: `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` (Run Q: Qwen3.5 + D1, khoảng 12–13 giờ; Run I: Qwen3-4B + D1, khoảng 5–6 giờ; máy thứ ba dự phòng). **Anh gửi file này cho anh trai kèm "go" (B47).** **3 file public chờ nộp ở `cloud_results/nop_public_2026-11-11/` (B45).** **Hỏi BTC qua email aichallenge@zalo.me; email soạn sẵn ở JOURNAL entry 136.** **Hạn Docker: 11:59 trưa thứ Hai 16/11 giờ Buffalo** (23:59 GMT+7); nên nộp lần đầu chậm nhất tối Chủ nhật 15/11 (JOURNAL entry 136).
@@ -267,7 +268,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B48. (17:34 ngày 11/11)** (5 phút quyết) **[Anh, cùng Leader] Duyệt kế hoạch train lại không dùng dữ liệu public** (JOURNAL entry 138):
+- [ ] **B49. (17:45 ngày 11/11)** (3 phút) **[Anh] Đưa gói v7 lên Drive và gửi hướng dẫn V7 cho anh trai.**
+  1. Chrome trên laptop (tab thư mục ZAIC_2026 đang mở): New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261111_v7.tar.gz` → Open. Drive hiện khoảng 4,3 MB.
+  2. Gửi anh trai `cloud_results/anh_trai/BROTHER_AI_GUIDE_V7_2026-11-11_EN.md` kèm chữ "go". File này huỷ hai file v6; nếu anh trai đã chạy v6 thì AI bên đó dừng lại theo mục 1.
+  3. Nên làm B34 (khoá thư mục Drive, thêm tài khoản anh trai trước).
+  - Kết quả: v7q3 khoảng 3,5–4 giờ, v7q35 khoảng 6–6,5 giờ sau khi bắt đầu. Có file public thì Anh nộp; Claude áp luật entry 138.
+- [x] **B48. (17:34 ngày 11/11)** *(17:45 ngày 11/11: Anh duyệt "Duyệt, làm ngay"; code ở PR #17, gói v7 và hướng dẫn V7 đã sẵn; JOURNAL entry 139.)* (5 phút quyết) **[Anh, cùng Leader] Duyệt kế hoạch train lại không dùng dữ liệu public** (JOURNAL entry 138):
   1. Báo anh trai không chạy file v6 (D1 cho app public bị cấm).
   2. Code (qua PR): app nhiễu khi dựng dữ liệu train chỉ lấy từ catalog train; script chạy bản cuối không có D1.
   3. Gói mới; Anh tải lên Drive; máy anh trai train lại Qwen3.5 (công thức A1, khoảng 6 giờ) và Qwen3-4B (dự phòng, khoảng 3–4 giờ), 2 seed mỗi model, rồi làm file public.

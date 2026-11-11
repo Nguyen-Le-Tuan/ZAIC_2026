@@ -227,6 +227,7 @@ data/
 runs/
 sft/
 ckpt/
+lifemate/ckpt
 .venv-gpu/
 gen/
 asr/

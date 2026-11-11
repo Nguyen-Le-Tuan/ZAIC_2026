@@ -13,9 +13,51 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:20 ngày 05/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:21 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:21 ngày 11/11:** **Public: A1 (Qwen3.5) 57,03 và 56,39 (trung bình 56,71); file mốc cùng máy 52,43.** A1 qua luật (≥ 54,18), hơn bản đang nộp 4,03 điểm. **A1 thành bản nộp nếu BTC chấp nhận cách đếm tham số; Leader đang hỏi BTC.** Nếu dùng A1, gói Docker (L9) phải đổi model gốc, adapter và bật D5 mặc định. Run I cần ≥ 54,18; Run Q cần ≥ 58,21. Anh đang gửi hướng dẫn cho anh trai (B47) (JOURNAL entry 137).
+> - **15:51 ngày 11/11:** **Anh chọn chạy cả hai hướng trên máy anh trai.** Hướng dẫn mới: `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` (Run Q: Qwen3.5 + D1, khoảng 12–13 giờ; Run I: Qwen3-4B + D1, khoảng 5–6 giờ; máy thứ ba dự phòng). **Anh gửi file này cho anh trai kèm "go" (B47).** **3 file public chờ nộp ở `cloud_results/nop_public_2026-11-11/` (B45).** **Hỏi BTC qua email aichallenge@zalo.me; email soạn sẵn ở JOURNAL entry 136.** **Hạn Docker: 11:59 trưa thứ Hai 16/11 giờ Buffalo** (23:59 GMT+7); nên nộp lần đầu chậm nhất tối Chủ nhật 15/11 (JOURNAL entry 136).
+> - **15:00 ngày 11/11:** **A1 (Qwen3.5-4B text-only) thắng rõ trên dev_lao:** chữ ASR 47,36 so với mốc 40,84 (+7,27), chữ chuẩn 62,02. D2 thua. **Hai file public của A1 đã sẵn, Anh nộp (B45).** **A1 chỉ dùng được khi BTC chấp nhận cách đếm tham số bản text-only: hỏi BTC ngay nếu chưa hỏi.** **Anh chọn lượt kế tiếp cho máy anh trai (B46).** D1 qua luật gốc khi tính A0 vào mốc (JOURNAL entry 135).
+> - **14:03 ngày 11/11:** **B43 xong: gói bản cuối đã lên Drive** (256,2 MB, khớp kích thước). Anh báo anh trai "go" khi đợt v5 in `XONG` (dự kiến 16:00–20:00 hôm nay). B34 (khoá thư mục) vẫn chờ Anh (JOURNAL entry 134).
+> - **13:59 ngày 11/11:** **Claude không tải được gói bản cuối lên Drive** (công cụ của Claude chỉ nhận file tới 10 MB; gói 268 MB). **Anh tải từ Chrome trên laptop (B43):** New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261110_d1full.tar.gz`. Thư mục ZAIC_2026 thuộc tài khoản Anh, nên **B34 (khoá thư mục) là việc của Anh**; thêm tài khoản anh trai trước khi chọn "Restricted" (JOURNAL entry 133).
+> - **13:46 ngày 11/11:** **Kết quả train của máy anh trai chưa lên Drive;** mới có file D5 public 53 KB. Giai đoạn 1 thực ra bắt đầu khoảng 19:00 ngày 10/11, nên kết quả giai đoạn 1 khoảng trưa 11/11, giai đoạn 2 khoảng 16:00–20:00. **Gói bản cuối `…d1full` chưa có trên Drive (B43)**, chỉ nằm trên laptop. File D5 của anh trai khớp file 52,68 ở 581/634 dòng (45 dòng khác do khác GPU); **đề xuất nộp file này để có mốc cùng máy cho luật 54,18 (B44)**. Lượt dev_lao D1: trung bình 2 seed 43,91 (chữ ASR) / 55,82 (chữ chuẩn); seed 0 đạt nên bản cuối vẫn chạy (JOURNAL entry 131–132).
+> - **22:42 ngày 09/11:** **Anh chọn cả 2.139 mẫu cho bản cuối. Gói đã đóng lại: `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte); gói `…_d1final.tar.gz` lúc 22:35 đã xoá, đừng dùng.** File hướng dẫn đã sửa theo; bản cuối ước 8–9 giờ trên máy anh trai (JOURNAL entry 130).
+> - **22:35 ngày 09/11:** **Gói 2 lượt bản cuối đã sẵn trên laptop** (`~/zac_cloud_bundle_20261110_d1final.tar.gz`, 268.666.315 byte) kèm file hướng dẫn tiếng Anh. **Anh tải gói lên Drive và gửi file cho anh trai; anh trai CHƯA chạy, chờ đợt cũ xong và Anh báo "go" sau khi seed 0 của lượt dev_lao đạt (khoảng 08:30 ngày 10/11) (B43).** Dữ liệu public: 2.139 mẫu, bản cuối mặc định dùng 1.155. API: Anthropic 30,12/100 USD; Meta 15,14/81 USD (JOURNAL entry 129).
+> - **21:45 ngày 09/11:** **Anh: "Seed 0 đạt là chạy".** Hai lượt bản cuối trên máy anh trai bắt đầu khi seed 0 của lượt dev_lao (khoảng 09:00 ngày 10/11) đạt cả hai ngưỡng 44,1 và 50,2; không chờ seed 1. Laptop này đóng gói, không cần Leader (JOURNAL entry 128).
+> - **21:40 ngày 09/11:** **B42: Anh bỏ 4 lượt đo nhánh app đã thấy.** Đợt GPU còn lại trên máy anh trai chạy 2 lượt bản cuối (train đủ + dữ liệu 11 app public); Claude sinh dữ liệu public ngay. **Luật thay bản nộp: trung bình public 2 seed ≥ 54,18.** Leader đóng gói (L10). `d1_seen_v1.jsonl` giữ lại, không train (JOURNAL entry 127).
+> - **21:30 ngày 09/11:** **Nhánh app đã thấy: đã sinh 752 mẫu (hỏi lại + 6 app), khớp nhãn thật 0,965; bỏ `email` và `flights.cancel`. Chưa train: Anh quyết chạy 4 lượt đo ở đâu (B42).** Lượt dev_lao trên laptop: seed 0 có điểm khoảng 09:00 ngày 10/11, seed 1 khoảng 21:00. API: Anthropic 11,61/100 USD; Meta 6,38/81 USD (JOURNAL entry 126).
+> - **20:58 ngày 09/11:** **Laptop bắt đầu train lượt đo D1 trên dev_lao (2 seed, khoảng 21 giờ, xong khoảng 19:00 ngày 10/11). Anh để máy cắm sạc; cần dùng máy thì chạy `systemctl --user stop lifemate-d1lao` (lưu tiến độ), xong chạy lại `bash ~/zac-d1-job/start_d1lao.sh`.** Luật giữ/bỏ: chữ PhoWhisper-ft ≥ 44,1 và chữ chuẩn ≥ 50,2 (trung bình 2 seed). Hai trần API tách riêng: Anthropic 5,56/100 USD, Meta 3,14/81 USD. Máy anh trai chạy từ 18:30, giai đoạn 1 xong khoảng 12:00 ngày 10/11 (JOURNAL entry 125).
+> - **20:25 ngày 09/11:** **Model viết: `claude-opus-5-5` (B40 xong).** Sáu app của dev_lao đã vào bộ sinh; viết mù rồi so với nhãn thật: tool và ID đúng hết, bộ tham số khớp 0,845 → 0,902. **Nhánh D1 cho 46 app đã thấy đã ghi luật giữ/bỏ; một tiền đề của bản giao việc sai (`final_state` không chứa app không ghi), chờ Anh xác nhận cách thay thế (B41).** (JOURNAL entry 124)
+> - **19:18 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
+> - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
+> - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
+> - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
+> - **17:25 ngày 09/11:** **Public có bật D5: 52,68 (+1,61 so với 51,07). Giữ D5** theo luật viết trước; Leader đổi mặc định `SEARCH_GUARD=1` và build L9 từ bản có D5. **Leader đồng ý D1; trần API bỏ giới hạn; Claude bắt đầu cửa 0 (CPU).** Máy anh trai chạy từ khoảng 12:00, giai đoạn 1 xong khoảng 05:00–06:00 ngày 10/11 (JOURNAL entry 119).
+> - **17:15 ngày 09/11:** **Anh muốn làm D1 (sinh dữ liệu) bằng key Claude và Meta; chờ Anh quyết B38.** Đợt chạy trên máy anh trai gồm 9–10 lượt train, 22–26 giờ, nên trước 13/11 chỉ còn chỗ cho khoảng một đợt nữa (JOURNAL entry 118; sửa entry 117).
+> - **15:45 ngày 09/11:** **Anh đã gửi gói cho anh trai chạy giai đoạn 1 (7 lượt train, kết quả khoảng 10/11).** Claude đánh giá phương án và phân rã chỗ mất điểm (JOURNAL entry 117): mất nhiều nhất ở quyết định làm / hỏi lại / dừng (khoảng 27 điểm) và ghi sai tham số hoặc tool (khoảng 28 điểm); ASR khoảng 10,5. **Chờ Anh quyết B37.** B36 (nộp file D5) vẫn chờ.
+> - **04:02 ngày 09/11:** **File public có bật D5 đã xong, Anh nộp được ngay (B36):** `lifemate/runs/pub_d5_2026-11-09/full/submission.jsonl`. 634 dòng, kiểm định dạng đạt, có `time`. 603/634 dòng giống file thử 51,07; 30 dòng khác do guard tìm lại. Guard làm mất 9 lệnh hỏi lại, nên điểm có thể lên hoặc xuống. **Giữ D5 nếu điểm ≥ 50,77** (JOURNAL entry 116).
+> - **02:13 ngày 09/11:** **B28 xong: image Docker 05/11 chạy đúng trên GPU, cho cùng kết quả với lúc chạy ngoài Docker** (627/634 dòng giống file 51,16; hai lượt chỉ khác 1 dòng, do hạn 25 giây). Còn L9 (image chưa có `/code`, notebook). **D5 (search guard của Leader) đang chạy trên public, xong khoảng 04:10. Anh nộp file khi Claude báo; giữ D5 nếu điểm ≥ 50,77 (B36).** File gửi anh trai bản tiếng Anh có link Drive đã xong, còn chờ Leader gửi kích thước và sha256 của gói (JOURNAL entry 112–115).
+> - **22:20 ngày 08/11:** **B28 đang chạy trong Docker trên laptop.** Image của leader nạp được và chạy được trên GPU; torch trong image có hỗ trợ RTX 5090; 3 mẫu giống hệt file 51,16. Hai lượt 634 mẫu xong khoảng 02:40 ngày 09/11. **Anh để máy cắm sạc, đừng tắt máy** (gập nắp được) (B31; JOURNAL entry 111).
+> - **20:54 ngày 08/11:** **Anh đã vào nhóm `docker`, nhưng phải đăng xuất rồi đăng nhập lại (hoặc khởi động lại máy) thì B28 mới chạy được.** Ubuntu 26.04 không có `sg`/`newgrp` như Claude ghi ngày 06/11 (đã sửa). Sau đó Anh mở lại phiên này, nhắn "chạy B28" (B31; JOURNAL entry 110).
+> - **20:25 ngày 08/11:** **B35 xong: file public thử bằng cấu hình nộp cuối được 51,07** (file 05/11: 51,16; −0,09, đúng phần hạn 25 giây cắt 9 dòng). Trang nộp nhận trường `time`. **Cấu hình nộp cuối đã chốt; việc còn lại là Docker (B28/B31, L9), hạn 11:59 ngày 16/11.** B34 (khoá Drive) vẫn chờ Anh (JOURNAL entry 109).
+> - **20:00 ngày 08/11:** **File public thử đã xong, Anh nộp được ngay (B35):** `lifemate/runs/pub_trial_2026-11-08/full/submission.jsonl`. 634 dòng, kiểm định dạng đạt, có trường `time`. 625/634 dòng giống hệt file 51,16; 9 dòng còn lại bị hạn 25 giây cắt các lời gọi cuối, nên điểm có thể thấp hơn 51,16 tối đa khoảng 1,4 (JOURNAL entry 108).
+> - **17:57 ngày 08/11:** **Anh nhờ làm một file public để nộp thử.** Claude chạy đúng cấu hình nộp cuối (giao diện BTC của PR #15, hạn 25 giây, có trường `time`) trên laptop, ngoài Docker. 3 mẫu thử giống hệt file 51,16. Đủ 634 mẫu xong khoảng 20:00, rồi Anh nộp (B35; JOURNAL entry 108).
+> - **16:45 ngày 08/11:** **Pilot v2 không đạt luật ghi trước:** chữ ASR −0,46 (cần +2,0), kể cả trên đúng 6 app được sinh dữ liệu (−0,98). **Dừng hướng dữ liệu sinh, Docker giữ bản 05/11.** **Việc gấp còn lại là Docker:** B28 (B31) chưa chạy, L9 (hạn 11:59 ngày 16/11). **B34 [Anh]:** thư mục Drive đang mở cho bất kỳ ai có link, trong đó có dữ liệu thi; chuyển sang "Hạn chế" và nhờ anh trai xoá dữ liệu trên máy (JOURNAL entry 107).
+> - **17:25 ngày 06/11:** **Anh đã tải gói lên một thư mục Google Drive riêng; hướng dẫn đã sửa:** anh trai lấy gói từ thư mục đó và tải kết quả lên lại đúng thư mục đó. Bản có link nằm ngoài git (`cloud_results/anh_trai/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`); bản trong repo không ghi link. **Anh chia sẻ thư mục cho tài khoản của anh trai với quyền "Người chỉnh sửa", giữ chế độ "Hạn chế"** (B33; JOURNAL entry 106).
+> - **17:20 ngày 06/11:** **File hướng dẫn cho AI bên máy anh trai đã xong:** [`docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md`](docs/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md). File nói train gì, lệnh nào, lấy file ở đâu, gửi lại gì. Lệnh nay tự áp luật ghi trước khi chạy xong. Anh gửi file này kèm gói (B33; JOURNAL entry 105).
+> - **12:47 ngày 06/11:** **Gói pilot v2 cho máy anh trai đã sẵn, sớm hơn lịch một ngày.** 202 mẫu sinh cho 6 app bị giấu, theo đúng tỉ lệ của mẫu thật (lịch sử, dùng lại ID, câu không gọi tool); 4 lượt 4-bit, mỗi bên 2 seed. Đã chạy thử và kiểm gói trên laptop. Chi 9,36 USD, tổng API 52,39/80. **Anh gửi gói và lệnh cho anh trai (B33), tối nay nếu được** (JOURNAL entry 104, [`docs/CLOUD_PILOT_V2_2026-11-07.md`](docs/CLOUD_PILOT_V2_2026-11-07.md)).
+> - **11:45 ngày 06/11:** Máy anh trai chỉ chạy 1 lần mỗi ngày. **Vẫn đủ: dữ liệu sinh v2 cần 2 lần chạy** (pilot 2 seed tối 07/11; train đủ dữ liệu tối 08 hoặc 09/11), chốt model 13/11, API khoảng 25 USD. **Anh duyệt B32** (JOURNAL entry 103).
+> - **11:40 ngày 06/11:** Anh hỏi train ở máy nào. **Nếu train (chỉ còn hướng dữ liệu sinh v2) thì dùng máy anh trai:** nhanh gấp 3,7 lần, chạy 2 seed cùng lúc. Laptop để kiểm Docker (B31, L9). Cần biết anh trai cho dùng máy mấy lần trước 13/11 (JOURNAL entry 102).
+> - **11:35 ngày 06/11:** **Kết quả gói v3 từ máy anh trai đã về (2× RTX 4090): không có adapter nào tốt hơn để thay vào image.** 4B bf16 so với 4B 4-bit đang nộp (chữ chuẩn): dev_random +5,70, dev_lao −2,12, gộp +1,56. Cùng một công thức train trên hai máy đã lệch tới 4,21 điểm, nên các mức chênh này chưa nói được gì. **B32:** hướng (1) xong; Claude không đề xuất bf16; còn hướng (2) dữ liệu sinh v2 (JOURNAL entry 101).
+> - **09:50 ngày 06/11:** **Đã tải xong file image (09:47, đủ byte, sha256 khớp); Docker 29.1.3 và NVIDIA toolkit 1.20.1 đã cài; Anh chưa vào nhóm `docker`.** Anh hỏi có phải nộp luôn bản này, không cải tiến nữa không. **Trả lời: đóng gói bản này là để có sẵn một bản chạy được; có model tốt hơn thì chỉ thay một thư mục trong image.** Nhưng hiện chưa có cải tiến nào có bằng chứng; **Anh chọn hướng ở B32** (JOURNAL entry 100).
+> - **09:40 ngày 06/11:** **Leader đã gửi image (L8 xong) và đã đọc hướng dẫn Docker của BTC (L4 xong).** Anh mang máy đi lúc 11:00, nên **B28 chạy tối nay (B31, khoảng 4 giờ)**. **Trước 11:00, Anh chạy `sudo bash ~/zac-c3/b28_setup_docker.sh` và tải file image từ Drive (B30).** **Theo hướng dẫn BTC, máy chấm là RTX 5090 32 GB, CUDA 13.2; gói nộp cuối phải theo giao diện `/code/predict.sh` → `/data` → `/result/submission.jsonl`, có notebook đo thời gian, trường `time`, README và code train.** Image 05/11 chưa theo giao diện này; việc mới cho leader là L9: [`docs/BTC_DOCKER_GUIDE_2026-11-06.md`](docs/BTC_DOCKER_GUIDE_2026-11-06.md) (JOURNAL entry 99).
+> - **02:04 ngày 06/11:** **B28: Anh chọn kiểm image Docker trên laptop** (không thuê GPU). **Anh cài Docker + NVIDIA toolkit (B30, 15 phút)** và gửi leader tin nhắn có sẵn; **leader gửi file image và lệnh `docker run` (L8)**. Hướng dẫn: [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md) (JOURNAL entry 98).
+> - **00:47 ngày 06/11:** **B29 xong: public 49,65, thấp hơn 51,16. Docker giữ `ckpt/asr_phoft/merged`**; không phải gửi leader thư mục mới. Image leader đã build là bản cuối về model. **Việc còn lại cho Docker: B28** (kiểm image trên GPU 24 GB) (JOURNAL entry 95).
+> - **18:15 ngày 05/11:** **B27 xong. Anh hoặc leader nộp B29:** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (PhoWhisper-ft học thêm dev; WER 54 mẫu 7,65 → 7,08). ≥ 51,16 thì Docker đổi ASR. `predict.sh` 3 mẫu trên laptop đạt `"ok": true`, giống hệt file 51,16 (JOURNAL entry 94).
+> - **17:45 ngày 05/11:** **B27 chạy tiếp** (đóng băng 13:38–17:45). File public dự kiến xong khoảng 18:10–18:15 (JOURNAL entry 93).
+> - **13:38 ngày 05/11:** **Anh cần dùng máy: B27 đóng băng** ở bước agent làm file public (còn khoảng 25 phút). Kiểm WER đã qua (7,65 → 7,08). Chạy tiếp: `systemctl --user thaw lifemate-asr-phoft-all` (JOURNAL entry 92).
+> - **10:24 ngày 05/11:** **Leader build xong Docker với PhoWhisper-ft** (12,6 GB; sha256 khớp; chữ ASR 3 mẫu khớp nguyên văn). Bước agent hết VRAM trên GPU 4 GB (thiếu 116 MiB), nên chưa có `"ok"`. **Anh quyết B28:** thuê GPU 24 GB một lượt để chạy image (JOURNAL entry 91).
 > - **09:20 ngày 05/11:** **B27 xong: Anh duyệt. Laptop fine-tune lại PhoWhisper từ 09:18**, train xong khoảng 12:00. Đạt kiểm WER thì làm tiếp file public, xong khoảng 14:00–14:30 (JOURNAL entry 90).
 > - **09:06 ngày 05/11:** Trong lúc leader làm B26, Anh không phải chờ. **Anh quyết B27:** cho laptop fine-tune lại PhoWhisper trên gần đủ train không (JOURNAL entry 89).
 > - **08:54 ngày 05/11:** **Lượt prompt `xref` không qua cửa 1** (xong 06:38): dev_lao chữ ASR 39,20 → 38,18 (−1,02), chữ chuẩn 53,40 → 52,72 (−0,69). Dừng theo luật; [PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14) đã đóng, không merge (Anh duyệt 09:03).
@@ -93,15 +135,18 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 | Máy | Ai lo | Đang chạy gì | Xong khoảng | Kết quả |
 |---|---|---|---|---|
-| Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); 23:30 ngày 04/11 – 06:38 ngày 05/11 lượt prompt `xref` (không qua cửa 1). Từ 09:18 ngày 05/11 fine-tune lại PhoWhisper trên gần đủ train (B27), xong khoảng 14:00–14:30.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
+| Laptop của Anh (RTX 4070) | Claude theo dõi | **04/11: chấm 4B với chữ PhoWhisper fine-tune 14:44–16:06 (qua luật); 16:45–18:40 làm file nộp public bằng PhoWhisper-ft (B24; public 51,16, B25); 23:30 ngày 04/11 – 06:38 ngày 05/11 lượt prompt `xref` (không qua cửa 1). Từ 09:18 ngày 05/11 fine-tune lại PhoWhisper trên gần đủ train (B27); kiểm WER qua; đóng băng 13:38–17:45 vì Anh cần dùng máy; file public xong 18:09 (B29). Rảnh từ 18:14.** Trước đó: rảnh từ 07:34 ngày 04/11. Lượt train lại trên đủ 1.545 mẫu (00:13–06:03) và file nộp public (06:03–07:34) đã xong (B19). Lượt chữ trộn trên fit_lao (08:54–15:27) không qua luật gộp. Lượt chữ trộn trên fit_random (00:19–07:30, dừng 00:37–00:53 vì máy khởi động lại) qua cửa 1: chữ ASR +2,31, chữ chuẩn +0,43. Trước đó GPU rảnh từ 10:13 ngày 02/11. C7 (4B trên fit_random) xong 10:13: **chốt 4B**. C6 (4B trên fit_lao) xong 03:28: 4B thắng rõ. Lượt sáng 01/11 (09:27–10:13) đã bỏ. File nộp public mới đã xong (C5). C3 xong lúc 00:53 (5 lượt chấm, entry 52). Trước đó: 4 lượt kiểm C4 xong lúc 21:05. Hai lượt train đã xong: **(1)** `q17b_random_asrtrain` (học trên chữ turbo): xong 17:00, không đáng dùng (C1). **(2)** `q17b_random_up` (công thức B-up): xong 20:19, không giữ (C2) | Đã xong | Nằm sẵn trên laptop (`lifemate/runs/`), không cần gửi |
 | Kaggle của leader (T4 x2) | Leader | **Xong khoảng 15:50, không train:** T4 chỉ 157 token/giây (khoảng 22,5 giờ mỗi epoch), nên ô lệnh tự bỏ qua. Chấm lại adapter laptop trên T4: 54,35 so với 53,92 (+0,43; 228/233 mẫu giống hệt) | Đã xong | Đã giải nén ở `cloud_results/kaggle/` |
-| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
+| Máy Google của anh trai Anh | Anh trai | Gói v3 (4B và 1.7B) với lệnh có kiểm GPU bf16. **Anh đã gửi (16:12), đang chờ phản hồi** *(04/11 12:25: Anh báo anh trai đã bắt đầu train.)* *(06/11 11:23: xong; máy là 2× RTX 4090, chạy 22:21–01:04; báo cáo ở `cloud_results/anh_trai/`; không có adapter tốt hơn, JOURNAL entry 101.)* *(06/11 12:47: gói pilot v2 sẵn, chờ Anh gửi (B33); chạy 1 lần mỗi ngày.)* *(08/11: pilot v2 chạy xong 19:22 ngày 07/11 – 02:36 ngày 08/11, luật FAIL; không còn việc cho máy này; dọn dữ liệu, B34.)* | 3–5 giờ sau khi anh trai chạy (2–4 GPU A100) | `~/cloud_results_*.tar.gz`, `~/zac_logs.tar.gz` (máy anh trai) |
 
 - **Laptop:**
   - Chấm 4B với chữ PhoWhisper fine-tune xong 16:06 (qua luật).
   - File nộp public bằng PhoWhisper-ft xong 18:40 (B24); public 51,16 (B25).
   - Lượt `xref` chạy 23:30–06:38, không qua cửa 1 (dev_lao chữ ASR −1,02).
-  - **09:18 – khoảng 14:30 ngày 05/11:** fine-tune lại PhoWhisper (B27), rồi làm file public nếu đạt kiểm WER. Dùng máy được nhưng chậm hơn; để máy cắm sạc và mở. Dừng: `systemctl --user stop lifemate-asr-phoft-all`; chạy lại: `bash ~/zac-c3/start_asr_phoft_all.sh` (phần train sẽ chạy lại từ đầu).
+  - **09:18 ngày 05/11:** fine-tune lại PhoWhisper (B27). Train xong 12:08; kiểm WER qua (7,65 → 7,08); chữ ASR public xong 12:25.
+  - 13:38–17:45 đóng băng vì Anh cần dùng máy. **File public xong 18:09** (B29); chạy lại riêng `public_0497` lúc 18:10.
+  - 18:12–18:14: `predict.sh` 3 mẫu (nhánh `q4b-laptop`, không Docker) đạt `"ok": true`.
+  - **Rảnh từ 18:14 ngày 05/11.** Anh mang máy đi từ 11:00 tới tối 06/11. **Tối nay chạy thử image Docker (B28, B31), khoảng 4 giờ:** 3 mẫu, rồi đủ 634 mẫu hai lần, bằng `~/zac-c3/b28_run.sh` (đã thử bằng lệnh `docker` giả).
 - **Bài học từ Kaggle:** train agent cần GPU có bf16 phần cứng (A100, A10, A30, L4, H100, RTX 30/40). T4, V100, P100 chậm gần 9 lần, nên không dùng để train agent. Colab T4 vẫn fine-tune ASR được, vì Whisper chạy fp16.
 
 ### B. Việc tiếp theo, làm theo thứ tự
@@ -165,11 +210,158 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - *(13:40 ngày 02/11) Anh nâng trần lên 30 USD; chưa báo kết quả chấm. Claude sinh pilot ngay (chỉ dùng API, không cần GPU) bằng `muse-wonder-1.0`. Phần train vẫn chờ GPU rảnh (sau B11). Nếu Anh chấm thấy dưới 4/5 câu tự nhiên thì báo để Claude dừng trước khi train.*
   - *(13:48 ngày 02/11) Anh chọn "Tự bật khi xong": train pilot tự bật khi B11 và pilot sinh xong.*
   - *(14:54 ngày 02/11) Pilot sinh xong 280 mẫu đạt; train đã bật lúc 14:52. Kết quả chấm vẫn có ích: nếu dưới 4/5 câu tự nhiên thì báo để Claude dừng train, hoặc bỏ kết quả pilot.*
-- [x] **B27. (09:06 ngày 05/11)** *Anh duyệt lúc khoảng 09:10 ngày 05/11 ("Chạy ngay"); job chạy từ 09:18.* (1 phút) **Cho laptop fine-tune lại PhoWhisper trên gần đủ train?**
+- [x] **B27. (09:06 ngày 05/11)** *Anh duyệt lúc khoảng 09:10 ngày 05/11 ("Chạy ngay"); job chạy từ 09:18, xong 18:09 (đóng băng 13:38–17:45). WER qua (7,65 → 7,08); file public sẵn (B29).* (1 phút) **Cho laptop fine-tune lại PhoWhisper trên gần đủ train?**
   - **Vì sao:** bản hiện tại (public 51,16) chỉ học 1.033 mẫu. Bản mới học thêm 495 mẫu dev, như cách agent học đủ 1.545 mẫu (public 45,39 → 46,29). ASR vẫn là chỗ mất nhiều điểm nhất đã đo.
   - **Claude làm:** cùng công thức Colab, giữ riêng 54 mẫu kiểm cũ để so WER với bản hiện tại. Đạt thì làm file nộp public. Laptop khoảng 4–6 giờ, vẫn dùng máy được nhưng chậm hơn. 0 USD.
   - **Luật ghi trước:** WER trên 54 mẫu kiểm không tệ hơn quá 0,5 điểm thì làm file public. Public ≥ 51,16 thì Docker đổi sang bản mới (leader thay một thư mục); thấp hơn thì giữ bản hiện tại.
-- [ ] **B26. (00:30 ngày 05/11; cập nhật 08:54)** (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
+- [x] **B29. (18:15 ngày 05/11)** *Anh nộp, được **49,65** (báo lúc khoảng 00:45 ngày 06/11); thấp hơn 51,16 nên Docker giữ `ckpt/asr_phoft/merged`.* (5 phút) **Nộp file public bằng PhoWhisper-ft-all** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoftall_fix0497.jsonl` (sha256 `4d7e1cf4c80f…`; cột SLM). Báo lại điểm cho Claude.
+  - **Khác file 51,16 ở đâu:** chỉ ASR (PhoWhisper-ft học thêm 495 mẫu dev). Cùng code, adapter `q4b4_all/final` và hạn 60 giây. 274/634 dòng trả lời khác. WER trên 54 mẫu kiểm: 7,65 → 7,08.
+  - **Lưu ý:** nộp file `_fix0497`, không nộp `e2e_public_q4b_all_phoftall.jsonl`. File kia có dòng `public_0497` rỗng vì mẫu này đang chạy lúc đóng băng 13:38; Claude đã chạy lại riêng mẫu đó (JOURNAL entry 94).
+  - **Luật ghi trước (B27):** ≥ 51,16 thì Docker đổi sang `ckpt/asr_phoft_all/merged`: Anh gửi leader thư mục này (2,9 GB, 6 file; sha256 `model.safetensors`: `478866317dfe91945ad3bc3fc1ed5da9d58ea8b2e66b1eb6256646afb3959d98`), leader thay thư mục `ckpt/asr_phoft/merged` trong image. Thấp hơn thì giữ bản hiện tại.
+- [ ] **B30. (02:04 ngày 06/11; cập nhật 09:40)** (15 phút, cần sudo; **làm trước 11:00**) **Cài Docker và NVIDIA Container Toolkit trên laptop, rồi tải file image.**
+  - **Cài:** `sudo bash ~/zac-c3/b28_setup_docker.sh`. Script chạy đúng các lệnh ở mục 1 của [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md), rồi kiểm GPU trong container. Dòng cuối phải là `B28 SETUP OK`.
+  - **Tải:** mở link Drive leader gửi trong Chrome (đăng nhập tài khoản Google mà leader đã chia sẻ file), bấm Tải xuống rồi "Vẫn tải xuống", lưu vào `~/Downloads/zac_lifemate_2026-11-05.tar` (12.635.573.248 byte). File chia sẻ riêng, phải đăng nhập mới tải được, nên Claude không tải hộ.
+  - **Tuỳ Anh:** `sudo usermod -aG docker $USER` để Claude chạy `docker` không cần sudo. Nhóm này có quyền tương đương root. Không thêm thì tối nay Anh tự chạy một lệnh sudo (B31).
+  - Xong thì báo Claude. Nếu còn kịp trước 11:00, Claude kiểm sha256, nạp image và chạy 3 mẫu.
+- [x] **B32. (09:50 ngày 06/11)** *(11:50: Anh chọn (2), "Làm theo lịch"; train trên máy anh trai; JOURNAL entry 104.)* (5 phút quyết) **Trong 10 ngày còn lại, thử cải tiến model theo hướng nào?** Bản 05/11 vẫn đóng gói trước. Có model tốt hơn thì chỉ thay thư mục adapter hoặc ASR trong image, chạy lại B28, và phải chốt trước khoảng 13/11 để kịp L9.
+  - **Đã thử sau 51,16 và không qua luật ghi trước:**
+    - prompt `xref`: dev_lao chữ ASR −1,02;
+    - PhoWhisper-ft-all: public 49,65;
+    - chữ trộn trên fit_lao: gộp −0,69;
+    - dữ liệu sinh pilot 1: dev_lao −2,09;
+    - train thêm epoch: loss dev đã phẳng.
+  - **Chỗ mất điểm lớn nhất (đã đo):**
+    - app chưa thấy: 65% mẫu public; 4B kém 12–15 điểm;
+    - ASR: khoảng 13 điểm;
+    - quyết định làm / hỏi / bỏ qua, và chọn ID.
+  - **(1) Hỏi anh trai kết quả gói v3** (4B train trên A100, bắt đầu từ 04/11). Không tốn tiền; Anh chỉ cần nhắn.
+    - *(11:35 ngày 06/11) Xong (máy thật là 2× RTX 4090). Không có adapter nào tốt hơn để thay:*
+      - *4B bf16 so với 4B 4-bit đang nộp, chữ chuẩn: dev_random 65,61 → 71,31; dev_lao 53,40 → 51,28; gộp 59,15 → 60,71;*
+      - *cùng công thức train trên hai máy lệch tới 4,21 điểm, lớn hơn các mức chênh trên;*
+      - *agent học trên chữ ASR: chữ chuẩn −7,97, bỏ (JOURNAL entry 101).*
+  - **(2) Dữ liệu sinh v2 cho app chưa thấy:**
+    - Sửa hai lý do pilot 1 thất bại: call lệch quy ước của nhãn, và 90% mẫu mở đầu bằng call đọc.
+    - Chi phí: Claude viết khoảng 1 ngày; API dưới 15 USD (còn 36,97 trong trần 80); laptop train + chấm khoảng 7 giờ, chạy ban đêm.
+    - Qua pilot thì sinh cho 11 app public, train lại, nộp public, rồi thay vào Docker.
+    - Rủi ro cao: pilot 1 làm giảm điểm.
+  - **(3) Nạp model ở bf16 thay vì 4-bit:**
+    - Máy chấm có 32 GB, nên không còn bắt buộc 4-bit.
+    - Adapter được train trên nền 4-bit, nên điểm có thể tăng hoặc giảm chút ít; tốc độ thì nhanh hơn.
+    - Cần GPU từ 16 GB để đo (1–2 giờ); laptop 8 GB không làm được.
+  - **Claude đề xuất:** làm (1) ngay hôm nay; làm (2) nếu Anh chấp nhận rủi ro và chi phí; làm (3) chỉ khi có GPU lớn, ví dụ máy anh trai.
+  - *(11:35 ngày 06/11) **Claude đề xuất mới:** không làm (3), vì trên dev_lao (tập giống public nhất) bf16 kém 2,12. Còn hai lựa chọn:*
+    - *giữ bản 05/11 và dồn sức vào đóng gói (B31, L9);*
+    - *làm (2). Nếu anh trai cho dùng máy thêm, mỗi vòng train + chấm còn khoảng 2 giờ thay vì 7 giờ.*
+  - *(11:45) Máy anh trai 1 lần mỗi ngày: vẫn đủ. Cần 2 lần chạy, lịch và luật ở JOURNAL entry 103. Anh báo nếu mỗi lần bị giới hạn giờ (giả định 6–7 giờ trên 2 GPU).*
+  - *(11:40) Nếu làm (2): train trên máy anh trai, dùng đúng công thức 4-bit, mỗi bên 2 seed. Claude làm gói mới từ code `q4b-laptop`. Anh hỏi anh trai: trước 13/11 cho dùng máy mấy lần (JOURNAL entry 102).*
+- [x] **B33. (12:47 ngày 06/11)** *(08/11 15:55: anh trai đã chạy và tải kết quả lên Drive; luật FAIL, chữ ASR −0,46; JOURNAL entry 107.)* (5 phút) **[Anh] Gửi anh trai gói pilot v2 và lệnh chạy; tối nay nếu anh trai rảnh.**
+  - **Gói:** `~/zac_cloud_bundle_20261106_synthv2.tar.gz` (5.752.327 byte, sha256 `8314687a327301d30410549489644494250067d5522548d3b49c4accc5c0c6a3`). *(17:25: Anh đã tải lên thư mục Drive riêng.)*
+  - **Thư mục Drive:** chia sẻ cho tài khoản Google của anh trai với quyền "Người chỉnh sửa", để anh trai tải kết quả lên được. Giữ chế độ "Hạn chế", không bật "Bất kỳ ai có đường liên kết": gói có dữ liệu thi.
+  - **Hướng dẫn:** gửi anh trai bản có sẵn link, `~/Zalo AI Challenge/cloud_results/anh_trai/BROTHER_AI_GUIDE_PILOT_V2_2026-11-07.md` (ngoài git; có thể tải lên cùng thư mục Drive). File có:
+    - cách tải gói từ Drive (trình duyệt hoặc `rclone`);
+    - lệnh chạy, khoảng 6 giờ;
+    - cách kiểm và cách xử lý lỗi;
+    - mẫu báo cáo và cách tải kết quả lên.
+  - **Anh trai tải lên cùng thư mục Drive:** `zac_v4_results.tar.gz` và báo cáo `ZAIC_pilot_v2_report_<ngày>.md`. Anh tải cả hai về `~/Zalo AI Challenge/cloud_results/anh_trai/` rồi báo Claude.
+  - **Sau đó:**
+    - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
+    - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B47. (15:51 ngày 11/11)** (2 phút) **[Anh] Gửi anh trai file `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` kèm chữ "go".** Không gửi file `…D1FINAL…` cũ. Gói `zac_cloud_bundle_20261110_d1full.tar.gz` đã có trên Drive. Kết quả về: Run I khoảng 5–6 giờ sau khi bắt đầu, Run Q khoảng 12–13 giờ.
+- [x] **B46. (15:00 ngày 11/11)** (5 phút quyết) *(15:51 ngày 11/11: Anh chọn chạy cả hai cùng lúc, mỗi lượt một máy; JOURNAL entry 136.)* **[Anh, cùng Leader] Máy anh trai chạy gì tiếp?** Gói `…d1full` đã trên Drive.
+  - **(1) Qwen3.5 + D1 (Claude đề xuất nếu nhiều khả năng BTC chấp nhận bản text-only):** cùng gói, chỉ đổi lệnh chạy; khoảng 11–12 giờ; chưa đo trên dev. Luật: thay A1 khi trung bình public 2 seed ≥ A1 + 1,5.
+  - **(2) Qwen3-4B + D1 (gói như đã đóng):** 8–9 giờ; là ứng viên nếu BTC không chấp nhận Qwen3.5. Luật: ≥ 54,18 (entry 127).
+  - Claude sửa file hướng dẫn cho anh trai theo lựa chọn; anh trai bắt đầu khi Anh báo "go".
+- [x] **B45. (15:00 ngày 11/11)** *(17:21 ngày 11/11: Anh nộp. A1 seed 0: 57,03; seed 1: 56,39; trung bình 56,71 ≥ 54,18 → đạt; mốc cùng máy: 52,43. Leader đang hỏi BTC. JOURNAL entry 137.)* (5 phút) **[Anh hoặc leader] Nộp 2 file public của A1; hỏi BTC cách đếm tham số bản text-only nếu chưa hỏi.**
+  - **File** (gom lại lúc 15:51 ngày 11/11): `cloud_results/nop_public_2026-11-11/1_A1_qwen35_seed0.jsonl`, `2_A1_qwen35_seed1.jsonl`, và file mốc cùng máy `3_C0_moc_cung_may_anh_trai.jsonl` (B44). Cả 3 đều 634 dòng, kiểm đạt, có `time`.
+  - **Hỏi BTC:** email `aichallenge@zalo.me` (kênh hỗ trợ duy nhất trang cuộc thi ghi); email soạn sẵn ở JOURNAL entry 136.
+  - **Luật (ghi trước khi có điểm, entry 135):** A1 thay bản đang nộp khi trung bình 2 seed ≥ 54,18 **và** BTC chấp nhận cách đếm. Nộp thêm file mốc cùng máy (B44) nếu còn lượt.
+- [x] **B44. (13:46 ngày 11/11)** *(17:21 ngày 11/11: Anh nộp cùng B45: 52,43, lệch −0,25 so với 52,68, nên giữ mốc 52,68; JOURNAL entry 137.)* (2 phút) **[Anh hoặc leader] Nộp file D5 của máy anh trai lên public, để có mốc cùng máy cho luật 54,18.**
+  - **File:** `cloud_results/anh_trai/v5_d5_2026-11-11/x/pub_c0_guard.jsonl` (634 dòng, kiểm đạt, có `time`). Cùng adapter, cùng D5 với file 52,68, chỉ khác GPU (RTX 4090); 581/634 dòng giống hệt.
+  - **Đọc điểm thế nào:** hai lượt bản cuối D1 cũng làm file public trên máy anh trai. Luật 54,18 = 52,68 (laptop) + 1,5. Nếu file này lệch khỏi 52,68 quá khoảng 0,5 điểm, Claude đề xuất đổi mốc thành điểm của file này (+1,5) trước khi có điểm bản cuối, rồi Anh và Leader duyệt.
+  - Có hạn số lần nộp mỗi ngày thì ưu tiên hai file bản cuối hơn file này.
+- [x] **B43. (22:35 ngày 09/11)** *(14:03 ngày 11/11: xong; gói trên Drive 256,2 MB, khớp 268.666.293 byte; JOURNAL entry 134.)* *(13:46 ngày 11/11: gói `zac_cloud_bundle_20261110_d1full.tar.gz` chưa có trên Drive; vẫn ở `~/` của laptop, 268.666.293 byte. Nên làm B34 (khoá thư mục) trước khi tải lên. JOURNAL entry 132.)* (10 phút; JOURNAL entry 129) **[Anh] Đưa gói bản cuối lên Drive và gửi file hướng dẫn cho anh trai.**
+  - **Gói (đổi lúc 22:42, bản đủ 2.139 mẫu):** `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte, sha256 `d02a3c04…ca90fcc`). Có dữ liệu thi: chỉ tải lên thư mục Drive của đội, để chế độ "Hạn chế". Gói `…_d1final.tar.gz` đã xoá; nếu đã tải lên Drive thì xoá đi.
+  - **File hướng dẫn:** `cloud_results/anh_trai/BROTHER_AI_GUIDE_D1FINAL_2026-11-10_EN.md` (đã có link Drive, kích thước và sha256).
+  - **Dặn anh trai:** chưa chạy ngay. Chỉ chạy khi đợt đang chạy (`~/zac_v5`) đã xong **và** Anh nhắn "go".
+  - **Anh nhắn "go" khi:** Claude báo seed 0 của lượt dev_lao đạt cả hai ngưỡng (44,1 và 50,2), khoảng 08:30 ngày 10/11. Không đạt thì không chạy.
+  - **Sau đó:** nộp hai file public anh trai gửi về; thay bản nộp khi trung bình ≥ 54,18.
+- [x] **B42. (21:30 ngày 09/11)** *(21:40: Anh quyết qua phiên phụ: "Bỏ 4 lượt đo app đã thấy"; máy anh trai chạy 2 lượt bản cuối; JOURNAL entry 127.)* (3 phút; JOURNAL entry 126) **[Anh, bàn với Leader] Chạy 4 lượt đo nhánh app đã thấy ở đâu.**
+  - Cần 2 lượt mốc (`fit_random`) và 2 lượt có D1 (`fit_random` + `d1_seen_v1.jsonl`, 752 mẫu), cùng một máy, chấm dev_random.
+  - **Máy anh trai** (rảnh khoảng 16:30–20:30 ngày 10/11): 4 lượt trên 2 card, khoảng 8–9 giờ; cần đóng một gói mới gửi sang.
+  - **Laptop:** bận lượt dev_lao tới khoảng 21:00 ngày 10/11; sau đó 4 lượt mất khoảng 40–50 giờ, không kịp mốc 13/11.
+  - **Claude đề xuất:** máy anh trai, chạy ngay sau đợt hiện tại; gói đó chở luôn lượt bản cuối nếu lượt dev_lao đạt luật.
+- [x] **B41. (20:25 ngày 09/11)** *(20:58: Anh đồng ý; JOURNAL entry 125.)* (3 phút; JOURNAL entry 124) **[Anh] Xác nhận cách lấy state cho nhánh D1 của 46 app đã thấy.**
+  - Bản giao việc ghi: `final_state` của app mà mẫu không ghi là state ban đầu. Dữ liệu không như vậy: `final_state` chỉ có app mà nhãn đã ghi.
+  - **Claude đề xuất:** dùng `final_state` sau khi ghi làm state ban đầu cho kịch bản mới, cộng kết quả các lệnh đọc không tham số. Phủ 39/46 app; 4 app chỉ đọc (fuel_price, lottery, exchange_rate, calculator) phải tự dựng state.
+  - Anh trả lời: đồng ý, hoặc cách khác.
+- [x] **B40. (19:18 ngày 09/11)** *(20:25: Anh chọn `claude-opus-5-5`; JOURNAL entry 124.)* (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
+  - **File:** `lifemate/gen/d1_t1_say_compare.md`. Mỗi kịch bản có dòng "muốn" (điều người dùng cần) và ba câu do ba model viết.
+  - **Chấm ba điều:** câu có tự nhiên như người nói thật không; có nói đủ và đúng mọi con số, ngày giờ, tên không; có thêm việc hay thông tin ngoài dòng "muốn" không.
+  - **Claude đề xuất:** `claude-opus-5-5` làm model chính (khoảng 7,7 USD mỗi 1.000 câu); có thể trộn `muse-spark-1.3` (3,5 USD) cho đa dạng, nhưng không cho nó viết câu tự sửa giữa chừng.
+  - Báo Claude: model chọn, và những câu Anh thấy sai để sửa prompt.
+- [x] **B39. (17:32 ngày 09/11)** *(19:18: Anh đã tạo `~/.zac_anthropic_env`.)* (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
+  - Chạy trong terminal, dán key khi được hỏi (key không hiện lên màn hình, không dán vào chat):
+    `read -rs -p "Anthropic API key: " K; echo; printf 'export ANTHROPIC_API_KEY=%s\n' "$K" > ~/.zac_anthropic_env; chmod 600 ~/.zac_anthropic_env; unset K`
+  - Key Meta đã có ở `~/.zac_meta_env` (tạo 02/11). Nếu Anh muốn dùng key Meta mới (90 USD) thì chạy lại lệnh tương tự với `META_API_KEY` và `~/.zac_meta_env`.
+  - Cửa 1 chi tối đa 5 USD cho cả hai nhà cung cấp.
+- [x] **B38. (17:15 ngày 09/11)** *(17:25: Anh duyệt; Leader đồng ý; trần API bỏ giới hạn; anh trai chạy từ khoảng 12:00; JOURNAL entry 119.)* (5 phút đọc; JOURNAL entry 118) **[Anh, bàn với Leader] Duyệt D1 theo ba cửa.**
+  - **Cửa 0** (CPU, 0 USD): code tự sinh lại nhãn train từ catalog; khớp ≥ 80% thì đi tiếp, dưới 60% thì dừng D1.
+  - **Cửa 1** (API tối đa 5 USD): 50 mẫu cho 3 app public; Anh đọc 20 câu.
+  - **Cửa 2** (API tối đa 35 USD): sinh đủ; laptop đo trên dev_lao (2 seed, khoảng 16 giờ), máy anh trai train bản cuối sau đợt hiện tại.
+  - **Anh trả lời:** trần API mới là bao nhiêu (ghi nhớ hiện tại: 80 USD tổng, đã chi 52,39); Leader có đồng ý đưa D1 lên trước không; anh trai bắt đầu chạy lúc mấy giờ.
+- [ ] **B37. (15:45 ngày 09/11)** (5 phút đọc; JOURNAL entry 117) **[Anh, bàn với Leader] Quyết hai việc trong lúc chờ máy anh trai.**
+  - **Việc 1: chạy D5 trên dev có nhãn bằng laptop.** Khoảng 1,5 giờ GPU, 0 USD; laptop đang rảnh.
+    - Câu hỏi: D5 tăng hay giảm điểm trên 495 mẫu có nhãn; luật "lặp 3 bước thì dừng" có cắt lệnh hỏi lại đúng không.
+    - Kết quả không đổi luật public 50,77; chỉ dùng để sửa luật dừng nếu cần.
+  - **Việc 2: gửi Leader ba luật bổ sung, viết trước khi có kết quả train.**
+    - Nhánh thắng không được làm số mẫu vượt 25 giây trên laptop tăng quá 1% số mẫu.
+    - Nhánh nằm trong khoảng +1,5 tới +3,0 thì chạy thêm 2 seed, không loại ngay.
+    - Bản giai đoạn 2 chỉ thay bản 05/11 khi trung bình public 2 seed ≥ bản cùng trạng thái D5 + 1,5.
+  - **Kèm theo:** cho Claude push nhật ký 112–117 lên `main` hay chưa.
+- [x] **B36. (02:13 ngày 09/11)** *(17:25: Anh nộp, được **52,68**; bản thử 51,07; +1,61; giữ D5; JOURNAL entry 119.)* (2 phút) **[Anh hoặc leader] Nộp file public có bật D5 (search guard).**
+  - **File:** `lifemate/runs/pub_d5_2026-11-09/full/submission.jsonl`. Chỉ khác lượt thử 51,07 ở chỗ bật `SEARCH_GUARD=1`.
+  - **Luật viết trước (RANKING §5 của Leader):** điểm ≥ 50,77 (51,07 − 0,3) thì giữ D5 và bật mặc định trong `docker/predict.sh` và `lifemate/submit.py`; thấp hơn thì bỏ.
+  - Ghi điểm vào đây và báo Claude.
+- [x] **B35. (17:57 ngày 08/11)** *(20:25: Anh nộp, được 51,07; file 05/11 51,16; trang nhận trường `time`; JOURNAL entry 109.)* (2 phút, sau khi Claude báo file xong) **[Anh hoặc leader] Nộp thử file public làm bằng cấu hình nộp cuối.**
+  - **File (xong 19:59, kiểm đạt):** `lifemate/runs/pub_trial_2026-11-08/full/submission.jsonl`, 634 dòng, có trường `time`.
+  - **Ghi lại hai điều:**
+    - trang nộp có nhận dòng có trường `time` không;
+    - điểm so với 51,16. 625/634 dòng giống hệt file 51,16; 9 dòng bị hạn 25 giây cắt các lời gọi cuối, nên điểm có thể thấp hơn tối đa khoảng 1,4.
+  - **Điểm thấp hơn 51,16 quá 1,4 thì báo Claude:** khi đó có chỗ khác ngoài hạn 25 giây.
+- [ ] **B34. (16:45 ngày 08/11)** *(13:59 ngày 11/11: thư mục thuộc tài khoản Anh, không phải Leader; quyền vẫn là "ai có link đều sửa được"; JOURNAL entry 133.)* *(18:41 ngày 09/11: chưa làm. Gói train mới cũng nằm trong thư mục, quyền của gói vẫn là "ai có link đều sửa được". Leader là chủ thư mục; tài khoản của Anh cũng có nút "Manage access" nên có thể tự đổi; JOURNAL entry 122.)* (5 phút) **[Anh] Khoá thư mục Drive và dọn dữ liệu trên máy anh trai.**
+  - **Thư mục Drive `ZAIC_2026`:** đang xem được mà không cần đăng nhập, tức chế độ "Bất kỳ ai có đường liên kết". Trong đó có hai gói chứa dữ liệu thi có licence (`zac_cloud_bundle_20261031_v3.tar.gz`, `zac_cloud_bundle_20261106_synthv2.tar.gz`) và file image `gui_leader_phoft_2026-11-05.tar` (3,14 GB).
+    - Chuyển thư mục sang "Hạn chế": Chia sẻ → Quyền truy cập chung → Hạn chế.
+    - Xoá hai gói, vì pilot đã xong và không có lần chạy 2.
+    - Giữ file image nếu leader còn cần, nhưng chỉ chia sẻ cho người trong đội.
+  - **Máy anh trai:** nhờ xoá `~/zac_v4`, `~/ZAIC_2026`, các file `zac_cloud_bundle_*.tar.gz`, `cloud_results_*.tar.gz`, `zac_logs.tar.gz`, `zac_v4_results.tar.gz` (theo mục 8 của file hướng dẫn).
+- [x] **B31. (09:40 ngày 06/11)** *(02:09 ngày 09/11: xong. 3 mẫu và hai lượt 634 mẫu đều `ok`; lượt 1 giống file 51,16 ở 627/634 dòng; hai lượt khác nhau 1 dòng, do hạn 25 giây; lâu nhất 25,6 giây mỗi mẫu; JOURNAL entry 115.)* (2 phút; máy chạy khoảng 4 giờ) **Tối nay, khi mở lại laptop: cắm sạc, tắt bớt app nặng, báo Claude.**
+  - **(22:20 ngày 08/11) Đang chạy từ 22:14, xong khoảng 02:40 ngày 09/11. Anh để máy cắm sạc, đừng tắt máy; gập nắp được.** 3 mẫu đã đạt.
+  - Khi đó Claude chạy `bash ~/zac-c3/b28_start.sh all`. Lệnh này chạy trong một unit riêng, chặn ngủ cả khi gập máy, và tự dừng nếu chưa có quyền docker.
+  - Nếu chưa vào nhóm, Anh chạy `sudo systemd-inhibit --what=sleep:idle:handle-lid-switch --why=B28 bash /home/truyen-anh-thach/zac-c3/b28_run.sh all` và để nguyên terminal.
+  - **Thứ tự chạy:**
+    1. kiểm số byte và sha256, rồi nạp image;
+    2. `info`: ID image, CUDA, torch có sm_120 cho RTX 5090 không;
+    3. 3 mẫu;
+    4. đủ 634 mẫu hai lần.
+  - Bước nào đã xong thì bỏ qua; bước nào hỏng hoặc `ok` không đúng thì dừng.
+  - Claude báo Anh và leader:
+    - có `"ok"` không;
+    - thời gian mỗi mẫu;
+    - số dòng khác giữa hai lần chạy;
+    - số dòng khác file 51,16;
+    - ID image.
+- [x] **B28. (10:24 ngày 05/11)** *Anh chọn dùng laptop lúc khoảng 01:15 ngày 06/11 (không thuê GPU); việc tiếp theo ở B30 và L8. Laptop không đo được thời gian trên A30.* (1 phút quyết; thuê khoảng 2–3 giờ) **Thuê một GPU 24 GB (tốt nhất A30) để chạy đúng image Docker?**
+  - **Vì sao:** máy leader 4 GB không chạy nổi bước agent. Chưa ai chạy image trọn từ đầu tới cuối, và thời gian trên GPU giống máy chấm chưa đo. Đây là rủi ro mất bài lớn nhất còn lại.
+  - **Làm gì:** leader đẩy image lên registry riêng, chạy trên máy thuê:
+    - 3 mẫu để có `"ok": true`;
+    - đủ 634 mẫu public để đo thời gian mỗi mẫu và đếm số mẫu dừng vì hết giờ;
+    - chạy lại lần nữa để kiểm kết quả giống nhau.
+  - **Khi nào:** sau khi B27 có kết quả (tối 05/11 hoặc 06/11), để chỉ test image cuối một lần.
+  - *(00:47 ngày 06/11) ASR đã chốt (B29: 49,65, giữ bản hiện tại), nên image leader đã build là bản cuối về model. **Làm được ngay.***
+  - *(18:15 ngày 05/11) B27 đã có kết quả; chờ điểm B29 để chốt ASR rồi test image cuối. `predict.sh` 3 mẫu trên laptop (không Docker) đạt `"ok": true`, nên đường code đã đúng; B28 chỉ còn kiểm chính image và đo thời gian.*
+  - **Tiền:** của Anh hoặc leader, không tính vào trần API. Claude không thuê.
+  - **Nếu không thuê:** Anh tự cài Docker + NVIDIA Container Toolkit trên laptop (cần sudo) rồi chạy image trên RTX 4070. Cách này kiểm được `"ok"` nhưng không đo được thời gian trên A30.
+- [ ] **B26. (00:30 ngày 05/11; cập nhật 10:24)** *Leader làm xong phần build (10:20 ngày 05/11): sha256 khớp; image 12,6 GB, không có Whisper-turbo-ft; chữ ASR 3 mẫu khớp tham chiếu. Còn thiếu `"ok"` vì GPU 4 GB hết VRAM ở bước agent (B28).* (Anh 10 phút, leader khoảng 1–2 giờ) **Đổi ASR trong Docker sang PhoWhisper-ft.** Hướng dẫn đầy đủ: [`docs/LEADER_DOCKER_PHOFT_2026-11-05.md`](docs/LEADER_DOCKER_PHOFT_2026-11-05.md).
   - **Anh gửi riêng cho leader** (trong `~/zac-c3/lifemate/`; có lệnh `tar` gói tất cả trong hướng dẫn):
     - `ckpt/asr_phoft/merged/` (2,9 GB): đúng bản cho ra 51,16.
     - `ckpt/q4b4_all/final/` (263 MB), nếu chưa gửi hôm 04/11.
@@ -178,7 +370,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Kiểm sha256 của hai file model.
     - Chép vào image, đặt `ASR_MODEL=ckpt/asr_phoft/merged`. Code (nhánh `q4b-laptop`) và các biến khác giữ nguyên: adapter `q4b4_all/final`, 4-bit, `TIME_BUDGET` 25.
     - Chạy thử 3 mẫu trong Docker khi tắt mạng.
-  - **Còn mở:** máy leader chỉ có GPU 4 GB, nên thời gian trên GPU 24 GB chưa đo được. Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
+  - **Còn mở:** máy leader chỉ có GPU 4 GB, không chạy nổi bước agent (thiếu 116 MiB ở warm-up), nên chưa có `"ok"` và chưa đo thời gian trên GPU 24 GB (B28). Trên laptop, PhoWhisper thêm trung bình 0,9 giây mỗi mẫu, nhiều nhất khoảng 3,4 giây.
   - **Tổng tham số:** ASR 1,543B + Qwen3-4B 4,022B + LoRA 0,066B = khoảng 5,63B, dưới trần 6B.
 - [x] **B25. (18:41 ngày 04/11)** *Anh nộp, được **51,16** (báo lúc khoảng 00:28 ngày 05/11); hơn 46,29 nên Docker đổi sang PhoWhisper-ft (B26).* (5 phút) **Nộp file public bằng PhoWhisper-ft** `~/zac-c3/lifemate/runs/e2e_public_q4b_all_phoft.jsonl` (634 dòng, kiểm định dạng đạt, sha256 `b3f86ef0c812…`), **chọn cột SLM**, rồi báo điểm cho Claude. Anh hoặc leader nộp; Claude không nộp.
   - **Khác file 46,29 ở đâu:** chỉ ASR (PhoWhisper-large fine-tune thay cho Whisper-turbo fine-tune). Cùng code, adapter `q4b4_all/final` và hạn giờ. 345/634 dòng trả lời khác.
@@ -213,9 +405,22 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Mở Colab, chọn T4 GPU, chạy ô mount Drive, rồi dán ô lệnh và đổi `MODELS="pho"`. **Để tab mở.**
   - Kết quả: `My Drive/zac_out/asr_results_pho.tar.gz`. Colab và Kaggle chạy song song được.
   - ***Xong (00:05 ngày 01/11, Anh báo):*** train 163 phút trên T4, 3 epoch. WER trên phần kiểm giữ lại của train 23,7 → 7,7. Trên dev_random, WER lượt cuối 25,9 → 9,2; dev_lao 26,9 → 12,9. Đã giải nén ở `cloud_results/colab_leader/x/`.
-- [ ] **L4.** (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1 (so khớp tham số). Xem bảng xếp hạng public: điểm cao nhất, số đội. Ghi vào mục 4.
+- [x] **L4.** *(Leader báo sáng 06/11; Claude tóm tắt lúc 09:40 ở [`docs/BTC_DOCKER_GUIDE_2026-11-06.md`](docs/BTC_DOCKER_GUIDE_2026-11-06.md). Máy chấm: RTX 5090 32 GB, driver 595.58.03, CUDA 13.2. Giao diện nộp cuối khác image 05/11, xem L9. Hướng dẫn không ghi giới hạn 30 giây hay A30. Q1 và bảng xếp hạng chưa có tin.)* (20 phút) Forum BTC: hướng dẫn Docker, máy chấm, Q1 (so khớp tham số). Xem bảng xếp hạng public: điểm cao nhất, số đội. Ghi vào mục 4.
 - [ ] **L5.** (cùng B5) Nghe 18 câu ASR sai cùng Anh. Lập danh sách "cụm từ nguy hiểm" (số, giờ, tên người, từ phủ định, tự sửa giữa câu).
 - [ ] **L6.** (1–2 giờ) Bản Docker đầu tiên quanh `lifemate/scripts/predict.sh`, lấy từ nhánh `time-budget` ([PR #9](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/9)) để có giới hạn thời gian mỗi mẫu (tính cả ASR). *(16:27 ngày 03/11, cập nhật 17:22: nên lấy từ nhánh `q4b-laptop`, đã có PR #12 sau khi merge ([PR #12](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/12)), có thêm 4B 4-bit, hạn 25 giây và bước khởi động; lệnh mẫu ở đầu `predict.sh`.)* Dựng trên máy leader; GPU 4 GB không chạy nổi cả ASR lẫn LLM, nên chạy thử 1–2 mẫu bằng CPU. Hạn Docker là 16/11. *(12:22 ngày 04/11: dùng adapter `ckpt/q4b4_all/final` (public 46,29), Anh gửi riêng; truyền `ADAPTER=ckpt/q4b4_all/final`.)*
+- [x] **L8. (02:04 ngày 06/11)** *(Leader gửi sáng 06/11: file trên Drive, chỉ chia sẻ cho Anh; 12.635.573.248 byte; sha256 `190bdeeb6157…`; image `zaic-lifemate`; lệnh chạy 3 mẫu. **Thiếu ID của image** (tin nhắn chỉ ghi "sha256"); Claude ghi ID sau khi nạp và gửi lại leader để so.)* (30 phút + thời gian tải lên) **Gửi Anh image Docker đã build ngày 05/11** để chạy thử trên laptop (B28), theo mục 2 của [`docs/B28_LAPTOP_DOCKER_2026-11-06.md`](docs/B28_LAPTOP_DOCKER_2026-11-06.md):
+  - file `docker save` (khoảng 12–13 GB) kèm `sha256sum`, gửi riêng qua Google Drive;
+  - đúng lệnh `docker run` đã dùng để chạy 3 mẫu khi tắt mạng (mount dữ liệu, chỗ ghi kết quả, biến môi trường);
+  - tên, tag và ID của image.
+- [ ] **L9. (09:40 ngày 06/11)** (khoảng 1 ngày; **trước 11:59 ngày 16/11**) **Gói nộp cuối theo hướng dẫn BTC.** Image 05/11 chỉ để kiểm nội bộ. Bảng 9 việc còn thiếu ở cuối [`docs/BTC_DOCKER_GUIDE_2026-11-06.md`](docs/BTC_DOCKER_GUIDE_2026-11-06.md). Chính là:
+  - `/code/predict.sh` đọc `/data/<split>`, ghi `/result/submission.jsonl`, tham số đặt sẵn, không dùng biến môi trường;
+  - trường `time` (mili giây) trên mỗi dòng; in thời gian nạp model và predict ra stdout;
+  - base image CUDA 13.2, torch có sm_120 (RTX 5090);
+  - `jupyterlab`, `start_jupyter.sh`, `predict_notebook.ipynb` chạy từng mẫu, ra `/result/jupyter_submission.jsonl` cùng điểm với `submission.jsonl`;
+  - seed cố định;
+  - `README.md` và `training_code/`, kèm URL tải dữ liệu và model. **Anh và leader quyết:** dữ liệu train là của BTC, `gen/` sinh từ train, repo đang public;
+  - khi nộp: `docker save | gzip`, `md5sum`, Drive "Anyone with the link".
+  - *(10:07 ngày 06/11) Phần code đã có ở [PR #15](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/15) (nhánh `docker-submit` → `q4b-laptop`, chưa merge): script bọc `/code/predict.sh`, notebook đo thời gian, `start_jupyter.sh`, trường `time`, seed cố định. Test CPU đạt; chưa chạy trên GPU, nên chưa kiểm notebook có cùng điểm với `predict.sh` không. Anh hoặc leader review trước khi merge.*
 - [ ] **L7.** Review PR #8 cùng Anh (B6). Sau đó tới #4 (ASR, predict), #6 (cloud), #7 (fine-tune ASR), #9 (giới hạn 30 giây, chốt chặn ID; nên xem trước khi đóng Docker) khi tới lượt. #12 (sẵn sàng Docker) đã merge vào `q4b-laptop` lúc 17:22 (B18).
 
 **Claude** (Anh không cần nhắc):
@@ -270,7 +475,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 | 14:44–16:06 ngày 04/11 | Laptop chấm 4B với chữ PhoWhisper fine-tune trên dev_random và dev_lao (B23): qua luật, gộp 46,17 → 47,88 |
 | 16:45–18:40 ngày 04/11 | Laptop ghép PhoWhisper-ft, kiểm chữ dev (779/784 câu giống Colab), làm file nộp public bằng PhoWhisper-ft (B24). Anh hoặc leader nộp (B25) |
 | 23:30 ngày 04/11 – 06:38 ngày 05/11 | Laptop tự train lượt prompt `xref` trên fit_lao rồi chấm dev_lao ([PR #14](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/14), B23): không qua cửa 1 |
-| 09:18 – khoảng 14:30 ngày 05/11 | Laptop fine-tune lại PhoWhisper trên gần đủ train, kiểm WER trên 54 mẫu, làm file public (B27); Anh hoặc leader nộp |
+| 09:18 – 18:14 ngày 05/11 | Laptop fine-tune lại PhoWhisper trên gần đủ train, kiểm WER trên 54 mẫu (qua), làm file public (B27; đóng băng 13:38–17:45 vì Anh cần dùng máy); `predict.sh` 3 mẫu đạt `"ok"`. Anh hoặc leader nộp (B29) |
+| Trước 11:00 ngày 06/11 | Anh cài Docker và tải file image (B30); kịp thì Claude nạp image và chạy 3 mẫu |
+| Tối 06/11, khi Anh mở lại máy (B31) | Laptop chạy thử image Docker (B28): 3 mẫu để có `"ok"`, rồi đủ 634 mẫu hai lần (khoảng 4 giờ) |
+| Trước 11:59 ngày 16/11 | Gói nộp cuối theo giao diện BTC (L9) |
 | **11:59 ngày 16/11 (giờ máy)** | **Hạn nộp Docker** (23:59 GMT+7) |
 | Nếu Anh duyệt B12 | Claude viết bộ sinh dữ liệu (khoảng nửa ngày), sinh pilot qua Batch API, train 4B khoảng 6 giờ, chấm khoảng 1 giờ |
 | ~~22:00–01:15~~ | Kaggle đã xong lúc 15:50 (không train) |
@@ -331,6 +539,7 @@ Không đổi tổng quát hoá lấy điểm public. Cụ thể:
    - 02/11: `e2e_public_q4b.jsonl` (Whisper-turbo fine-tune, agent `q4b4_fit_random` nạp 4-bit), dev 39–54 (gộp 46,17), public 45,39.
    - 04/11: `e2e_public_q4b_all.jsonl` (Whisper-turbo fine-tune, agent `q4b4_all` học đủ 1.545 mẫu nên không có điểm dev riêng), public 46,29.
    - 05/11: `e2e_public_q4b_all_phoft.jsonl` (PhoWhisper-large fine-tune, agent `q4b4_all`), dev với adapter fit 41–55 (gộp 47,88), public 51,16.
+   - 05/11: `e2e_public_q4b_all_phoftall_fix0497.jsonl` (PhoWhisper-large fine-tune học thêm 495 mẫu dev, agent `q4b4_all`; WER 54 mẫu kiểm 7,65 → 7,08), public 49,65: giữ bản 51,16.
 
 ## 0. Tối 30/10, trong lúc máy Anh chạy (tới khoảng 6 giờ sáng 31/10), làm trên máy leader
 

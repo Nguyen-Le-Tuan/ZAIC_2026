@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:00 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:51 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **15:51 ngày 11/11:** **Anh chọn chạy cả hai hướng trên máy anh trai.** Hướng dẫn mới: `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` (Run Q: Qwen3.5 + D1, khoảng 12–13 giờ; Run I: Qwen3-4B + D1, khoảng 5–6 giờ; máy thứ ba dự phòng). **Anh gửi file này cho anh trai kèm "go" (B47).** **3 file public chờ nộp ở `cloud_results/nop_public_2026-11-11/` (B45).** **Hỏi BTC qua email aichallenge@zalo.me; email soạn sẵn ở JOURNAL entry 136.** **Hạn Docker: 11:59 trưa thứ Hai 16/11 giờ Buffalo** (23:59 GMT+7); nên nộp lần đầu chậm nhất tối Chủ nhật 15/11 (JOURNAL entry 136).
 > - **15:00 ngày 11/11:** **A1 (Qwen3.5-4B text-only) thắng rõ trên dev_lao:** chữ ASR 47,36 so với mốc 40,84 (+7,27), chữ chuẩn 62,02. D2 thua. **Hai file public của A1 đã sẵn, Anh nộp (B45).** **A1 chỉ dùng được khi BTC chấp nhận cách đếm tham số bản text-only: hỏi BTC ngay nếu chưa hỏi.** **Anh chọn lượt kế tiếp cho máy anh trai (B46).** D1 qua luật gốc khi tính A0 vào mốc (JOURNAL entry 135).
 > - **14:03 ngày 11/11:** **B43 xong: gói bản cuối đã lên Drive** (256,2 MB, khớp kích thước). Anh báo anh trai "go" khi đợt v5 in `XONG` (dự kiến 16:00–20:00 hôm nay). B34 (khoá thư mục) vẫn chờ Anh (JOURNAL entry 134).
 > - **13:59 ngày 11/11:** **Claude không tải được gói bản cuối lên Drive** (công cụ của Claude chỉ nhận file tới 10 MB; gói 268 MB). **Anh tải từ Chrome trên laptop (B43):** New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261110_d1full.tar.gz`. Thư mục ZAIC_2026 thuộc tài khoản Anh, nên **B34 (khoá thư mục) là việc của Anh**; thêm tài khoản anh trai trước khi chọn "Restricted" (JOURNAL entry 133).
@@ -264,12 +265,14 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B46. (15:00 ngày 11/11)** (5 phút quyết) **[Anh, cùng Leader] Máy anh trai chạy gì tiếp?** Gói `…d1full` đã trên Drive.
+- [ ] **B47. (15:51 ngày 11/11)** (2 phút) **[Anh] Gửi anh trai file `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` kèm chữ "go".** Không gửi file `…D1FINAL…` cũ. Gói `zac_cloud_bundle_20261110_d1full.tar.gz` đã có trên Drive. Kết quả về: Run I khoảng 5–6 giờ sau khi bắt đầu, Run Q khoảng 12–13 giờ.
+- [x] **B46. (15:00 ngày 11/11)** (5 phút quyết) *(15:51 ngày 11/11: Anh chọn chạy cả hai cùng lúc, mỗi lượt một máy; JOURNAL entry 136.)* **[Anh, cùng Leader] Máy anh trai chạy gì tiếp?** Gói `…d1full` đã trên Drive.
   - **(1) Qwen3.5 + D1 (Claude đề xuất nếu nhiều khả năng BTC chấp nhận bản text-only):** cùng gói, chỉ đổi lệnh chạy; khoảng 11–12 giờ; chưa đo trên dev. Luật: thay A1 khi trung bình public 2 seed ≥ A1 + 1,5.
   - **(2) Qwen3-4B + D1 (gói như đã đóng):** 8–9 giờ; là ứng viên nếu BTC không chấp nhận Qwen3.5. Luật: ≥ 54,18 (entry 127).
   - Claude sửa file hướng dẫn cho anh trai theo lựa chọn; anh trai bắt đầu khi Anh báo "go".
 - [ ] **B45. (15:00 ngày 11/11)** (5 phút) **[Anh hoặc leader] Nộp 2 file public của A1; hỏi BTC cách đếm tham số bản text-only nếu chưa hỏi.**
-  - **File:** `cloud_results/anh_trai/v5_results_2026-11-11/x/lifemate/runs/public_f_a1_q35t_lao_s0.jsonl` và `…_s1.jsonl` (634 dòng, kiểm đạt, có `time`, D5 bật).
+  - **File** (gom lại lúc 15:51 ngày 11/11): `cloud_results/nop_public_2026-11-11/1_A1_qwen35_seed0.jsonl`, `2_A1_qwen35_seed1.jsonl`, và file mốc cùng máy `3_C0_moc_cung_may_anh_trai.jsonl` (B44). Cả 3 đều 634 dòng, kiểm đạt, có `time`.
+  - **Hỏi BTC:** email `aichallenge@zalo.me` (kênh hỗ trợ duy nhất trang cuộc thi ghi); email soạn sẵn ở JOURNAL entry 136.
   - **Luật (ghi trước khi có điểm, entry 135):** A1 thay bản đang nộp khi trung bình 2 seed ≥ 54,18 **và** BTC chấp nhận cách đếm. Nộp thêm file mốc cùng máy (B44) nếu còn lượt.
 - [ ] **B44. (13:46 ngày 11/11)** (2 phút) **[Anh hoặc leader] Nộp file D5 của máy anh trai lên public, để có mốc cùng máy cho luật 54,18.**
   - **File:** `cloud_results/anh_trai/v5_d5_2026-11-11/x/pub_c0_guard.jsonl` (634 dòng, kiểm đạt, có `time`). Cùng adapter, cùng D5 với file 52,68, chỉ khác GPU (RTX 4090); 581/634 dòng giống hệt.

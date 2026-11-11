@@ -13,9 +13,18 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:41 ngày 09/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 13:46 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **13:46 ngày 11/11:** **Kết quả train của máy anh trai chưa lên Drive;** mới có file D5 public 53 KB. Giai đoạn 1 thực ra bắt đầu khoảng 19:00 ngày 10/11, nên kết quả giai đoạn 1 khoảng trưa 11/11, giai đoạn 2 khoảng 16:00–20:00. **Gói bản cuối `…d1full` chưa có trên Drive (B43)**, chỉ nằm trên laptop. File D5 của anh trai khớp file 52,68 ở 581/634 dòng (45 dòng khác do khác GPU); **đề xuất nộp file này để có mốc cùng máy cho luật 54,18 (B44)**. Lượt dev_lao D1: trung bình 2 seed 43,91 (chữ ASR) / 55,82 (chữ chuẩn); seed 0 đạt nên bản cuối vẫn chạy (JOURNAL entry 131–132).
+> - **22:42 ngày 09/11:** **Anh chọn cả 2.139 mẫu cho bản cuối. Gói đã đóng lại: `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte); gói `…_d1final.tar.gz` lúc 22:35 đã xoá, đừng dùng.** File hướng dẫn đã sửa theo; bản cuối ước 8–9 giờ trên máy anh trai (JOURNAL entry 130).
+> - **22:35 ngày 09/11:** **Gói 2 lượt bản cuối đã sẵn trên laptop** (`~/zac_cloud_bundle_20261110_d1final.tar.gz`, 268.666.315 byte) kèm file hướng dẫn tiếng Anh. **Anh tải gói lên Drive và gửi file cho anh trai; anh trai CHƯA chạy, chờ đợt cũ xong và Anh báo "go" sau khi seed 0 của lượt dev_lao đạt (khoảng 08:30 ngày 10/11) (B43).** Dữ liệu public: 2.139 mẫu, bản cuối mặc định dùng 1.155. API: Anthropic 30,12/100 USD; Meta 15,14/81 USD (JOURNAL entry 129).
+> - **21:45 ngày 09/11:** **Anh: "Seed 0 đạt là chạy".** Hai lượt bản cuối trên máy anh trai bắt đầu khi seed 0 của lượt dev_lao (khoảng 09:00 ngày 10/11) đạt cả hai ngưỡng 44,1 và 50,2; không chờ seed 1. Laptop này đóng gói, không cần Leader (JOURNAL entry 128).
+> - **21:40 ngày 09/11:** **B42: Anh bỏ 4 lượt đo nhánh app đã thấy.** Đợt GPU còn lại trên máy anh trai chạy 2 lượt bản cuối (train đủ + dữ liệu 11 app public); Claude sinh dữ liệu public ngay. **Luật thay bản nộp: trung bình public 2 seed ≥ 54,18.** Leader đóng gói (L10). `d1_seen_v1.jsonl` giữ lại, không train (JOURNAL entry 127).
+> - **21:30 ngày 09/11:** **Nhánh app đã thấy: đã sinh 752 mẫu (hỏi lại + 6 app), khớp nhãn thật 0,965; bỏ `email` và `flights.cancel`. Chưa train: Anh quyết chạy 4 lượt đo ở đâu (B42).** Lượt dev_lao trên laptop: seed 0 có điểm khoảng 09:00 ngày 10/11, seed 1 khoảng 21:00. API: Anthropic 11,61/100 USD; Meta 6,38/81 USD (JOURNAL entry 126).
+> - **20:58 ngày 09/11:** **Laptop bắt đầu train lượt đo D1 trên dev_lao (2 seed, khoảng 21 giờ, xong khoảng 19:00 ngày 10/11). Anh để máy cắm sạc; cần dùng máy thì chạy `systemctl --user stop lifemate-d1lao` (lưu tiến độ), xong chạy lại `bash ~/zac-d1-job/start_d1lao.sh`.** Luật giữ/bỏ: chữ PhoWhisper-ft ≥ 44,1 và chữ chuẩn ≥ 50,2 (trung bình 2 seed). Hai trần API tách riêng: Anthropic 5,56/100 USD, Meta 3,14/81 USD. Máy anh trai chạy từ 18:30, giai đoạn 1 xong khoảng 12:00 ngày 10/11 (JOURNAL entry 125).
+> - **20:25 ngày 09/11:** **Model viết: `claude-opus-5-5` (B40 xong).** Sáu app của dev_lao đã vào bộ sinh; viết mù rồi so với nhãn thật: tool và ID đúng hết, bộ tham số khớp 0,845 → 0,902. **Nhánh D1 cho 46 app đã thấy đã ghi luật giữ/bỏ; một tiền đề của bản giao việc sai (`final_state` không chứa app không ghi), chờ Anh xác nhận cách thay thế (B41).** (JOURNAL entry 124)
+> - **19:18 ngày 09/11:** **Bộ sinh kịch bản D1 chạy cho 11 app public; thử 3 model viết câu nói xong (0,65 USD).** Anh đọc `lifemate/gen/d1_t1_say_compare.md` và chọn model viết (B40). Còn lại của cửa 1: 6 app của dev_lao, kho tên lớn hơn, bước kiểm đổi nghĩa (JOURNAL entry 123).
 > - **18:41 ngày 09/11:** **Gói train đã có trên Drive** (240 MB, Leader tải lên 08/11). **B34 gấp [Anh hoặc Leader]:** gói (và nhiều khả năng cả thư mục) vẫn để "bất kỳ ai có link đều sửa được", mà trong đó có dữ liệu thi. Chuyển sang "Hạn chế" và chỉ thêm tài khoản của Anh và anh trai; làm sau khi anh trai tải xong gói, hoặc thêm tài khoản anh trai trước (JOURNAL entry 122).
 > - **18:22 ngày 09/11:** **Gói train cho máy anh trai (`zac_cloud_bundle_20261109_arms.tar.gz`, 240 MB) chỉ có trên máy Leader; Leader tải lên Drive** (thư mục để "Hạn chế", B34). Laptop không tự tạo được gói này. File hướng dẫn tiếng Anh đã điền kích thước và sha256 (JOURNAL entry 121).
 > - **17:32 ngày 09/11:** **Cửa 0 của D1 đạt** (mẫu dùng app của dev_lao không có lỗi quy tắc: 94,5%, ngưỡng 80%). Một nửa số lệnh đọc trong nhãn thuộc về kịch bản, chưa kiểm; đó là việc của cửa 1. Code ở nhánh `d1-program-first`. **Anh tạo file key Anthropic (B39).** (JOURNAL entry 120)
@@ -252,7 +261,31 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B39. (17:32 ngày 09/11)** (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
+- [ ] **B44. (13:46 ngày 11/11)** (2 phút) **[Anh hoặc leader] Nộp file D5 của máy anh trai lên public, để có mốc cùng máy cho luật 54,18.**
+  - **File:** `cloud_results/anh_trai/v5_d5_2026-11-11/x/pub_c0_guard.jsonl` (634 dòng, kiểm đạt, có `time`). Cùng adapter, cùng D5 với file 52,68, chỉ khác GPU (RTX 4090); 581/634 dòng giống hệt.
+  - **Đọc điểm thế nào:** hai lượt bản cuối D1 cũng làm file public trên máy anh trai. Luật 54,18 = 52,68 (laptop) + 1,5. Nếu file này lệch khỏi 52,68 quá khoảng 0,5 điểm, Claude đề xuất đổi mốc thành điểm của file này (+1,5) trước khi có điểm bản cuối, rồi Anh và Leader duyệt.
+  - Có hạn số lần nộp mỗi ngày thì ưu tiên hai file bản cuối hơn file này.
+- [ ] **B43. (22:35 ngày 09/11)** *(13:46 ngày 11/11: gói `zac_cloud_bundle_20261110_d1full.tar.gz` chưa có trên Drive; vẫn ở `~/` của laptop, 268.666.293 byte. Nên làm B34 (khoá thư mục) trước khi tải lên. JOURNAL entry 132.)* (10 phút; JOURNAL entry 129) **[Anh] Đưa gói bản cuối lên Drive và gửi file hướng dẫn cho anh trai.**
+  - **Gói (đổi lúc 22:42, bản đủ 2.139 mẫu):** `~/zac_cloud_bundle_20261110_d1full.tar.gz` (268.666.293 byte, sha256 `d02a3c04…ca90fcc`). Có dữ liệu thi: chỉ tải lên thư mục Drive của đội, để chế độ "Hạn chế". Gói `…_d1final.tar.gz` đã xoá; nếu đã tải lên Drive thì xoá đi.
+  - **File hướng dẫn:** `cloud_results/anh_trai/BROTHER_AI_GUIDE_D1FINAL_2026-11-10_EN.md` (đã có link Drive, kích thước và sha256).
+  - **Dặn anh trai:** chưa chạy ngay. Chỉ chạy khi đợt đang chạy (`~/zac_v5`) đã xong **và** Anh nhắn "go".
+  - **Anh nhắn "go" khi:** Claude báo seed 0 của lượt dev_lao đạt cả hai ngưỡng (44,1 và 50,2), khoảng 08:30 ngày 10/11. Không đạt thì không chạy.
+  - **Sau đó:** nộp hai file public anh trai gửi về; thay bản nộp khi trung bình ≥ 54,18.
+- [x] **B42. (21:30 ngày 09/11)** *(21:40: Anh quyết qua phiên phụ: "Bỏ 4 lượt đo app đã thấy"; máy anh trai chạy 2 lượt bản cuối; JOURNAL entry 127.)* (3 phút; JOURNAL entry 126) **[Anh, bàn với Leader] Chạy 4 lượt đo nhánh app đã thấy ở đâu.**
+  - Cần 2 lượt mốc (`fit_random`) và 2 lượt có D1 (`fit_random` + `d1_seen_v1.jsonl`, 752 mẫu), cùng một máy, chấm dev_random.
+  - **Máy anh trai** (rảnh khoảng 16:30–20:30 ngày 10/11): 4 lượt trên 2 card, khoảng 8–9 giờ; cần đóng một gói mới gửi sang.
+  - **Laptop:** bận lượt dev_lao tới khoảng 21:00 ngày 10/11; sau đó 4 lượt mất khoảng 40–50 giờ, không kịp mốc 13/11.
+  - **Claude đề xuất:** máy anh trai, chạy ngay sau đợt hiện tại; gói đó chở luôn lượt bản cuối nếu lượt dev_lao đạt luật.
+- [x] **B41. (20:25 ngày 09/11)** *(20:58: Anh đồng ý; JOURNAL entry 125.)* (3 phút; JOURNAL entry 124) **[Anh] Xác nhận cách lấy state cho nhánh D1 của 46 app đã thấy.**
+  - Bản giao việc ghi: `final_state` của app mà mẫu không ghi là state ban đầu. Dữ liệu không như vậy: `final_state` chỉ có app mà nhãn đã ghi.
+  - **Claude đề xuất:** dùng `final_state` sau khi ghi làm state ban đầu cho kịch bản mới, cộng kết quả các lệnh đọc không tham số. Phủ 39/46 app; 4 app chỉ đọc (fuel_price, lottery, exchange_rate, calculator) phải tự dựng state.
+  - Anh trả lời: đồng ý, hoặc cách khác.
+- [x] **B40. (19:18 ngày 09/11)** *(20:25: Anh chọn `claude-opus-5-5`; JOURNAL entry 124.)* (15 phút; JOURNAL entry 123) **[Anh, có thể cùng Leader] Đọc 30 kịch bản × 3 câu và chọn model viết câu nói.**
+  - **File:** `lifemate/gen/d1_t1_say_compare.md`. Mỗi kịch bản có dòng "muốn" (điều người dùng cần) và ba câu do ba model viết.
+  - **Chấm ba điều:** câu có tự nhiên như người nói thật không; có nói đủ và đúng mọi con số, ngày giờ, tên không; có thêm việc hay thông tin ngoài dòng "muốn" không.
+  - **Claude đề xuất:** `claude-opus-5-5` làm model chính (khoảng 7,7 USD mỗi 1.000 câu); có thể trộn `muse-spark-1.3` (3,5 USD) cho đa dạng, nhưng không cho nó viết câu tự sửa giữa chừng.
+  - Báo Claude: model chọn, và những câu Anh thấy sai để sửa prompt.
+- [x] **B39. (17:32 ngày 09/11)** *(19:18: Anh đã tạo `~/.zac_anthropic_env`.)* (2 phút; JOURNAL entry 120) **[Anh] Tạo file key Anthropic để Claude thử model viết câu nói (cửa 1).**
   - Chạy trong terminal, dán key khi được hỏi (key không hiện lên màn hình, không dán vào chat):
     `read -rs -p "Anthropic API key: " K; echo; printf 'export ANTHROPIC_API_KEY=%s\n' "$K" > ~/.zac_anthropic_env; chmod 600 ~/.zac_anthropic_env; unset K`
   - Key Meta đã có ở `~/.zac_meta_env` (tạo 02/11). Nếu Anh muốn dùng key Meta mới (90 USD) thì chạy lại lệnh tương tự với `META_API_KEY` và `~/.zac_meta_env`.

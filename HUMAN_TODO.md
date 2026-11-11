@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:21 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:34 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **17:34 ngày 11/11:** **FAQ của BTC: Qwen3.5-4B tính là 4B, nên A1 hợp lệ về số tham số. Nhưng cấm dùng dữ liệu public test để sinh dữ liệu hay train → huỷ hai lượt v6 (D1 cho app public). Anh báo anh trai KHÔNG chạy file `BROTHER_AI_GUIDE_V6_BOTH` (B47 huỷ).** Bộ dựng dữ liệu train cũ lấy app nhiễu từ cả catalog public_test (ít nhất 13% số dòng), nên bản đang nộp và A1 đều có rủi ro. **Đề xuất train lại với app nhiễu chỉ từ train (B48)** (JOURNAL entry 138).
 > - **17:21 ngày 11/11:** **Public: A1 (Qwen3.5) 57,03 và 56,39 (trung bình 56,71); file mốc cùng máy 52,43.** A1 qua luật (≥ 54,18), hơn bản đang nộp 4,03 điểm. **A1 thành bản nộp nếu BTC chấp nhận cách đếm tham số; Leader đang hỏi BTC.** Nếu dùng A1, gói Docker (L9) phải đổi model gốc, adapter và bật D5 mặc định. Run I cần ≥ 54,18; Run Q cần ≥ 58,21. Anh đang gửi hướng dẫn cho anh trai (B47) (JOURNAL entry 137).
 > - **15:51 ngày 11/11:** **Anh chọn chạy cả hai hướng trên máy anh trai.** Hướng dẫn mới: `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` (Run Q: Qwen3.5 + D1, khoảng 12–13 giờ; Run I: Qwen3-4B + D1, khoảng 5–6 giờ; máy thứ ba dự phòng). **Anh gửi file này cho anh trai kèm "go" (B47).** **3 file public chờ nộp ở `cloud_results/nop_public_2026-11-11/` (B45).** **Hỏi BTC qua email aichallenge@zalo.me; email soạn sẵn ở JOURNAL entry 136.** **Hạn Docker: 11:59 trưa thứ Hai 16/11 giờ Buffalo** (23:59 GMT+7); nên nộp lần đầu chậm nhất tối Chủ nhật 15/11 (JOURNAL entry 136).
 > - **15:00 ngày 11/11:** **A1 (Qwen3.5-4B text-only) thắng rõ trên dev_lao:** chữ ASR 47,36 so với mốc 40,84 (+7,27), chữ chuẩn 62,02. D2 thua. **Hai file public của A1 đã sẵn, Anh nộp (B45).** **A1 chỉ dùng được khi BTC chấp nhận cách đếm tham số bản text-only: hỏi BTC ngay nếu chưa hỏi.** **Anh chọn lượt kế tiếp cho máy anh trai (B46).** D1 qua luật gốc khi tính A0 vào mốc (JOURNAL entry 135).
@@ -266,7 +267,13 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B47. (15:51 ngày 11/11)** (2 phút) **[Anh] Gửi anh trai file `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` kèm chữ "go".** Không gửi file `…D1FINAL…` cũ. Gói `zac_cloud_bundle_20261110_d1full.tar.gz` đã có trên Drive. Kết quả về: Run I khoảng 5–6 giờ sau khi bắt đầu, Run Q khoảng 12–13 giờ.
+- [ ] **B48. (17:34 ngày 11/11)** (5 phút quyết) **[Anh, cùng Leader] Duyệt kế hoạch train lại không dùng dữ liệu public** (JOURNAL entry 138):
+  1. Báo anh trai không chạy file v6 (D1 cho app public bị cấm).
+  2. Code (qua PR): app nhiễu khi dựng dữ liệu train chỉ lấy từ catalog train; script chạy bản cuối không có D1.
+  3. Gói mới; Anh tải lên Drive; máy anh trai train lại Qwen3.5 (công thức A1, khoảng 6 giờ) và Qwen3-4B (dự phòng, khoảng 3–4 giờ), 2 seed mỗi model, rồi làm file public.
+  4. Luật: nộp Qwen3.5 mới (seed có điểm public cao hơn); nếu trung bình của nó thấp hơn Qwen3-4B mới thì nộp Qwen3-4B mới.
+  5. Laptop chạy thử Qwen3.5 qua `predict.sh` (tải 8,4 GB). 6. L9 dùng adapter mới, D5 bật, không có dữ liệu D1.
+- [x] **B47. (15:51 ngày 11/11)** *(17:34 ngày 11/11: **HUỶ.** FAQ của BTC cấm dùng dữ liệu public test để sinh dữ liệu train, mà cả hai lượt v6 đều dùng D1 của app public. Anh trai không chạy file này; đã chạy thì dừng. JOURNAL entry 138.)* (2 phút) **[Anh] Gửi anh trai file `cloud_results/anh_trai/BROTHER_AI_GUIDE_V6_BOTH_2026-11-11_EN.md` kèm chữ "go".** Không gửi file `…D1FINAL…` cũ. Gói `zac_cloud_bundle_20261110_d1full.tar.gz` đã có trên Drive. Kết quả về: Run I khoảng 5–6 giờ sau khi bắt đầu, Run Q khoảng 12–13 giờ.
 - [x] **B46. (15:00 ngày 11/11)** (5 phút quyết) *(15:51 ngày 11/11: Anh chọn chạy cả hai cùng lúc, mỗi lượt một máy; JOURNAL entry 136.)* **[Anh, cùng Leader] Máy anh trai chạy gì tiếp?** Gói `…d1full` đã trên Drive.
   - **(1) Qwen3.5 + D1 (Claude đề xuất nếu nhiều khả năng BTC chấp nhận bản text-only):** cùng gói, chỉ đổi lệnh chạy; khoảng 11–12 giờ; chưa đo trên dev. Luật: thay A1 khi trung bình public 2 seed ≥ A1 + 1,5.
   - **(2) Qwen3-4B + D1 (gói như đã đóng):** 8–9 giờ; là ứng viên nếu BTC không chấp nhận Qwen3.5. Luật: ≥ 54,18 (entry 127).

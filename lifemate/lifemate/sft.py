@@ -16,7 +16,9 @@ Sources:
 Augmentations (gold only):
   rename    apps/tools renamed consistently (schema, history, targets) so the model reads schemas instead of memorising names
   remove    every app in the groups the request needs is uninstalled -> target becomes no call
-  distract  1-3 unrelated apps (other groups, also from the public_test catalog) added to installed_apps
+  distract  1-3 unrelated apps of the train catalog (other groups) added to installed_apps. Never from public_test:
+            the organisers' FAQ (09/11/2026) forbids using any public_test data, its tool catalog included, to
+            build training data (JOURNAL entry 138; until 11/11 this pool also held the public_test catalog)
   lower     user transcripts lower-cased without punctuation (ASR-like)
 """
 from __future__ import annotations
@@ -302,7 +304,7 @@ def history_examples(s, user_text_list, tools, apps, tagged: bool):
 
 def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=0.5, p_lower=0.3,
               history="off", drop_apps=(), asr=None, seed=0, thoughts=None, stats=None):
-    """pool: {app id: catalog app} for distractors (train + public_test catalogs; shared tools have identical schemas).
+    """pool: {app id: catalog app} for distractors (train catalog only; never public_test).
     thoughts: {sample id: lifemate.rationale row} -> every assistant turn starts with a <think> block (D2); a sample
     without a row gets the fallback thoughts and is counted in stats["no_thoughts"]. None = the old format, byte for
     byte (the random draws are the same either way)."""
@@ -386,7 +388,7 @@ def main():
     cat = load_catalog("train", a.root)
     tools, apps = catalog_tools(cat), {x["id"]: x for x in cat["apps"]}
     drop = set(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else set()
-    pool = {x["id"]: x for x in load_catalog("public_test", a.root)["apps"]} | apps  # distractor schemas (text only)
+    pool = dict(apps)  # distractor schemas: train catalog only (no public_test data in training, organisers' FAQ)
     pool = {k: v for k, v in pool.items() if k not in drop}
     samples = load_split("train", a.root)
     if a.fit:
@@ -437,8 +439,7 @@ def main():
 def _spec(a) -> dict:
     """Everything that determines the SFT file's content: settings, input files and the code that renders it."""
     root = Path(a.root)
-    files = {"train_jsonl": root / "train" / "train.jsonl", "train_catalog": root / "train" / "train_tools_catalog.json",
-             "public_catalog": root / "public_test" / "public_test_tools_catalog.json"}
+    files = {"train_jsonl": root / "train" / "train.jsonl", "train_catalog": root / "train" / "train_tools_catalog.json"}
     return {
         "args": {k: v for k, v in vars(a).items() if k not in ("out", "reuse", "root")},
         "fit_ids": runinfo.ids_digest(runinfo.read_ids(a.fit)) if a.fit else "all",

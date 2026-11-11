@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 14:03 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:00 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **15:00 ngày 11/11:** **A1 (Qwen3.5-4B text-only) thắng rõ trên dev_lao:** chữ ASR 47,36 so với mốc 40,84 (+7,27), chữ chuẩn 62,02. D2 thua. **Hai file public của A1 đã sẵn, Anh nộp (B45).** **A1 chỉ dùng được khi BTC chấp nhận cách đếm tham số bản text-only: hỏi BTC ngay nếu chưa hỏi.** **Anh chọn lượt kế tiếp cho máy anh trai (B46).** D1 qua luật gốc khi tính A0 vào mốc (JOURNAL entry 135).
 > - **14:03 ngày 11/11:** **B43 xong: gói bản cuối đã lên Drive** (256,2 MB, khớp kích thước). Anh báo anh trai "go" khi đợt v5 in `XONG` (dự kiến 16:00–20:00 hôm nay). B34 (khoá thư mục) vẫn chờ Anh (JOURNAL entry 134).
 > - **13:59 ngày 11/11:** **Claude không tải được gói bản cuối lên Drive** (công cụ của Claude chỉ nhận file tới 10 MB; gói 268 MB). **Anh tải từ Chrome trên laptop (B43):** New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261110_d1full.tar.gz`. Thư mục ZAIC_2026 thuộc tài khoản Anh, nên **B34 (khoá thư mục) là việc của Anh**; thêm tài khoản anh trai trước khi chọn "Restricted" (JOURNAL entry 133).
 > - **13:46 ngày 11/11:** **Kết quả train của máy anh trai chưa lên Drive;** mới có file D5 public 53 KB. Giai đoạn 1 thực ra bắt đầu khoảng 19:00 ngày 10/11, nên kết quả giai đoạn 1 khoảng trưa 11/11, giai đoạn 2 khoảng 16:00–20:00. **Gói bản cuối `…d1full` chưa có trên Drive (B43)**, chỉ nằm trên laptop. File D5 của anh trai khớp file 52,68 ở 581/634 dòng (45 dòng khác do khác GPU); **đề xuất nộp file này để có mốc cùng máy cho luật 54,18 (B44)**. Lượt dev_lao D1: trung bình 2 seed 43,91 (chữ ASR) / 55,82 (chữ chuẩn); seed 0 đạt nên bản cuối vẫn chạy (JOURNAL entry 131–132).
@@ -263,6 +264,13 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B46. (15:00 ngày 11/11)** (5 phút quyết) **[Anh, cùng Leader] Máy anh trai chạy gì tiếp?** Gói `…d1full` đã trên Drive.
+  - **(1) Qwen3.5 + D1 (Claude đề xuất nếu nhiều khả năng BTC chấp nhận bản text-only):** cùng gói, chỉ đổi lệnh chạy; khoảng 11–12 giờ; chưa đo trên dev. Luật: thay A1 khi trung bình public 2 seed ≥ A1 + 1,5.
+  - **(2) Qwen3-4B + D1 (gói như đã đóng):** 8–9 giờ; là ứng viên nếu BTC không chấp nhận Qwen3.5. Luật: ≥ 54,18 (entry 127).
+  - Claude sửa file hướng dẫn cho anh trai theo lựa chọn; anh trai bắt đầu khi Anh báo "go".
+- [ ] **B45. (15:00 ngày 11/11)** (5 phút) **[Anh hoặc leader] Nộp 2 file public của A1; hỏi BTC cách đếm tham số bản text-only nếu chưa hỏi.**
+  - **File:** `cloud_results/anh_trai/v5_results_2026-11-11/x/lifemate/runs/public_f_a1_q35t_lao_s0.jsonl` và `…_s1.jsonl` (634 dòng, kiểm đạt, có `time`, D5 bật).
+  - **Luật (ghi trước khi có điểm, entry 135):** A1 thay bản đang nộp khi trung bình 2 seed ≥ 54,18 **và** BTC chấp nhận cách đếm. Nộp thêm file mốc cùng máy (B44) nếu còn lượt.
 - [ ] **B44. (13:46 ngày 11/11)** (2 phút) **[Anh hoặc leader] Nộp file D5 của máy anh trai lên public, để có mốc cùng máy cho luật 54,18.**
   - **File:** `cloud_results/anh_trai/v5_d5_2026-11-11/x/pub_c0_guard.jsonl` (634 dòng, kiểm đạt, có `time`). Cùng adapter, cùng D5 với file 52,68, chỉ khác GPU (RTX 4090); 581/634 dòng giống hệt.
   - **Đọc điểm thế nào:** hai lượt bản cuối D1 cũng làm file public trên máy anh trai. Luật 54,18 = 52,68 (laptop) + 1,5. Nếu file này lệch khỏi 52,68 quá khoảng 0,5 điểm, Claude đề xuất đổi mốc thành điểm của file này (+1,5) trước khi có điểm bản cuối, rồi Anh và Leader duyệt.

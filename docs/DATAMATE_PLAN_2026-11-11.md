@@ -20,7 +20,7 @@
   BTC chỉ chấm lần nộp cuối, nên thứ tự A rồi B dùng vừa 2 lần nộp.
 - **LifeMate đi trước:** việc của Leader (L9, PR #17) không đổi. Anh chỉ phải làm vài việc ngắn cho DataMate (thuê máy, nộp file, tải image lên). Claude viết toàn bộ code và tài liệu DataMate.
 - **Kỳ vọng thật:** bản A khoảng 0,35–0,5 trên public (tiệm có kiểu file lạ sẽ abstain nhiều); bản B khoảng 0,5–0,7, quanh trung vị public 0,598. Không có cửa top 2 (43 đội đã 1,000).
-- **Chờ Anh:** B51 (thuê một máy ảo GPU có Docker, cần từ sáng thứ Sáu), B52 (đo tốc độ tải lên Drive). Không cần tiền API.
+- **Chờ Anh:** B51 (thuê một máy ảo GPU có Docker, cần từ sáng thứ Sáu, **hoặc không thuê**: mục 10), B52 (đo tốc độ tải lên Drive, chỉ cần khi có image B). Không cần tiền API.
 
 ---
 
@@ -239,3 +239,39 @@ Số đo chính: **PA trên train** (3.000 câu) và **PA trên phần giữ ri�
 - **B51 (trước 08:00 thứ Sáu 13/11):** thuê một máy ảo GPU theo mục 5 và gửi Claude địa chỉ và cổng SSH (không gửi mật khẩu; thêm khoá công khai của laptop). Hoặc báo "không thuê", khi đó kế hoạch chạy theo đường chỉ có bản A.
 - **B52 (trước tối thứ Sáu):** tải thử một file 1 GB lên Drive và báo số phút.
 - **Bắt đầu:** Claude làm phần tối nay (mục 3, dòng đầu) khi Anh đồng ý. Phần này không tốn tiền và không đụng LifeMate.
+
+## 10. Không thuê máy ảo GPU (bổ sung 18:54 ngày 11/11, entry 144)
+
+Anh hỏi: "không thuê máy ảo GPU có được không?" **Được.** Đề không bắt dùng LLM. Hướng dẫn Docker có sẵn mẫu log "gọi hàm đóng gói sẵn" với `thinking: null` (mẫu 2, trang 4). Bản A (chỉ CPU) đã là một bài hoàn chỉnh và hợp lệ.
+
+| | Thuê máy (mục 2–9) | Không thuê |
+|---|---|---|
+| Bài chính | B (Qwen3-14B) nếu qua cửa, không thì A | **A (chỉ CPU)** |
+| LLM | Qwen3-14B, 2 GPU, vLLM | bỏ; hoặc model nhỏ có sẵn trên laptop (Qwen3-1.7B, Qwen3-4B-Instruct-2507) trên 1 GPU, chỉ khi bản A xong sớm |
+| Kiểm trên RTX 5090 | có | không; bản A không dùng GPU nên không cần |
+| Chạy private 20–23/11 | máy ảo | laptop, vài phút (bản A) |
+| Tải lên Drive | 20–35 GB | 1–2 GB |
+| Tái lập (lệch ≤ 0,03) | phần LLM có thể lệch khi đổi GPU | bản A tất định, không lệch |
+| Tiền | 30–80 USD | 0 |
+| Kỳ vọng public | A 0,35–0,5; B 0,5–0,7 | A 0,35–0,5, có thể cao hơn vì dồn thêm thời gian vào bộ hiểu file và luật |
+
+**Mất gì:** LLM chủ yếu giúp ở kiểu file lạ và loại tiệm mới, đúng chỗ private có nhiều. Không có LLM thì những tiệm, những câu đó abstain: 0 điểm, không bị trừ. Phần bù: thời gian dành cho máy ảo và image B chuyển sang bộ hiểu README và tên cột (đo bằng 6 tiệm train giữ riêng) và phủ thêm nhóm câu.
+
+**Nếu vẫn muốn một LLM nhỏ khi không thuê máy:**
+- Dùng base `vllm/vllm-openai:v0.10.1.1` (torch 2.7.1+cu128) như BTC khuyên. **Không dùng lại base của image LifeMate** (CUDA 13.2): hướng dẫn DataMate chỉ ghi CUDA ≥ 12.8 và driver R570 trở lên, nên máy chấm DataMate có thể không chạy được CUDA 13.2.
+- Model chạy trên 1 GPU, không chia 2 GPU, để tránh lỗi NCCL mà hướng dẫn nhắc.
+- `predict.sh` chạy đường CPU trước. LLM chỉ là phần thêm: nạp lỗi hay chạy lỗi thì ghi log rồi làm tiếp như bản A.
+- Chỉ làm khi bản A xong trước tối thứ Sáu, GPU laptop không bận việc LifeMate, và qua cửa 2.
+
+**Lịch khi không thuê:**
+
+| Khi nào | Việc |
+|---|---|
+| Thứ Tư tối – thứ Năm | như mục 3 (toàn bộ chạy CPU) |
+| Thứ Năm, 23:59 | **Cửa 1** như mục 4 |
+| Thứ Sáu | phủ thêm nhóm câu, unanswerable, chốt rulebook, bộ hiểu file đo trên 6 tiệm giữ riêng; Docker A dựng và thử trên laptop bằng lệnh chấm (đổi `device=0,1` thành `device=0` vì laptop có 1 GPU); Anh nộp public lần 2 |
+| Thứ Bảy, chiều | Anh tải image A (1–2 GB) lên Drive; **nộp Solution lần 1**; nộp thử ở tab Test Solution nếu BTC xác nhận |
+| Chủ nhật, trước 20:00 | bản A2 (sửa thêm) chỉ thay A khi PA trên phần train giữ riêng hơn ít nhất 0,02 và PA public không thấp hơn A; khi đó **nộp Solution lần 2** |
+| 19/11 tối – 23/11 trưa | chạy image đã nộp trên laptop, Anh nộp file private |
+
+**Việc của Anh khi không thuê:** nộp public (tối thứ Năm, thứ Sáu), tải image A lên Drive và nộp (chiều thứ Bảy, có thể thêm tối Chủ nhật), nộp private. B51 và B52 không cần nữa.

@@ -139,7 +139,7 @@ def _read_csv(path: str) -> list[tuple[str, list[list[str]], int | None]]:
 
 def _read_sqlite(path: str) -> list[tuple[str, pd.DataFrame]]:
     out = []
-    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    con = sqlite3.connect(f"file:{path}?mode=ro&immutable=1", uri=True)
     try:
         for (t,) in con.execute("select name from sqlite_master where type='table' order by name"):
             cur = con.execute(f'select * from "{t}"')

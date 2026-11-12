@@ -1,0 +1,19 @@
+{
+  "training": "none (rule-based system, no model, no generated data)",
+  "datasets_used_for_development": [
+    {
+      "name": "Zalo AI Challenge 2026 DataMate training split",
+      "source": "organisers' train.zip",
+      "url": "https://dl-challenge.zalo.ai/2026/datamate_dkewxftdzo/train.zip",
+      "bytes": 128118095,
+      "sha256": "c1adbc654a301c30e4cf20b55d301381025f49db1162d88322b552d7472fea01",
+      "businesses": 30,
+      "questions": 3000,
+      "use": "rule writing (1,990 questions of 25 businesses) and checking (lockbox 621 questions, 5 held-out businesses)"
+    }
+  ],
+  "files_included": [
+    {"path": "/code/src/ref/rulebook_train.md", "bytes": 18515, "sha256": "740267bccba29df70f745bc39968bbec5b3e62dada2c858c45314f3ec723d113", "source": "train.zip: train/rulebook.md"}
+  ],
+  "models": []
+}

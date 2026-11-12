@@ -122,11 +122,13 @@ def test_settings_defaults_and_overrides():
     s = settings({})
     assert s == {"asr_model": "ckpt/asr_phoft/merged", "asr_beams": 1, "adapter": "ckpt/q4b4_all/final",
                  "llm": "Qwen/Qwen3-4B-Instruct-2507", "load_4bit": True, "time_budget": 25.0, "warmup": True, "seed": 0,
-                 "search_guard": False}
+                 "search_guard": False, "arg_rules": False}
     assert settings({"TIME_BUDGET": "20", "WARMUP": "0", "ADAPTER": ""}) == {**s, "time_budget": 20.0, "warmup": False}
     assert settings({"SEARCH_GUARD": "1"}) == {**s, "search_guard": True}
+    assert settings({"ARG_RULES": "1"}) == {**s, "arg_rules": True}
     assert settings({"ASR_BEAMS": "4"}) == {**s, "asr_beams": 4} and settings({"ASR_BEAMS": ""}) == s
     for bad in ({"TIME_BUDGET": "30"}, {"TIME_BUDGET": "0"}, {"LOAD_4BIT": "yes"}, {"WARMUP": "2"}, {"SEARCH_GUARD": "on"},
+                {"ARG_RULES": "yes"},
                 {"ASR_BEAMS": "0"}, {"ASR_BEAMS": "-1"}, {"ASR_BEAMS": "2.5"}, {"ASR_BEAMS": "four"}):
         try:
             settings(bad)

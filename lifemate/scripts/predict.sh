@@ -35,7 +35,8 @@ TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
 SEARCH_GUARD=${SEARCH_GUARD:-0}
-ARG_RULES=${ARG_RULES:-0}   # 1 = lifemate.infer --arg-rules (safe argument rules R0-R3, JOURNAL entry 146)
+# ARG_RULES: 1 = lifemate.infer --arg-rules (safe argument rules R0-R3, JOURNAL entry 146)
+ARG_RULES=${ARG_RULES:-0}
 ASR_BEAMS=${ASR_BEAMS:-1}
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}

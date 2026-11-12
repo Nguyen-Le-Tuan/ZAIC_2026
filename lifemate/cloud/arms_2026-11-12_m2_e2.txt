@@ -1,0 +1,5 @@
+# M2 (JOURNAL entry 146-147): the training change "one more epoch, learning rate decayed to 0 over both" (EPOCHS=2,
+# train_local.sh -> lifemate.train --epochs 2), otherwise identical to M1's baseline arms. Gate (written before the run):
+# 2-seed mean on dev_lao ASR text >= M1 baseline mean + 3.0 and clean text >= M1 baseline mean - 2.0.
+train TAG=v8e2_lao_s0 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao EPOCHS=2 TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft_v8.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,0
+train TAG=v8e2_lao_s1 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao EPOCHS=2 TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft_v8.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,1

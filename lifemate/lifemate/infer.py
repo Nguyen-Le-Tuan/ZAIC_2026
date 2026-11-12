@@ -68,6 +68,9 @@ def main():
     ap.add_argument("--search-guard", action="store_true",
                     help="retry an empty filtered read once with looser arguments, and stop after 3 steps in a row that "
                          "only repeat answered reads (lifemate.agent docstring; off = the 05/11 system)")
+    ap.add_argument("--arg-rules", action="store_true",
+                    help="rewrite each call's arguments with lifemate.agent.safe_args (R0-R3: drop args outside the schema, "
+                         "ISO/HH:MM time formats as the schema says, ask only required or one-of params) before it runs")
     ap.add_argument("--no-warmup", action="store_true",
                     help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
@@ -119,7 +122,8 @@ def main():
         user_text, hist = texts_for(item, a.text, asr)
         spent = asr_seconds_for(item, asr_secs) if a.text == "asr" else 0.0
         agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard,
-                      search_relax=a.search_guard, max_repeat_steps=3 if a.search_guard else 0)
+                      search_relax=a.search_guard, max_repeat_steps=3 if a.search_guard else 0,
+                      arg_rules=a.arg_rules)
         trace = agent.run(item, env, user_text, hist, t0=t0, spent=spent)
         row = {"id": item["id"], "tool_calls": env.get_tool_calls(), "state_hash": env.get_state_hash()}
         # organisers' `time` (guide p. 6-7): integer ms of the sample, before its audio is read to its result;

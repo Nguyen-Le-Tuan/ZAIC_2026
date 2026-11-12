@@ -19,6 +19,9 @@ ADAPTER=${ADAPTER:-}
 LOAD_4BIT=${LOAD_4BIT:-0}
 TIME_BUDGET=${TIME_BUDGET:-25}
 case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
+# inference switches of the submission (default off = the rollouts of every earlier dev measurement)
+case ${SEARCH_GUARD:-0} in 1) Q+=(--search-guard) ;; 0) ;; *) echo "SEARCH_GUARD must be 0 or 1" >&2; exit 1 ;; esac
+case ${ARG_RULES:-0} in 1) Q+=(--arg-rules) ;; 0) ;; *) echo "ARG_RULES must be 0 or 1" >&2; exit 1 ;; esac
 if [ "${LOSS:-0}" = 1 ] && [ "$LOAD_4BIT" = 1 ]; then
   echo "LOSS=1 needs a bf16 load (lifemate.eval_loss has no 4-bit option); train.py already logs the dev loss" >&2; exit 1
 fi

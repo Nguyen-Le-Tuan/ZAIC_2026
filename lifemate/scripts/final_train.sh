@@ -5,7 +5,8 @@
 # The public file is for the team to submit; nothing here submits anything.
 #   TAG=f_a2_s0 MODEL=Qwen/Qwen3-4B-Thinking-2507 THOUGHTS=gen/rationale_d2all.jsonl SEED=0 bash scripts/final_train.sh
 # Env: TAG (required), MODEL (default Qwen/Qwen3-4B-Instruct-2507), SEED (default 0), THOUGHTS (sft --thoughts file,
-#      empty = none), LORA_TARGETS (comma list, empty = train.py default), PUBLIC_ASR (default
+#      empty = none), LORA_TARGETS (comma list, empty = train.py default), EPOCHS (default 1; the learning rate
+#      decays to 0 over all of them), PUBLIC_ASR (default
 #      runs/e2e_public_phoft_asr.jsonl), SEARCH_GUARD (default 1), TIME_BUDGET (default 25), DRY_RUN=1 (print only).
 # Restartable: a finished adapter ckpt/$TAG/final is reused (training is skipped); a public file that already has its
 # check file is kept; a public file without one is moved aside and redone.
@@ -17,6 +18,7 @@ MODEL=${MODEL:-Qwen/Qwen3-4B-Instruct-2507}
 SEED=${SEED:-0}
 THOUGHTS=${THOUGHTS:-}
 LORA_TARGETS=${LORA_TARGETS:-}
+EPOCHS=${EPOCHS:-1}
 PUBLIC_ASR=${PUBLIC_ASR:-runs/e2e_public_phoft_asr.jsonl}
 SEARCH_GUARD=${SEARCH_GUARD:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
@@ -39,9 +41,9 @@ else
   stamp "SFT rows: all train samples${THOUGHTS:+, thoughts from $THOUGHTS}"
   # shellcheck disable=SC2086
   run $PY -m lifemate.sft --reuse ${THOUGHTS:+--thoughts "$THOUGHTS"} --out "$SFT"
-  stamp "train $MODEL on $SFT (4-bit, seed $SEED${LORA_TARGETS:+, LoRA on $LORA_TARGETS})"
+  stamp "train $MODEL on $SFT (4-bit, seed $SEED, $EPOCHS epoch(s)${LORA_TARGETS:+, LoRA on $LORA_TARGETS})"
   run $PY -m lifemate.train --model "$MODEL" --data "$SFT" --out "ckpt/$TAG" --load-4bit --optim adamw8bit \
-      --max-len 6144 --seed "$SEED" ${LORA_TARGETS:+--lora-targets "$LORA_TARGETS"}
+      --max-len 6144 --seed "$SEED" --epochs "$EPOCHS" ${LORA_TARGETS:+--lora-targets "$LORA_TARGETS"}
 fi
 
 if [ -f "${OUT}_check.json" ]; then

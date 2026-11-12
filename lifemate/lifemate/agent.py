@@ -30,6 +30,7 @@ import time
 import unicodedata
 import urllib.error
 import urllib.request
+from datetime import datetime
 
 from .guard import block_message, unseen_ids
 from .prompt import build_messages, render_calls, render_results, to_chatml
@@ -225,18 +226,113 @@ class OracleBackend:
         return "Xong."
 
 
+# ---------------------------------------------------------------- safe argument rules (JOURNAL entry 146)
+# Four rewrites of a call's arguments before it is validated and executed (the submission is the env's own call log,
+# so they must act before env.call). Derived from the fit_lao gold only and simulated on A1's dev_lao outputs:
+# +0.62 [+0.10, +1.34] dev_lao points (Qwen3-4B: +1.34), no sample hurt, no fit_lao gold call changed
+# (cloud_results/research_2026-11-11/errors.md, section 5).
+#   R0 drop arguments that are not in the tool's schema
+#   R1 an ISO-described time given as HH:MM or as a partial ISO value -> full ISO (date of context.current_time, its offset)
+#   R2 a time/date parameter WITHOUT an ISO description given as full ISO -> HH:MM (format "date" -> the date)
+#   R3 sys.ask_missing_info: keep only params that are required or in an x-one-of group of the asked tool (schema order)
+_HHMM = re.compile(r"^(\d{1,2}):(\d{2})(:\d{2})?$")
+_ISO_NOSEC = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$")
+_ISO_NOOFF = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})$")
+_FULLISO = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})([+-]\d{2}:\d{2}|Z)$")
+_TIMEKEY = re.compile(r"(time|date|start|end|deadline|due|_at$|^at$|since|until|when|day|from|to$|departure|checkin"
+                      r"|checkout)")
+ASK = "sys.ask_missing_info"
+
+
+def _iso_param(sc: dict) -> bool:
+    return sc.get("format") == "date-time" or "iso-8601" in (sc.get("description") or "").lower()
+
+
+def _map(v, f):
+    return [f(x) for x in v] if isinstance(v, list) else f(v)
+
+
+def _today_and_offset(current_time: str | None) -> tuple[str | None, str]:
+    try:
+        now = datetime.fromisoformat(str(current_time))
+    except (TypeError, ValueError):
+        return None, "+07:00"
+    off = now.utcoffset()
+    if off is None:
+        return now.date().isoformat(), "+07:00"
+    mins = int(off.total_seconds() // 60)
+    sign = "+" if mins >= 0 else "-"
+    return now.date().isoformat(), f"{sign}{abs(mins) // 60:02d}:{abs(mins) % 60:02d}"
+
+
+def safe_args(call: dict, tools: dict, current_time: str | None) -> dict:
+    """R0-R3 above on one call; returns the call unchanged (same object) when no rule applies."""
+    name, args = call.get("name"), call.get("arguments") or {}
+    if not isinstance(args, dict):
+        return call
+    if name == ASK:
+        pp = tools.get(args.get("tool_name"), {}).get("parameters", {})
+        ps = args.get("params")
+        if not pp or not isinstance(ps, list):
+            return call
+        allowed = set(pp.get("required", [])) | {q for g in (pp.get("x-one-of") or []) for q in g}
+        order = list(pp.get("properties", {}))
+        kept = [x for x in ps if x in allowed] or list(ps)
+        kept = sorted(dict.fromkeys(kept), key=lambda x: order.index(x) if x in order else len(order))
+        return call if kept == ps else {"name": name, "arguments": {**args, "params": kept}}
+    props = tools.get(name, {}).get("parameters", {}).get("properties")
+    if not props:
+        return call
+    today, off = _today_and_offset(current_time)
+
+    def iso_fill(x):
+        if not isinstance(x, str):
+            return x
+        m = _HHMM.match(x)
+        if m and today:
+            return f"{today}T{int(m.group(1)):02d}:{m.group(2)}:00{off}"
+        m = _ISO_NOSEC.match(x)
+        if m:
+            return f"{m.group(1)}T{m.group(2)}:{m.group(3)}:00{off}"
+        return x + off if _ISO_NOOFF.match(x) else x
+
+    def to_hhmm(x):
+        m = _FULLISO.match(x) if isinstance(x, str) else None
+        return f"{m.group(2)}:{m.group(3)}" if m else x
+
+    def to_date(x):
+        m = _FULLISO.match(x) if isinstance(x, str) else None
+        return m.group(1) if m else x
+
+    new = {}
+    for k, v in args.items():
+        sc = props.get(k)
+        if sc is None:                                    # R0
+            continue
+        if _iso_param(sc):                                # R1
+            v = _map(v, iso_fill)
+        elif sc.get("format") == "date":                  # R2
+            v = _map(v, to_date)
+        elif sc.get("format") == "time" or (_TIMEKEY.search(k) and sc.get("type") in ("string", "array")):
+            v = _map(v, to_hhmm)
+        new[k] = v
+    return call if new == args else {"name": name, "arguments": new}
+
+
 # ---------------------------------------------------------------- loop
 
 class Agent:
     def __init__(self, llm, tools_by_name: dict, apps_by_id: dict, max_steps: int = 8, max_retries: int = 2,
                  time_budget: float = 25.0, min_step_seconds: float = 1.0, id_guard: bool = True,
-                 search_relax: bool = False, max_relax: int = 2, max_repeat_steps: int = 0):
+                 search_relax: bool = False, max_relax: int = 2, max_repeat_steps: int = 0, arg_rules: bool = False):
         """search_relax: retry an empty filtered read once with relaxed_args (at most max_relax retries per sample).
-        max_repeat_steps: stop after this many steps in a row that only repeat answered reads (0 = never)."""
+        max_repeat_steps: stop after this many steps in a row that only repeat answered reads (0 = never).
+        arg_rules: rewrite each call's arguments with safe_args (R0-R3) before it is validated and executed."""
         self.llm, self.tools, self.apps = llm, tools_by_name, apps_by_id
         self.max_steps, self.max_retries, self.time_budget = max_steps, max_retries, time_budget
         self.min_step_seconds, self.id_guard = min_step_seconds, id_guard
         self.search_relax, self.max_relax, self.max_repeat_steps = search_relax, max_relax, max_repeat_steps
+        self.arg_rules = arg_rules
 
     def _relax(self, env, c: dict, r, seen: dict, step: dict) -> tuple[dict, dict] | None:
         """One looser retry of read call `c` whose result `r` was empty; (call, result) or None."""
@@ -284,6 +380,11 @@ class Agent:
             results, processed, stop = [], [], False
             repeats = 0  # calls of this step answered from `seen` (no env.call)
             for c in calls:
+                if self.arg_rules:
+                    c2 = safe_args(c, self.tools, (item.get("context") or {}).get("current_time"))
+                    if c2 is not c:
+                        step.setdefault("arg_rules", []).append({"from": c, "to": c2})
+                        c = c2
                 processed.append(c)
                 # only reads are de-duplicated: repeating a write can be intended (redeem twice = two tickets)
                 is_read = self.tools.get(c["name"], {}).get("kind") == "read"

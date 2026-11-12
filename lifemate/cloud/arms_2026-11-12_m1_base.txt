@@ -1,0 +1,20 @@
+# M1 (JOURNAL entry 146-147): same-machine baseline for the 2-epoch arm, and fit_lao adapters of the submitted recipe
+# (v7 code: distractors from the train catalog) to measure the inference switches on dev_lao.
+# Lines alternate seed 0 / seed 1 so that, on 2 GPUs, every seed-0 line is queued on GPU 0 after its training (round-robin).
+# Dev rollouts: 60 s budget, search guard off, as every earlier dev measurement; dev ASR text = asr/train_dev_union_phoft_v8.jsonl
+# (PhoWhisper-ft trained on the fit split only, greedy, transcribed on the laptop 11/11).
+train TAG=v8base_lao_s0 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft_v8.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,0
+train TAG=v8base_lao_s1 MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 FIT=fit_lao DEV=dev_lao TIME_BUDGET=60 ASR_DEV=asr/train_dev_union_phoft_v8.jsonl LORA_TARGETS=q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj,in_proj_qkv,in_proj_z,out_proj TRAIN_ARGS=--max-len,6144,--seed,1
+# safe argument rules (R0-R3), clean and ASR text
+eval TAG=v8base_lao_s0_rules ADAPTER=ckpt/v8base_lao_s0/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ARG_RULES=1
+eval TAG=v8base_lao_s1_rules ADAPTER=ckpt/v8base_lao_s1/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ARG_RULES=1
+eval TAG=v8base_lao_s0_rules_asr ADAPTER=ckpt/v8base_lao_s0/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8.jsonl ARG_RULES=1
+eval TAG=v8base_lao_s1_rules_asr ADAPTER=ckpt/v8base_lao_s1/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8.jsonl ARG_RULES=1
+# 4-beam ASR on the final turn (history greedy), ASR text only
+eval TAG=v8base_lao_s0_beam4_asr ADAPTER=ckpt/v8base_lao_s0/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8_beam4.jsonl
+eval TAG=v8base_lao_s1_beam4_asr ADAPTER=ckpt/v8base_lao_s1/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=1 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8_beam4.jsonl
+# bf16 inference of the same adapters (base not quantised), clean and ASR text
+eval TAG=v8base_lao_s0_bf16 ADAPTER=ckpt/v8base_lao_s0/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=0 DEV=dev_lao TIME_BUDGET=60
+eval TAG=v8base_lao_s1_bf16 ADAPTER=ckpt/v8base_lao_s1/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=0 DEV=dev_lao TIME_BUDGET=60
+eval TAG=v8base_lao_s0_bf16_asr ADAPTER=ckpt/v8base_lao_s0/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=0 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8.jsonl
+eval TAG=v8base_lao_s1_bf16_asr ADAPTER=ckpt/v8base_lao_s1/final MODEL=principled-intelligence/Qwen3.5-4B-text-only LOAD_4BIT=0 DEV=dev_lao TIME_BUDGET=60 ASR_FILE=asr/train_dev_union_phoft_v8.jsonl

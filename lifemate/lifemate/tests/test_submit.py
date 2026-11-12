@@ -57,18 +57,21 @@ def _check_module():
 
 
 class FakeASR:
-    """Text = the wav's sample count, so a test can tell which wav was transcribed."""
+    """Text = the wav's sample count, so a test can tell which wav was transcribed. `beams` records the num_beams of
+    each wav (1 when the call passed none)."""
 
     def __init__(self, *args, sleep: float = 0.0, **kw):
-        self.sleep, self.calls, self.warmups = sleep, 0, 0
+        self.sleep, self.calls, self.warmups, self.beams, self.warmup_beams = sleep, 0, 0, [], []
 
-    def __call__(self, audios):
+    def __call__(self, audios, **kw):
         self.calls += len(audios)
+        self.beams += [kw.get("num_beams", 1)] * len(audios)
         time.sleep(self.sleep)
         return [f"len {len(a)}" for a in audios]
 
-    def warmup(self):
+    def warmup(self, **kw):
         self.warmups += 1
+        self.warmup_beams.append(kw.get("num_beams", 1))
 
 
 class FakeLLM:
@@ -117,12 +120,16 @@ def test_find_split_rules():
 
 def test_settings_defaults_and_overrides():
     s = settings({})
-    assert s == {"asr_model": "ckpt/asr_phoft/merged", "adapter": "ckpt/q4b4_all/final",
+    assert s == {"asr_model": "ckpt/asr_phoft/merged", "asr_beams": 1, "adapter": "ckpt/q4b4_all/final",
                  "llm": "Qwen/Qwen3-4B-Instruct-2507", "load_4bit": True, "time_budget": 25.0, "warmup": True, "seed": 0,
-                 "search_guard": False}
+                 "search_guard": False, "arg_rules": False}
     assert settings({"TIME_BUDGET": "20", "WARMUP": "0", "ADAPTER": ""}) == {**s, "time_budget": 20.0, "warmup": False}
     assert settings({"SEARCH_GUARD": "1"}) == {**s, "search_guard": True}
-    for bad in ({"TIME_BUDGET": "30"}, {"TIME_BUDGET": "0"}, {"LOAD_4BIT": "yes"}, {"WARMUP": "2"}, {"SEARCH_GUARD": "on"}):
+    assert settings({"ARG_RULES": "1"}) == {**s, "arg_rules": True}
+    assert settings({"ASR_BEAMS": "4"}) == {**s, "asr_beams": 4} and settings({"ASR_BEAMS": ""}) == s
+    for bad in ({"TIME_BUDGET": "30"}, {"TIME_BUDGET": "0"}, {"LOAD_4BIT": "yes"}, {"WARMUP": "2"}, {"SEARCH_GUARD": "on"},
+                {"ARG_RULES": "yes"},
+                {"ASR_BEAMS": "0"}, {"ASR_BEAMS": "-1"}, {"ASR_BEAMS": "2.5"}, {"ASR_BEAMS": "four"}):
         try:
             settings(bad)
         except ValueError:
@@ -251,6 +258,29 @@ def test_runner_one_sample_at_a_time():
     assert asr.calls == sum(len(sample_wavs(s)) for s in _items())
 
 
+def test_runner_beams_on_final_turn_only():
+    """asr_beams > 1: the final turn (item["audio"]) is decoded with beams, every history turn greedily, and the
+    warm-up runs both paths; asr_beams = 1 makes only plain greedy calls (the default above)."""
+    _need_train()
+    item = _items(["train_0069"])[0]  # five user history turns
+    wavs = sample_wavs(item)
+    assert wavs[0] == item["audio"] and len(wavs) == 6
+    for beams, want in ((1, [1] * 6), (4, [4] + [1] * 5)):
+        asr = FakeASR()
+        runner = Runner("train", DEFAULT_ROOT, asr, FakeLLM(), asr_beams=beams)
+        texts = runner.transcribe(item)
+        assert list(texts) == wavs and asr.beams == want
+        assert texts[item["audio"]] == f"len {len(read_wav(Path(DEFAULT_ROOT) / 'train' / item['audio']))}"
+        runner.warmup(item)
+        assert asr.warmup_beams == ([1] if beams == 1 else [1, beams])
+    try:
+        Runner("train", DEFAULT_ROOT, FakeASR(), FakeLLM(), asr_beams=0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("asr_beams=0 accepted")
+
+
 def test_runner_budget_counts_asr():
     """The budget runs from t1 (before the audio is read): slow ASR leaves no time for an agent step."""
     _need_train()
@@ -369,7 +399,7 @@ def test_wrapper_dry_run_finds_split_and_writes_nothing():
 FAKE_PIPELINE = """#!/usr/bin/env bash
 # stands in for scripts/predict.sh: writes what the real one writes, from the environment the wrapper sets
 set -euo pipefail
-echo "fake pipeline SPLIT=$SPLIT DATA=$DATA OUT=$OUT SEED=$SEED TIME_BUDGET=$TIME_BUDGET PYTHONHASHSEED=$PYTHONHASHSEED"
+echo "fake pipeline SPLIT=$SPLIT DATA=$DATA OUT=$OUT SEED=$SEED TIME_BUDGET=$TIME_BUDGET PYTHONHASHSEED=$PYTHONHASHSEED ASR_BEAMS=$ASR_BEAMS"
 [ "${FAKE_WRITE:-1}" = 1 ] || exit 3
 printf '%s\\n' '{"id": "private_0001", "tool_calls": [], "state_hash": "ab", "time": 1500}' \\
   '{"id": "private_0002", "tool_calls": [], "state_hash": "cd", "time": 2500}' > "$OUT"
@@ -394,12 +424,34 @@ def test_wrapper_writes_result_and_times():
         p = _wrapper({"DATA_ROOT": str(data), "RESULT_DIR": str(d / "result"), "WORK": str(d / "work")}, lm)
         assert p.returncode == 0, p.stdout + p.stderr
         assert f"SPLIT=private_test DATA={data} OUT={d}/work/submission.jsonl SEED=0 TIME_BUDGET=25 PYTHONHASHSEED=0" \
-            in p.stdout
+            " ASR_BEAMS=1" in p.stdout
+        assert "system: ASR ckpt/asr_phoft/merged (final-turn beams=1) | LLM" in p.stdout
         assert "load model: 27000 ms (ASR 4000 ms, ASR warm-up 1000 ms, LLM 20000 ms, LLM warm-up 2000 ms)" in p.stdout
         assert "predict: 2 mẫu, 4000 ms, trung bình 2000.0 ms/mẫu" in p.stdout and "total wall time:" in p.stdout
         assert len(load_jsonl(d / "result" / "submission.jsonl")) == 2
         assert sorted(x.name for x in (d / "result").iterdir()) == ["submission.jsonl"]
         assert _listing(data) == ["private_test", "private_test/private_test_tools_catalog.json"]
+
+
+def test_wrapper_passes_asr_beams():
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        data, lm = _fake_data_root(d / "data", "private_test"), _fake_lifemate(d)
+        p = _wrapper({"DATA_ROOT": str(data), "RESULT_DIR": str(d / "result"), "WORK": str(d / "work"),
+                      "ASR_BEAMS": "4"}, lm)
+        assert p.returncode == 0, p.stdout + p.stderr
+        assert "(final-turn beams=4)" in p.stdout and "PYTHONHASHSEED=0 ASR_BEAMS=4" in p.stdout
+
+
+def test_pipeline_script_rejects_bad_asr_beams():
+    """scripts/predict.sh checks ASR_BEAMS before it loads or writes anything."""
+    with tempfile.TemporaryDirectory() as d:
+        for bad in ("0", "x", "-2", "1.5"):
+            e = {**os.environ, "SPLIT": "train", "ASR_MODEL": "x", "ADAPTER": "x", "OUT": f"{d}/o.jsonl",
+                 "ASR_BEAMS": bad, "PY": sys.executable}
+            p = subprocess.run(["bash", str(PKG_DIR / "scripts" / "predict.sh")], capture_output=True, text=True, env=e)
+            assert p.returncode == 1 and "ASR_BEAMS" in p.stderr, (bad, p.stdout, p.stderr)
+        assert list(Path(d).iterdir()) == []
 
 
 def test_wrapper_failures():

@@ -7,10 +7,14 @@ Per sample:
 A submitted call matches a gold call when the tool name is the same, every non-fuzzy argument is identical
 and every fuzzy argument has token-F1 > 0.6 (lowercase + NFC). Each call matches at most one call; order ignored.
 
-Points the official text leaves open (kept strict here, may differ from the server):
-  * argument key sets must be equal (an extra optional argument breaks the match)
-  * non-fuzzy values are compared exactly (no case folding); lists in order
+Points the official Evaluation text leaves open, settled by the organisers' FAQ (09/11/2026, JOURNAL entry 138):
+  * only the arguments present in the gold call are compared: an extra (valid, optional) argument in the submitted
+    call does not break the match (on a write tool it can still change the state hash, which zeroes the sample)
+  * `sys.ask_missing_info`: `params` is compared as a set (order ignored); a missing or extra param is no match
+  * non-fuzzy values are compared exactly (no case folding); other lists in order
   * fuzzy tokens = whitespace split after lowercase + NFC
+Until 11/11/2026 this scorer required equal argument key sets and ordered ask params, which cost A1 about 1.0-1.6
+dev_lao points against the official rule; LIFEMATE_SCORER_STRICT=1 restores that behaviour to reproduce old numbers.
 
 Local protocol for incomplete files: a gold id with no prediction row scores 0 even when its gold is empty
 ("no answer" is not "answered with no call"); a repeated id or an id outside the split is an error.
@@ -20,6 +24,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import os
 import sys
 import unicodedata
 
@@ -41,17 +46,25 @@ def token_f1(a, b) -> float:
     return 2 * p * r / (p + r)
 
 
-def calls_match(sub: dict, gold: dict, fuzzy: dict[str, set[str]]) -> bool:
+STRICT = os.environ.get("LIFEMATE_SCORER_STRICT") == "1"   # pre-FAQ behaviour, only to reproduce old numbers
+ASK = "sys.ask_missing_info"
+
+
+def calls_match(sub: dict, gold: dict, fuzzy: dict[str, set[str]], strict: bool | None = None) -> bool:
+    strict = STRICT if strict is None else strict
     if sub.get("name") != gold.get("name"):
         return False
     sa, ga = sub.get("arguments") or {}, gold.get("arguments") or {}
-    if set(sa) != set(ga):
+    if (set(sa) != set(ga)) if strict else not set(ga) <= set(sa):
         return False
     fz = fuzzy.get(gold["name"], set())
     for k, gv in ga.items():
         sv = sa[k]
         if k in fz and isinstance(gv, str) and isinstance(sv, str):
             if token_f1(sv, gv) <= 0.6:
+                return False
+        elif not strict and gold["name"] == ASK and k == "params" and isinstance(gv, list) and isinstance(sv, list):
+            if collections.Counter(map(str, sv)) != collections.Counter(map(str, gv)):
                 return False
         elif sv != gv:
             return False

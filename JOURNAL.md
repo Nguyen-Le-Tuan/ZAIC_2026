@@ -2990,12 +2990,13 @@ cd ~/"Zalo AI Challenge/lifemate" && mkdir -p runs && { nohup systemd-inhibit --
       - File danh sách lượt `lifemate/cloud/arms_2026-11-12_m1_base.txt`, `…_m2_e2.txt`; chạy khô đã kiểm thứ tự trên GPU. Chạy lại sau khi bị ngắt: lượt đã xong báo "exists" hay "refusing to overwrite", vô hại.
     - **Cửa giữ/bỏ** như entry 146. Dev giờ chấm bằng bộ chấm theo FAQ, nên M1 và M2 so với nhau, không so với số cũ của A1.
     - **Bảng HUMAN_TODO có hai mục B53** (kế hoạch ROI lúc 19:37, nộp file DataMate lúc 20:11). Mục DataMate đổi thành **B56** (cả ở entry 147, dòng trạng thái và hộp "Thay đổi gần nhất"); Claude báo phiên DataMate dùng B56 và lấy số mới từ B57.
-149. **Anh báo điểm public DataMate của file đầu tiên: 0,18100** (12/11, 00:22).
+149. **Anh báo điểm public DataMate của file đầu tiên: 0,18100** (12/11, 00:22). Đây là B56 (phiên LifeMate đổi số B53 cũ của DataMate thành B56).
     - **Suy ra:** file có 765 câu trả lời (gồm 75 câu "unanswerable") và 235 abstain, nên khoảng 473 đúng, 292 sai: **đúng khoảng 62% trên câu đã trả lời** (train: 97%). Điểm thấp hơn trung vị public (0,598), khoảng hạng 330/457.
     - **Hai giả thuyết chính (chưa tách được):** (1) 6 dòng luật của rulebook public đổi nghĩa thật, mà hệ thống đang áp luật train cho mọi câu; (2) bộ hiểu file sai ở 8 tiệm có kiểu file mới (trên 5 tiệm giữ riêng của train, tỉ lệ sai chỉ khoảng 7–9%, nên giả thuyết (1) có vẻ nặng hơn).
     - **Hai file thăm dò** (lọc từ chính file vừa nộp, không đọc nội dung public; ở `cloud_results/datamate/`, ngoài git):
       - **A** `probe_A_familiar_layouts.jsonl`: chỉ giữ câu trả lời của 6 tiệm có bộ file giống kiểu của train (324 câu), còn lại abstain. Điểm ≥ 0,22 (đúng ≥ 84%) thì lỗi chủ yếu ở kiểu file mới; ≤ 0,10 (đúng ≤ 65%) thì lỗi không nằm ở kiểu file.
       - **B** `probe_B_sales_core.jsonl`: chỉ giữ các câu bán hàng lõi (doanh thu, đơn, huỷ, giá trị trung bình đơn, ngày cao nhất, tỉ trọng…, 600 câu). Điểm ≥ 0,40 (đúng ≥ 83%) thì luật bán hàng lõi vẫn đúng; ≤ 0,15 (đúng ≤ 62%) thì luật lõi đã đổi.
+    - **Chờ Anh (B57):** nộp 2 file A, B (còn 4 lần nộp hôm nay) và báo 2 điểm.
     - **Luật dùng dữ liệu giữ nguyên:** không mở rulebook hay câu hỏi public; chỉ dùng điểm public.
 
 ---

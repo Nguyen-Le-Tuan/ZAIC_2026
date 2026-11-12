@@ -1,6 +1,6 @@
 # LifeMate: pipeline có ROI cao nhất tới hạn Docker 16/11 (tổng hợp nghiên cứu 11/11/2026)
 
-*Claude tổng hợp lúc 19:50 ngày 11/11 (giờ Buffalo) từ 4 nhóm nghiên cứu chạy song song. Báo cáo đầy đủ (tiếng Anh, ngoài git vì có mô tả mẫu train): `cloud_results/research_2026-11-11/{rivals,errors,methods,setter}.md`. Mọi con số gắn "ước" là ước lượng, chưa đo.*
+*Claude tổng hợp lúc 19:37 ngày 11/11 (giờ Buffalo) từ 4 nhóm nghiên cứu chạy song song. Báo cáo đầy đủ (tiếng Anh, ngoài git vì có mô tả mẫu train): `cloud_results/research_2026-11-11/{rivals,errors,methods,setter}.md`. Mọi con số gắn "ước" là ước lượng, chưa đo.*
 
 ## 0. Kết luận
 

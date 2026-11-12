@@ -17,7 +17,8 @@
 #   PY            Python with torch & co. (default $LIFEMATE_DIR/.venv/bin/python when present, else python3)
 #   DATA_ROOT (/data)  RESULT_DIR (/result)  SPLIT (found under DATA_ROOT)  WORK (new folder under $TMPDIR or /tmp)
 #   IDS           file of sample ids: run only those (smoke tests)
-#   ASR_MODEL ADAPTER LLM LOAD_4BIT TIME_BUDGET WARMUP SEED SEARCH_GUARD ARG_RULES   the system (do not change for the submission)
+#   ASR_MODEL ASR_BEAMS ADAPTER LLM LOAD_4BIT TIME_BUDGET WARMUP SEED SEARCH_GUARD ARG_RULES
+#                 the system (do not change for the submission)
 #   DRY_RUN=1     print the resolved settings and stop before loading any model
 set -euo pipefail
 T0=$(date +%s%N)
@@ -33,6 +34,8 @@ DATA_ROOT=$(realpath -e "${DATA_ROOT:-/data}")
 RESULT_DIR=$(realpath -m "${RESULT_DIR:-/result}")
 IDS=${IDS:+$(realpath -e "$IDS")}
 ASR_MODEL=${ASR_MODEL:-ckpt/asr_phoft/merged}
+# beam search on each sample's final turn only (history turns stay greedy), lifemate.asr --beams; 1 = greedy
+ASR_BEAMS=${ASR_BEAMS:-1}
 ADAPTER=${ADAPTER:-ckpt/q4b4_all/final}
 LLM=${LLM:-Qwen/Qwen3-4B-Instruct-2507}
 LOAD_4BIT=${LOAD_4BIT:-1}
@@ -60,7 +63,7 @@ for d in ${WORK:+"$WORK"} "$RESULT_DIR"; do
 done
 
 echo "lifemate predict: split $SPLIT from $DATA_ROOT/$SPLIT${IDS:+ (ids in $IDS)}"
-echo "system: ASR $ASR_MODEL | LLM $LLM + LoRA $ADAPTER (4-bit=$LOAD_4BIT) | budget ${TIME_BUDGET}s/sample | warm-up=$WARMUP | seed $SEED | search guard=$SEARCH_GUARD | arg rules=$ARG_RULES"
+echo "system: ASR $ASR_MODEL (final-turn beams=$ASR_BEAMS) | LLM $LLM + LoRA $ADAPTER (4-bit=$LOAD_4BIT) | budget ${TIME_BUDGET}s/sample | warm-up=$WARMUP | seed $SEED | search guard=$SEARCH_GUARD | arg rules=$ARG_RULES"
 echo "code $LIFEMATE_DIR, python $PY, temp files in ${WORK:-a new folder under ${TMPDIR:-/tmp}}"
 echo "output will be saved in $RESULT_DIR/submission.jsonl"
 if [ "${DRY_RUN:-0}" = 1 ]; then
@@ -76,8 +79,8 @@ fi
 mkdir -p "$WORK" "$RESULT_DIR"
 OUT=$WORK/submission.jsonl
 rc=0
-SPLIT=$SPLIT DATA=$DATA_ROOT IDS=$IDS OUT=$OUT PY=$PY ASR_MODEL=$ASR_MODEL ADAPTER=$ADAPTER LLM=$LLM \
-  LOAD_4BIT=$LOAD_4BIT TIME_BUDGET=$TIME_BUDGET WARMUP=$WARMUP SEED=$SEED SEARCH_GUARD=$SEARCH_GUARD ARG_RULES=$ARG_RULES \
+SPLIT=$SPLIT DATA=$DATA_ROOT IDS=$IDS OUT=$OUT PY=$PY ASR_MODEL=$ASR_MODEL ASR_BEAMS=$ASR_BEAMS ADAPTER=$ADAPTER \
+  LLM=$LLM LOAD_4BIT=$LOAD_4BIT TIME_BUDGET=$TIME_BUDGET WARMUP=$WARMUP SEED=$SEED SEARCH_GUARD=$SEARCH_GUARD ARG_RULES=$ARG_RULES \
   bash scripts/predict.sh || rc=$?
 
 if [ -s "$OUT" ]; then

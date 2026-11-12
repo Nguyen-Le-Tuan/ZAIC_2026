@@ -13,11 +13,12 @@ from pathlib import Path
 
 import numpy as np
 
-from lifemate.asr import read_wav, wav_paths
+from lifemate.asr import decode_passes, final_paths, read_wav, transcribe, wav_paths
 from lifemate.data import DEFAULT_ROOT, load_split
 from lifemate.tests.test_scorer import PKG_DIR, Skip, _skip
 
 sys.path.insert(0, str(PKG_DIR / "scripts"))
+import asr_beam_final as abf  # noqa: E402
 import asr_quality as aq  # noqa: E402
 import check_submission as cs  # noqa: E402
 
@@ -41,6 +42,97 @@ def test_wav_paths_final_then_history_unique():
              {"audio": "audio/b/b.wav", "history": []},
              {"audio": "audio/a/a.wav", "history": []}]
     assert wav_paths(items) == ["audio/a/a.wav", "audio/a/a_u1.wav", "audio/b/b.wav"]
+
+
+class RecordingASR:
+    """Stands in for Whisper: records each call's wav lengths and beams; text = the wav's sample count."""
+
+    def __init__(self):
+        self.calls = []  # (lengths of the batch, num_beams, whether num_beams was passed at all)
+
+    def __call__(self, audios, **kw):
+        self.calls.append(([len(a) for a in audios], kw.get("num_beams", 1), "num_beams" in kw))
+        return [f"len {len(a)}" for a in audios]
+
+
+# two samples: a (final + 2 user history turns) and b (final only); lengths chosen so length order mixes the turns
+TURNS = {"audio/a/a.wav": 5000, "audio/a/a_u1.wav": 3000, "audio/a/a_u2.wav": 9000, "audio/b/b.wav": 4000}
+ITEMS = [{"audio": "audio/a/a.wav", "history": [{"role": "user", "audio": "audio/a/a_u1.wav"},
+                                                {"role": "assistant", "text": "ok"},
+                                                {"role": "user", "audio": "audio/a/a_u2.wav"}]},
+         {"audio": "audio/b/b.wav", "history": []}]
+
+
+def _turn_wavs(d: Path) -> Path:
+    for p, n in TURNS.items():
+        (d / p).parent.mkdir(parents=True, exist_ok=True)
+        _write_wav(d / p, np.zeros(n) + 0.1)
+    return d
+
+
+def test_final_paths_are_each_samples_own_audio():
+    assert final_paths(ITEMS) == {"audio/a/a.wav", "audio/b/b.wav"}
+    assert final_paths([]) == set()
+    paths = wav_paths(ITEMS)
+    assert [p for p in paths if p not in final_paths(ITEMS)] == ["audio/a/a_u1.wav", "audio/a/a_u2.wav"]
+
+
+def test_decode_passes_split_by_mode():
+    paths, final = wav_paths(ITEMS), final_paths(ITEMS)
+    assert decode_passes(paths, 8) == [(1, paths, 8)]  # beams 1: one greedy pass over every wav
+    assert decode_passes(paths, 8, beams=1, final=final) == [(1, paths, 8)]
+    assert decode_passes(paths, 8, beams=4, final=final) == [
+        (1, ["audio/a/a_u1.wav", "audio/a/a_u2.wav"], 8), (4, ["audio/a/a.wav", "audio/b/b.wav"], 2)]
+    assert decode_passes(paths, 1, beams=4, final=final)[1] == (4, ["audio/a/a.wav", "audio/b/b.wav"], 1)
+    for bad in ({"beams": 0, "final": final}, {"beams": 4}):  # beams > 1 must be told which wavs are final turns
+        try:
+            decode_passes(paths, 8, **bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"decode_passes accepted {bad}")
+
+
+def test_transcribe_beams_on_final_turns_only():
+    with tempfile.TemporaryDirectory() as d:
+        root, paths, final = _turn_wavs(Path(d)), wav_paths(ITEMS), final_paths(ITEMS)
+        asr = RecordingASR()
+        rows = transcribe(asr, root, paths, batch_size=8, beams=4, final=final)
+        assert [r["audio"] for r in rows] == paths  # rows in the order of paths, whatever the decode order
+        assert all(set(r) == {"audio", "text", "seconds", "audio_s"} for r in rows)
+        assert [r["text"] for r in rows] == [f"len {TURNS[p]}" for p in paths]
+        # history turns: one greedy batch, plain asr(batch); final turns: 8 // 4 = 2 per batch, all with 4 beams
+        assert asr.calls == [([3000, 9000], 1, False), ([4000, 5000], 4, True)]
+        asr = RecordingASR()
+        transcribe(asr, root, paths, batch_size=1, beams=4, final=final)
+        assert asr.calls == [([3000], 1, False), ([9000], 1, False), ([4000], 4, True), ([5000], 4, True)]
+
+
+def test_transcribe_beams_1_is_the_greedy_run():
+    """beams = 1 decodes as before the option: every wav in one length-sorted pass, asr(batch) without num_beams."""
+    with tempfile.TemporaryDirectory() as d:
+        root, paths = _turn_wavs(Path(d)), wav_paths(ITEMS)
+        for kw in ({}, {"beams": 1, "final": final_paths(ITEMS)}):
+            asr = RecordingASR()
+            rows = transcribe(asr, root, paths, batch_size=3, **kw)
+            assert asr.calls == [([3000, 4000, 5000], 1, False), ([9000], 1, False)]
+            assert [r["audio"] for r in rows] == paths
+
+
+def test_beam_final_merge_replaces_final_rows_only():
+    """scripts/asr_beam_final.py: the greedy file's rows and order; only the final turns take the beam rows."""
+    paths, final = wav_paths(ITEMS), final_paths(ITEMS)
+    greedy = [{"audio": p, "text": "g", "seconds": 0.1, "audio_s": 1.0} for p in paths]
+    beam = [{"audio": p, "text": "b", "seconds": 0.3, "audio_s": 1.0} for p in sorted(final)]
+    out = abf.merge(greedy, beam)
+    assert [r["audio"] for r in out] == paths
+    assert [r["text"] for r in out] == ["b" if p in final else "g" for p in paths]
+    assert all(r is greedy[i] for i, r in enumerate(out) if r["audio"] not in final)  # history rows copied as is
+    try:
+        abf.merge(greedy, [{**beam[0], "beams": 4}])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a beam row with other keys than the greedy rows was accepted")
 
 
 def test_read_wav_checks_format_and_length():
@@ -76,6 +168,20 @@ def test_real_train_wavs_are_covered():
     assert paths[0] == s["audio"] and len(paths) == 1 + sum(h["role"] == "user" for h in s["history"])
     x = read_wav(Path(DEFAULT_ROOT) / "train" / paths[0])
     assert 0.5 < len(x) / 16000 < 30
+
+
+def test_real_final_turns_are_the_samples_audio():
+    """In train, each sample's `audio` is its own wav, never a history turn of any sample: the beam pass of a run
+    decodes exactly one wav per sample."""
+    _need_data()
+    items = load_split("train")
+    final = final_paths(items)
+    hist = {h["audio"] for s in items for h in s["history"] if h["role"] == "user"}
+    assert len(final) == len(items) and not final & hist
+    s = next(x for x in items if any(h["role"] == "user" for h in x["history"]))
+    passes = decode_passes(wav_paths([s]), 1, beams=4, final=final_paths([s]))
+    assert passes[1][1] == [s["audio"]] and s["audio"] not in passes[0][1]
+    assert sorted(passes[0][1]) == sorted(h["audio"] for h in s["history"] if h["role"] == "user")
 
 
 def test_wer_and_normalisation():

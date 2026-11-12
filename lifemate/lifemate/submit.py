@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -30,6 +31,7 @@ from .runinfo import percentile
 
 DEFAULTS = {
     "ASR_MODEL": "ckpt/asr_phoft/merged",          # PhoWhisper-large fine-tuned on all train audio, merged
+    "ASR_BEAMS": "1",                              # beams for each sample's final turn (lifemate.asr --beams); 1 = greedy
     "ADAPTER": "ckpt/q4b4_all/final",              # LoRA trained on the 4-bit base, all train samples
     "LLM": "Qwen/Qwen3-4B-Instruct-2507",          # base model, from the image's Hugging Face cache (offline)
     "LOAD_4BIT": "1",                              # NF4 base + adapter not merged, as in every scored 4B run
@@ -53,9 +55,11 @@ def settings(env=None) -> dict:
     budget = float(s["TIME_BUDGET"])
     if not 0 < budget < 30:
         raise ValueError(f"TIME_BUDGET must be above 0 and below 30, got {budget}")
-    return {"asr_model": s["ASR_MODEL"], "adapter": s["ADAPTER"], "llm": s["LLM"], "load_4bit": s["LOAD_4BIT"] == "1",
-            "time_budget": budget, "warmup": s["WARMUP"] == "1", "seed": int(s["SEED"]),
-            "search_guard": s["SEARCH_GUARD"] == "1", "arg_rules": s["ARG_RULES"] == "1"}
+    if not (re.fullmatch(r"[0-9]+", s["ASR_BEAMS"]) and int(s["ASR_BEAMS"]) >= 1):
+        raise ValueError(f"ASR_BEAMS must be a whole number of at least 1, got {s['ASR_BEAMS']!r}")
+    return {"asr_model": s["ASR_MODEL"], "asr_beams": int(s["ASR_BEAMS"]), "adapter": s["ADAPTER"], "llm": s["LLM"],
+            "load_4bit": s["LOAD_4BIT"] == "1", "time_budget": budget, "warmup": s["WARMUP"] == "1",
+            "seed": int(s["SEED"]), "search_guard": s["SEARCH_GUARD"] == "1", "arg_rules": s["ARG_RULES"] == "1"}
 
 
 def split_candidates(root) -> list[str]:
@@ -95,7 +99,9 @@ class Runner:
     before its ToolEnv and audio to its result (guide p. 17)."""
 
     def __init__(self, split: str, root, asr, llm, time_budget: float = 25.0, id_guard: bool = True,
-                 search_guard: bool = False, arg_rules: bool | None = None):
+                 search_guard: bool = False, arg_rules: bool | None = None, asr_beams: int = 1):
+        if asr_beams < 1:
+            raise ValueError(f"asr_beams must be at least 1, got {asr_beams}")
         cat = load_catalog(split, root)
         self.tools, self.apps = catalog_tools(cat), {x["id"]: x for x in cat["apps"]}
         self.split_dir = Path(root) / split
@@ -103,6 +109,7 @@ class Runner:
         self.search_guard = search_guard  # same switch as lifemate.infer --search-guard
         # same switch as lifemate.infer --arg-rules; None = the ARG_RULES setting (the notebook does not pass it)
         self.arg_rules = settings()["arg_rules"] if arg_rules is None else arg_rules
+        self.asr_beams = asr_beams  # same as lifemate.asr --beams: the final turn only, history turns greedy
 
     def warmup(self, item: dict) -> float:
         """Untimed, before the first sample (as predict.sh does): a short ASR decode of silence, then one short
@@ -110,13 +117,22 @@ class Runner:
         t = time.monotonic()
         if hasattr(self.asr, "warmup"):
             self.asr.warmup()
+            if self.asr_beams > 1:
+                self.asr.warmup(num_beams=self.asr_beams)
         if hasattr(self.llm, "warmup"):
             self.llm.warmup(warmup_prompt(item, self.tools, self.apps))
         return time.monotonic() - t
 
     def transcribe(self, item: dict) -> dict[str, str]:
-        """{wav path: text} for the sample's wavs, one at a time (= lifemate.asr --batch-size 1)."""
-        return {p: self.asr([read_wav(self.split_dir / p)])[0] for p in sample_wavs(item)}
+        """{wav path: text} for the sample's wavs, one at a time (= lifemate.asr --batch-size 1). With asr_beams > 1
+        the final turn (item["audio"]) is decoded with that many beams and the history turns greedily
+        (= lifemate.asr --beams); with 1 every call is the greedy asr([wav])."""
+        out = {}
+        for p in sample_wavs(item):
+            x = [read_wav(self.split_dir / p)]
+            out[p] = (self.asr(x, num_beams=self.asr_beams) if self.asr_beams > 1 and p == item["audio"]
+                      else self.asr(x))[0]
+        return out
 
     def run(self, item: dict, env, t1: float) -> dict:
         """One sample on `env`, the ToolEnv the caller created after t1 = time.perf_counter(). The time budget

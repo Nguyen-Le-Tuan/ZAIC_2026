@@ -14,7 +14,7 @@ import pandas as pd
 
 from .io import RawTable, load_business
 from .readme import Readme, parse_readme
-from .schema import PREFIX_FIELD, id_prefix, meaning_field, name_field
+from .schema import PREFIX_FIELD, id_prefix, is_noise_col, meaning_field, name_field, token_field
 from .textnorm import colkey, fold
 from .values import frac_parsed
 
@@ -32,35 +32,46 @@ class Mapped:
 
 
 def map_table(t: RawTable, rd: Readme) -> Mapped:
+    """Two passes: README meanings, exact header synonyms and ID prefixes first; token rules only fill fields that are
+    still free, so a 'Mô tả sản phẩm' column cannot take prod_name from 'Tên hàng hóa'."""
     mt = Mapped(name=t.name, raw=t)
     used = set()
     cols = [c for c in t.df.columns if c not in ("_src", "_year")]
+    strong, weak = {}, {}
     for c in cols:
         m = rd.meaning(t.name, c) or rd.any_meaning(c)
         mf = meaning_field(m) if m else None
+        if mf is None and is_noise_col(c):
+            continue
         nf = name_field(c)
         cands = [(mf, "readme"), (nf, "name")]
-        # ID columns: the value prefix decides when it disagrees with an ID-ish guess
         p = id_prefix(t.df[c].tolist())
         if p and p in PREFIX_FIELD:
             pf = PREFIX_FIELD[p]
-            if mf is None or mf in ID_FIELDS or mf in ("staff", "branch", "promo", "line_no"):
+            if mf is None or mf in ID_FIELDS or mf in ("staff", "branch", "promo", "line_no", "cust_name", "prod_name", "note"):
                 cands.insert(0, (pf, "prefix"))
-        f, how = None, None
-        for cf, ch in cands:
-            if cf and cf not in used:
-                f, how = cf, ch
+        strong[c] = [x for x in cands if x[0]]
+        tf = token_field(c)
+        if tf:
+            weak[c] = (tf, "token")
+    for c in cols:
+        for cf, ch in strong.get(c, []):
+            if cf not in used:
+                mt.fields[c], mt.how[c] = cf, ch
+                used.add(cf)
                 break
-        if f is None:
-            first = next(((cf, ch) for cf, ch in cands if cf), None)
-            if first:
-                f, how = first[0] + "__2", first[1]
-        if f:
-            mt.fields[c] = f
-            mt.how[c] = how
-            used.add(f)
         else:
-            mt.unmapped.append(c)
+            if strong.get(c):
+                cf, ch = strong[c][0]
+                mt.fields[c], mt.how[c] = cf + "__2", ch
+    for c in cols:
+        if c in mt.fields or c not in weak:
+            continue
+        cf, ch = weak[c]
+        if cf not in used:
+            mt.fields[c], mt.how[c] = cf, ch
+            used.add(cf)
+    mt.unmapped = [c for c in cols if c not in mt.fields]
     mt.role = classify(mt)
     finalize(mt)
     return mt
@@ -82,7 +93,8 @@ ROLE_RENAME = {
     "drug_info": {"name": "prod_name"},
     "conversions": {"unit": "conv_unit", "unit_price": "conv_price", "name": "prod_name"},
     "price_hist": {"unit_price": "new_price", "unit_price__2": "old_price", "name": "prod_name"},
-    "customers": {"prod_name": "cust_name", "name": "cust_name", "status": "cust_status", "order_ts": "created_ts"},
+    "customers": {"prod_name": "cust_name", "name": "cust_name", "status": "cust_status", "order_ts": "created_ts",
+                  "category": "cust_group"},
     "suppliers": {"name": "supplier"},
     "staff": {"name": "staff_name"},
     "lines": {"discount": "line_discount", "cost": "cost_unit", "order_gross": "line_amount", "name": "prod_name"},
@@ -104,6 +116,10 @@ def finalize(mt: Mapped) -> None:
             mt.fields[c] = g
             present.discard(f)
             present.add(g)
+    if mt.role == "customers":
+        for c in list(mt.fields):
+            if colkey(c) in ("hang", "hangkh", "hangkhach", "hangthanhvien") and "cust_group" not in mt.fields.values():
+                mt.fields[c] = "cust_group"
     # price history: decide new/old price by header name when both exist
     if mt.role == "price_hist":
         for c in list(mt.fields):
@@ -164,6 +180,8 @@ def classify(mt: Mapped) -> str:
         return "customers"
     if has_prod or ("name" in F and (F & {"category", "unit_price", "cost", "base_unit", "list_price"})):
         return "products"
+    if "exp_date" in F or "exp_item" in F:
+        return "expenses"
     if "staff" in F:
         return "staff"
     if "supplier_id" in F or "supplier" in F:

@@ -394,6 +394,8 @@ def _stock_from_lots(ctx: Ctx, product, d: dt.date):
     ls["d"] = ls["order_id"].map(od)
     ls["st"] = ls["order_id"].map(ost)
     ls = ls[(ls["d"] <= _ts(d)) & (ls["st"] != "cancelled")]
+    if "qty_base" not in ls:
+        raise Abstain("bán theo lô không ghi số lượng")
     out = float(to_number_series(ls["qty_base"]).sum())
     back = float(to_number_series(ls["ret_qty_base"]).fillna(0).sum()) if "ret_qty_base" in ls else 0.0
     return stock_in - out + back

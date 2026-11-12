@@ -177,3 +177,73 @@ def meaning_field(meaning: str) -> str | None:
 
 def name_field(col: str) -> str | None:
     return SYN_REV.get(colkey(col))
+
+
+# token rules on the folded column name (spaces kept), for headers that neither the README nor SYN know.
+# Each rule: (regex on " name ", field). Specific first.
+TOKEN_RULES = [
+    (r"dinh muc|toi thieu|toi da|\bton (lon|nho) nhat|\bdiem\b|barcode|ma vach|hinh anh|trong luong|bao hanh|thuoc tinh|"
+     r"vi tri|thuong hieu|lien quan|mau ghi chu|e ?mail|cccd|cmnd|\bmst\b|ma so thue|cong ty|nguoi tao|sinh|gioi tinh|"
+     r"loai hinh|doi tuong|\bmo ta\b|loai hang hoa|\bmau\b", "_skip"),
+    (r" (sl|so luong|slg|sluong|s l)\b.*\btra\b.*\b(co ban|le|quy doi|dvt co ban)\b", "ret_qty_base"),
+    (r" (sl|so luong|slg|sluong)\b.*\btra\b", "ret_qty"),
+    (r" (sl|so luong|slg|sluong|s l)\b.*\bnhap\b.*\b(co ban|le|quy doi)\b|\bnhap\b.*\b(co ban|quy doi)\b", "qty_base"),
+    (r" (sl|so luong|slg|sluong|s l)\b.*\b(co ban|le|quy doi|quy ra|goc|nho)\b|\bquy ra (le|dv)", "qty_base"),
+    (r" (sl|so luong|slg|sluong|s l|qty|quantity)\b", "qty"),
+    (r"\bgia\b.*\bquy doi\b", "conv_price"),
+    (r"\b(dvt|d vi|dv|don vi|dvi|unit)\b.*\b(co ban|goc|nho|co so)\b", "base_unit"),
+    (r"\b(dvt|d vi|dv|don vi|dvi)\b.*\b(lon|quy doi)\b", "conv_unit"),
+    (r"\b(dvt|d vi|dv|don vi|dvi|unit)\b", "unit"),
+    (r"\bgia\b.*\bvon\b", "cost"),
+    (r"\bgia\b.*\bnhap\b|\bnhap\b.*\bgia\b", "unit_cost"),
+    (r"\bgia\b.*\bquy doi\b", "conv_price"),
+    (r"\bgia\b.*\b(moi|sau)\b", "new_price"),
+    (r"\bgia\b.*\b(cu|truoc)\b", "old_price"),
+    (r"\b(don gia|gia ban|gia niem yet|gia le|gia 1|gia\b|price)\b", "unit_price"),
+    (r"\b(ck|chiet khau|giam gia|khuyen mai|km|discount)\b", "discount"),
+    (r"\btien hang\b.*\btruoc\b|\btong tien hang\b", "order_gross"),
+    (r"\b(da thu|da tra|khach tra|khach da tra|tien khach dua|paid)\b", "paid"),
+    (r"\b(con no|con lai|du no|chua tra|con thieu)\b", "remaining"),
+    (r"\b(tong tien|tong cong|tong bill|tong don|phai tra|tong thanh toan|tong)\b", "order_total"),
+    (r"\b(thanh tien|tri gia|amount|tien ban|so tien|tien)\b", "line_amount"),
+    (r"\bgio\b", "order_time"),
+    (r"\b(ngay|thoi gian|thoi diem|date|time)\b.*\b(chi)\b", "exp_date"),
+    (r"\b(ngay|thoi gian|thoi diem)\b.*\b(thu|tra)\b", "pay_ts"),
+    (r"\b(ngay|thoi gian|thoi diem)\b.*\b(nhap)\b", "po_date"),
+    (r"\b(ngay|thoi gian|thoi diem)\b.*\b(giao|cho)\b", "deliv_date"),
+    (r"\b(ngay|thoi gian|thoi diem)\b.*\b(ap dung|doi gia)\b", "eff_date"),
+    (r"\b(hsd|han su dung|han dung|het han|exp)\b", "expiry"),
+    (r"\b(ngay|thoi gian|thoi diem|date|time)\b", "order_date"),
+    (r"\b(nguon don|nguon|kenh|ban qua|channel)\b", "channel"),
+    (r"\b(pttt|httt|phuong thuc|hinh thuc)\b", "pay_method"),
+    (r"\b(trang thai|tinh trang|status|xu ly|ket qua)\b", "status"),
+    (r"\bke don\b|\brx\b", "rx"),
+    (r"\b(hoat chat|thanh phan)\b", "ingredient"),
+    (r"\b(ton kho|ton cuoi|ton thuc|ton)\b", "stock"),
+    (r"\b(he so|bang|ty le quy doi|ti le quy doi|quy doi)\b", "conv_factor"),
+    (r"\b(nhom|phan loai|loai|danh muc|hang)\b.*\b(kh|khach)\b|\b(kh|khach)\b.*\b(nhom|hang|loai)\b|^ hang $", "cust_group"),
+    (r"\b(nhom hang|nhom|phan loai|danh muc|loai sp|loai hang|category)\b", "category"),
+    (r"\b(lan giao|dot giao|luot giao|dot)\b", "deliv_round"),
+    (r"\b(nha cung cap|ncc)\b", "supplier"),
+    (r"\b(muc|khoan muc|noi dung chi|loai chi)\b", "exp_item"),
+    (r"\b(ghi chu|mo ta|dien giai|note)\b", "note"),
+    (r"\b(nhan vien|nv)\b", "staff"),
+    (r"^ (ten kh|ten khach|ten khach hang|khach hang|ho ten|ten nguoi mua|khach|kh) $", "cust_name"),
+    (r"^ (ten|chi tiet hang|hang hoa|san pham|mat hang|mon|ten mon|product|item)\b", "prod_name"),
+]
+
+
+def token_field(col: str) -> str | None:
+    n = " " + re.sub(r"[^a-z0-9]+", " ", fold(col)).strip() + " "
+    for pat, f in TOKEN_RULES:
+        if re.search(pat, n):
+            return None if f == "_skip" else f
+    return None
+
+
+SKIP_NAME = re.compile(TOKEN_RULES[0][0])
+
+
+def is_noise_col(col: str) -> bool:
+    n = " " + re.sub(r"[^a-z0-9]+", " ", fold(col)).strip() + " "
+    return bool(SKIP_NAME.search(n))

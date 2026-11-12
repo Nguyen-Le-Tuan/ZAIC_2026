@@ -33,6 +33,7 @@ TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
 SEARCH_GUARD=${SEARCH_GUARD:-0}
+ARG_RULES=${ARG_RULES:-0}   # 1 = lifemate.infer --arg-rules (safe argument rules R0-R3, JOURNAL entry 146)
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}
 IDS=${IDS:-}
@@ -46,6 +47,7 @@ stamp() { echo "[$(date '+%F %T')] $*"; }
 case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
 case $WARMUP in 1) W=() ;; 0) W=(--no-warmup) ;; *) echo "WARMUP must be 0 or 1" >&2; exit 1 ;; esac
 case $SEARCH_GUARD in 1) G=(--search-guard) ;; 0) G=() ;; *) echo "SEARCH_GUARD must be 0 or 1" >&2; exit 1 ;; esac
+case $ARG_RULES in 1) G+=(--arg-rules) ;; 0) ;; *) echo "ARG_RULES must be 0 or 1" >&2; exit 1 ;; esac
 awk -v t="$TIME_BUDGET" 'BEGIN { exit !(t > 0 && t < 30) }' || { echo "TIME_BUDGET must be above 0 and below 30" >&2; exit 1; }
 
 if [ -e "$ASR_OUT" ]; then
@@ -55,7 +57,7 @@ else
   "$PY" -m lifemate.asr --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --model "$ASR_MODEL" \
       ${ASR_REV:+--revision "$ASR_REV"} --batch-size "$ASR_BATCH" "${W[@]}" --seed "$SEED" --out "$ASR_OUT"
 fi
-stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP, seed $SEED, search guard=$SEARCH_GUARD) -> $OUT"
+stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP, seed $SEED, search guard=$SEARCH_GUARD, arg rules=$ARG_RULES) -> $OUT"
 "$PY" -m lifemate.infer --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --text asr --asr-file "$ASR_OUT" \
     --backend hf --model "$LLM" "${Q[@]}" --adapter "$ADAPTER" --time-budget "$TIME_BUDGET" "${W[@]}" "${G[@]}" \
     --seed "$SEED" --out "$OUT" --trace "$TRACE"

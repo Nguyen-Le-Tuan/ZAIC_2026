@@ -49,7 +49,7 @@ def _jsonable(x):
 DEFAULT_REF = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ref", "rulebook_train.md")
 
 
-def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False, guard=True, ref_rulebook=None):
+def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False, guard=False, ref_rulebook=None):
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
     qs = load_questions(split)
     if ids is not None:
@@ -130,12 +130,12 @@ def main():
     ap.add_argument("--biz")
     ap.add_argument("--cache")
     ap.add_argument("-v", action="store_true")
-    ap.add_argument("--no-guard", action="store_true")
+    ap.add_argument("--guard", action="store_true", help="abstain when the split's rulebook changes a rule the question needs")
     ap.add_argument("--ref-rulebook")
     a = ap.parse_args()
     ids = set(l.strip() for l in open(a.ids)) if a.ids else None
     bizs = set(a.biz.split(",")) if a.biz else None
-    secs = run(a.split, a.out, ids, bizs, a.cache, a.v, guard=not a.no_guard, ref_rulebook=a.ref_rulebook)
+    secs = run(a.split, a.out, ids, bizs, a.cache, a.v, guard=a.guard, ref_rulebook=a.ref_rulebook)
     print(f"done in {secs:.1f}s", file=sys.stderr)
 
 

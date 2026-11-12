@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 01:27 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 11:30 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **11:30 ngày 12/11:** **LifeMate: kết quả v7 về đủ và sạch** (dữ liệu train đúng luật FAQ; 4 file public đạt kiểm định dạng). **Anh nộp 4 file v7 rồi báo điểm (B59).** Laptop đang chạy file public của adapter gộp 2 seed (xong khoảng 13:15, dành lần nộp thứ 5). **Gửi anh trai hướng dẫn V8b thay V8** (B55): cả ba máy chạy ngay (JOURNAL entry 151).
 > - **01:27 ngày 12/11:** **DataMate image A đã đóng và kiểm** (144 MB, md5 `c4c14e554b78792ba3b5678caedb5d3c`). **Anh báo tên đội viết thường, rồi tải lên Drive và nộp Solution lần 1 (B58).** B57 (2 file thăm dò) vẫn chờ (JOURNAL entry 150).
 > - **00:22 ngày 12/11:** **DataMate public lần 1: 0,181 (B56 xong).** Đúng khoảng 62% câu đã trả lời (train 97%). **Anh nộp 2 file thăm dò A và B rồi báo điểm (B57)** để biết lỗi do luật public đổi hay do kiểu file mới (JOURNAL entry 149).
 > - **20:20 ngày 11/11:** **Gói v8 và hướng dẫn V8 cho máy anh trai đã sẵn (B55).** M1 (mốc + chấm các công tắc suy luận) chạy ngay trên máy dự phòng; M2 (2 epoch, fit_lao) khi v7q3 xong; M3 (2 epoch, đủ dữ liệu) khi v7q35 xong. Code ở PR #18, mọi công tắc mặc định tắt. ASR beam 4 giảm WER câu cuối 0,59 nhưng chậm gấp đôi, trượt cửa thời gian nên giữ tắt (JOURNAL entry 148).
@@ -279,10 +280,14 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B55. (20:20 ngày 11/11)** (3 phút) **[Anh] Tải gói v8 lên Drive và gửi anh trai hướng dẫn V8 kèm "go".**
+- [ ] **B59. (11:30 ngày 12/11)** (5 phút) **[Anh] Nộp 4 file public LifeMate v7 rồi báo 4 điểm cho Claude.**
+  1. Trang LifeMate → Public Submissions → Submit new entry, lần lượt: `cloud_results/nop_public_2026-11-12/1_v7q35_seed0.jsonl`, `2_v7q35_seed1.jsonl`, `3_v7q3_seed0.jsonl`, `4_v7q3_seed1.jsonl`.
+  2. Báo 4 điểm cho Claude. Claude áp luật entry 138: chọn Qwen3.5 hay Qwen3-4B, rồi chọn seed.
+  - Mỗi ngày nộp tối đa 5 lần: để dành 1 lần cho file của adapter gộp (laptop xong khoảng 13:15; Claude báo khi sẵn).
+- [ ] **B55. (20:20 ngày 11/11)** (3 phút) **[Anh] Tải gói v8 lên Drive và gửi anh trai hướng dẫn V8b kèm "go".**
   1. Chrome trên laptop: thư mục ZAIC_2026 → New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261111_v8.tar.gz` → Open (Drive hiện khoảng 4,5 MB).
-  2. Gửi anh trai `cloud_results/anh_trai/BROTHER_AI_GUIDE_V8_2026-11-11_EN.md` kèm chữ "go". File này **không** dừng v7: M1 chạy ngay trên máy dự phòng, M2 và M3 chạy khi máy của chúng xong v7.
-  - Kết quả về: M1 khoảng 8 giờ sau khi bắt đầu, M2 khoảng 9 giờ, M3 khoảng 10 giờ.
+  2. Gửi anh trai **`cloud_results/anh_trai/BROTHER_AI_GUIDE_V8b_2026-11-12_EN.md`** kèm chữ "go". *(Đổi lúc 11:30 ngày 12/11: dùng V8b, không dùng V8. v7 đã xong nên cả ba lượt chạy ngay: M1 trên máy v5, M2 trên máy v7q3, M3 trên máy v7q35.)*
+  - Kết quả về: M1 khoảng 8 giờ sau khi bắt đầu, M3 khoảng 10–11 giờ, M2 khoảng 13–14 giờ (máy 3090 chậm hơn).
 - [x] **B53. (19:37 ngày 11/11)** *(20:20 ngày 11/11: Anh duyệt "Duyệt, làm ngay"; code ở PR #18, gói v8, hướng dẫn V8; JOURNAL entry 148.)* (5 phút quyết) **[Anh, cùng Leader] Duyệt kế hoạch ROI LifeMate tới 16/11** ([`docs/LIFEMATE_ROI_PLAN_2026-11-11.md`](docs/LIFEMATE_ROI_PLAN_2026-11-11.md), JOURNAL entry 146): 4 thay đổi rẻ lúc suy luận (bộ chấm theo FAQ, luật tham số an toàn, ASR beam 4, trung bình 2 seed), bf16 nếu qua cửa, và lượt đo train thêm 1 epoch (M1–M3 trên máy anh trai từ sáng thứ Năm). Kỳ vọng +1 đến +3 điểm public.
 - [ ] **B54. (19:37 ngày 11/11)** (2 phút) **[Anh] Hỏi anh trai:** adapter fit_lao của A1 (`~/zac_v5/ZAIC_2026/lifemate/ckpt/a1_q35t_lao_s{0,1}/final`) còn không; nhờ giữ `~/zac_v5` và để máy rảnh cho M1–M3 từ sáng thứ Năm.
 - [ ] **B58. (01:27 ngày 12/11)** (15 phút) **[Anh] Nộp Docker A của DataMate (lần 1, bản an toàn).**

@@ -105,6 +105,15 @@ class Ctx:
         if C.get("customers") is not None and "cust_name" in C["customers"]:
             cust |= set(C["customers"]["cust_name"].unique())
         self.customers = sorted({c for c in cust if c and len(c) > 3}, key=lambda s: -len(s))
+        us = set()
+        if self.L is not None:
+            us |= {fold(u) for u in self.L["unit"].unique() if u and len(u) <= 12}
+        for (_k, u) in C.get("_conv", {}):
+            us.add(fold(u))
+        for u in C.get("_base_unit", {}).values():
+            if u and len(u) <= 12:
+                us.add(fold(u))
+        self.units = sorted({u for u in us if u and not u.isdigit()}, key=len, reverse=True)
         staff = set()
         if self.O is not None and "staff_name" in self.O:
             staff |= set(self.O["staff_name"].unique())

@@ -186,6 +186,11 @@ def build(b: Business) -> dict:
     frames = _frame(b, "lines")
     if frames:
         L = pd.concat(frames, ignore_index=True).fillna("")
+        L = _drop_total_rows(L, notes, "lines")
+        if "order_id" in L and (L["order_id"] != "").any() and (L["order_id"] == "").any():
+            # grouped exports: a row with a blank order id continues the order above it (rulebook §8)
+            filled = L["order_id"].replace("", np.nan).groupby(L["_src"]).ffill()
+            L["order_id"] = filled.fillna("")
         has_oid = "order_id" in L and (L["order_id"] != "").mean() > 0.5
         if has_oid:
             # duplicate rows inside one order are an export error: count once (§8)
@@ -371,6 +376,9 @@ def build(b: Business) -> dict:
         C["po_headers"] = H
     if po_lines:
         PL = pd.concat(po_lines, ignore_index=True).fillna("")
+        PL = _drop_total_rows(PL, notes, "purchases")
+        if (PL["po_id"] == "").any() and (PL["po_id"] != "").any():
+            PL["po_id"] = PL["po_id"].replace("", np.nan).groupby(PL["_src"]).ffill().fillna("")
         if "prod_name" not in PL and "prod_id" in PL:
             PL["prod_name"] = PL["prod_id"].map(id2name).fillna("")
         if "prod_id" not in PL:
@@ -433,6 +441,27 @@ def build(b: Business) -> dict:
     C["_data_start"] = dmin
     b.canon = C
     return C
+
+
+_TOTAL = re.compile(r"^(tong|cong|total|sum|subtotal|tong cong|cong don|luy ke)\b")
+
+
+def _drop_total_rows(df: pd.DataFrame, notes: list, what: str) -> pd.DataFrame:
+    """Subtotal rows inside exports ("Tổng ngày 01/04", "Cộng tháng"): a text cell starting with Tổng/Cộng/Total in a
+    row without a quantity."""
+    if len(df) == 0:
+        return df
+    text_cols = [c for c in ("prod_name", "prod_id", "order_id", "po_id", "cust_name", "note") if c in df]
+    if not text_cols:
+        return df
+    hit = pd.Series(False, index=df.index)
+    for c in text_cols:
+        hit |= df[c].map(lambda v: bool(_TOTAL.match(fold(v))) if v else False)
+    if "qty" in df:
+        hit &= df["qty"].map(lambda v: str(v).strip() == "")
+    if hit.any():
+        notes.append(f"{what}: dropped {int(hit.sum())} subtotal rows")
+    return df[~hit].copy()
 
 
 def _hhmm(v):

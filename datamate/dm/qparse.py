@@ -194,6 +194,7 @@ UNITS = ["ly", "chai", "lon", "kg", "goi", "hop", "cay", "bao", "thung", "cai", 
 
 
 def extract_threshold(t: str):
+    t = t.replace("≥", " >= ").replace("≤", " <= ")
     m = re.search(r"(tu|tren|hon|qua|duoi|it hon|nhieu hon|tu \S+ tro len|>=|>|<=|<|it nhat|toi thieu|dat|vuot)\s*"
                   r"([\d][\d.,]*\s*(?:trieu|tr|k|nghin|ngan)?)\s*(?:dong|d\b|vnd)?\s*(tro len|tro xuong)?", t)
     if not m:
@@ -243,7 +244,7 @@ def parse(question: str, asof: D, ctx=None, cal: str | None = None) -> Query:
     if m:
         f["size"] = m.group(1).upper()
     pays = []
-    for k, pat in (("cash", r"tien mat|\btm\b"), ("transfer", r"chuyen khoan|\bck\b"), ("ewallet", r"vi dien tu|vi (momo|zalo ?pay|vnpay|shopee ?pay)|(tra|thanh toan|bang|qua) (bang |qua )?vi\b(?! tri)"),
+    for k, pat in (("cash", r"tien mat|\btm\b|tien tuoi|tien le"), ("transfer", r"chuyen khoan|\bck\b"), ("ewallet", r"vi dien tu|vi (momo|zalo ?pay|vnpay|shopee ?pay)|(tra|thanh toan|bang|qua) (bang |qua )?vi\b(?! tri)"),
                    ("cod", r"\bcod\b|\bthu ho\b"), ("debt", r"ghi no|tra cham|mua no"), ("card", r"\bquet the\b|\bthe ngan hang\b")):
         for mm in re.finditer(pat, t):
             pays.append((mm.start(), k))
@@ -260,16 +261,17 @@ def parse(question: str, asof: D, ctx=None, cal: str | None = None) -> Query:
         f["channel"] = chans[0]
     elif len(chans) >= 2:
         f["channel_list"] = chans
-    if re.search(r"ke don", t) and not re.search(r"khong ke don", t):
-        f["rx"] = True
-    elif re.search(r"khong ke don", t):
+    if re.search(r"(khong|hong|ko|chua|khong phai|khong can) (phai )?(thuoc |hang )?ke don|tru (cac |nhung )?(thuoc |hang )?ke don", t):
         f["rx"] = False
+    elif re.search(r"ke don", t):
+        f["rx"] = True
 
     th = extract_threshold(t)
     if th:
         q.threshold = th
+    units = set(UNITS) | (set(ctx.units) if ctx is not None and getattr(ctx, "units", None) else set())
     m = re.search(r"(?:bao nhieu|may|so|tong( cong)?|tinh theo|cong moi mat hang tinh theo|bao nhieu tien mot|mot)\s+(" +
-                  "|".join(sorted(set(UNITS), key=len, reverse=True)) + r")\b(?! nhieu)", t)
+                  "|".join(re.escape(u) for u in sorted(units, key=len, reverse=True)) + r")\b(?! nhieu)", t)
     if m:
         q.unit = m.group(2)
     q.intent, q.output = classify(t, q)
@@ -278,7 +280,7 @@ def parse(question: str, asof: D, ctx=None, cal: str | None = None) -> Query:
 
 def classify(t: str, q: Query) -> tuple[str, str]:
     pct = bool(re.search(r"phan tram|%|\bpt\b", t))
-    cmpw = bool(re.search(r"so (voi|vs)|hon hay kem|thay doi|tang hay giam|chenh|tang truong|tang bao nhieu|giam bao nhieu|"
+    cmpw = bool(re.search(r"so (voi|vs)|hon hay kem|thay doi|tang hay giam|tang/giam|tang giam|chenh|tang truong|tang bao nhieu|giam bao nhieu|"
                           r"nhieu hay it hon|hon .* bao nhieu|kem .* bao nhieu", t))
     out = "value"
     if pct and cmpw:
@@ -368,7 +370,7 @@ def classify(t: str, q: Query) -> tuple[str, str]:
             (re.search(r"\btop\b", t) and re.search(r"mat hang|mon|san pham|hang", t)):
         return "top_items", "value"
     # ---- shares / pay split ----
-    if re.search(r"ti trong|ty trong|chiem|dong gop|phan cua|phan tram tong doanh thu|bang (bao nhieu|may) (%|phan tram) (tong|doanh thu)", t) or \
+    if re.search(r"ti trong|ty trong|chiem|dong gop|phan cua|phan tram tong doanh thu|bang (bao nhieu|may) (%|phan tram) (tong|doanh thu)|(ti le|ty le) .*tren tong|tren tong doanh thu", t) or \
             (pct and re.search(r"trong (tong )?doanh thu", t) and not cmpw):
         return "share", "value"
     if len(q.filters.get("pay_list", [])) >= 2:

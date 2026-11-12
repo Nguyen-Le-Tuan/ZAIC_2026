@@ -64,9 +64,105 @@ def _num(s: str) -> float | None:
     return x
 
 
+_NUMW = {"mot": 1, "hai": 2, "ba": 3, "bon": 4, "nam": 5, "bay": 7, "tam": 8, "chin": 9, "muoi": 10,
+         "muoi mot": 11, "muoi hai": 12, "muoi lam": 15, "muoi bon": 14, "hai muoi": 20, "ba muoi": 30, "bon muoi lam": 45,
+         "sau muoi": 60, "chin muoi": 90}
+_ROMAN = {"i": 1, "ii": 2, "iii": 3, "iv": 4}
+_WD = {"thu hai": 0, "thu ba": 1, "thu tu": 2, "thu nam": 3, "thu sau": 4, "thu bay": 5, "chu nhat": 6, "cn": 6}
+
+
+def normalize_periods(t: str, asof: D) -> str:
+    """Rewrite period variants into the forms parse_periods knows."""
+    y = asof.year
+    # number words before a time unit: "ba ngay gan nhat" -> "3 ngay gan nhat"
+    for w, n in sorted(_NUMW.items(), key=lambda kv: -len(kv[0])):
+        t = re.sub(rf"\b{w} (ngay|tuan|thang|quy|nam)\b(?! (nay|ngoai|truoc|roi|sau))", f"{n} \\1", t)
+    # ISO and dashed/dotted dates -> dd/mm/yyyy
+    t = re.sub(r"\b(20\d\d)-(\d{1,2})-(\d{1,2})\b", lambda m: f"{int(m.group(3)):02d}/{int(m.group(2)):02d}/{m.group(1)}", t)
+    t = re.sub(r"\b(\d{1,2})[-.](\d{1,2})[-.](20\d\d)\b", r"\1/\2/\3", t)
+    # month forms: T6/2025, thg 6/2025, 06/2025 (not part of a date), 6-2025, 2025-06
+    t = re.sub(r"\bt(\d{1,2})\s*[/-]\s*(20\d\d)\b", r"thang \1/\2", t)
+    t = re.sub(r"\b(?:thg|th)\.? ?(\d{1,2})\s*[/-]\s*(20\d\d)\b", r"thang \1/\2", t)
+    t = re.sub(r"(?<![/\d])(?<!thang )(?<!quy )(?<!q)\b(\d{1,2})\s*[/-]\s*(20\d\d)\b", r"thang \1/\2", t)
+    t = re.sub(r"\bsau thang (dau|cuoi)\b", r"6 thang \1", t)
+    t = re.sub(r"\bthang (\d{1,2})\s*-\s*(20\d\d)\b", r"thang \1/\2", t)
+    t = re.sub(r"\bthang (\d{1,2}) cua nam (20\d\d)", r"thang \1/\2", t)
+    # quarters: quy II/2025, Q2/2025, quy 2 2025
+    t = re.sub(r"\bquy (iv|iii|ii|i)\b", lambda m: f"quy {_ROMAN[m.group(1)]}", t)
+    t = re.sub(r"\bq([1-4])\s*[/-]?\s*(20\d\d)\b", r"quy \1/\2", t)
+    t = re.sub(r"\bquy ([1-4]) (20\d\d)\b", r"quy \1/\2", t)
+    # relative years
+    t = re.sub(r"\b(thang|quy) (\d{1,2}) (?:cua )?nam (ngoai|truoc|roi)\b", lambda m: f"{m.group(1)} {m.group(2)}/{y - 1}", t)
+    t = re.sub(r"\b(thang|quy) (\d{1,2}) (?:cua )?nam nay\b", lambda m: f"{m.group(1)} {m.group(2)}/{y}", t)
+    t = re.sub(r"\bnam (ngoai|truoc|roi)\b(?! nua)", f"nam {y - 1}", t)
+    t = re.sub(r"\bnam kia\b|\bnam truoc nua\b", f"nam {y - 2}", t)
+    # date without year: "ngay 5/6" -> this year unless after today
+    def _dm(m):
+        d_, mo = int(m.group(2)), int(m.group(3))
+        try:
+            yy = y if D(y, mo, d_) <= asof else y - 1
+        except ValueError:
+            return m.group(0)
+        return f"{m.group(1)} {d_:02d}/{mo:02d}/{yy}"
+    t = re.sub(r"\b(ngay|hom|tu|den|toi|het)\s+(\d{1,2})/(\d{1,2})\b(?!/)", _dm, t)
+    return t
+
+
 def parse_periods(t: str, asof: D, cal: str | None) -> tuple[list, object, dict]:
     """Return (periods, compare, info). info may hold 'state_date', 'months' etc."""
     info = {}
+    t = normalize_periods(t, asof)
+    y0 = asof.year
+    # named relative periods
+    if re.search(r"\bhom kia\b", t):
+        d = asof - dt.timedelta(days=2)
+        return [(d, d)], None, info
+    if re.search(r"\btuan truoc nua\b|\b2 tuan truoc\b", t):
+        a, b = P.last_week(asof)
+        return [(a - dt.timedelta(days=7), b - dt.timedelta(days=7))], None, info
+    if re.search(r"\bthang truoc nua\b|\b2 thang truoc\b", t):
+        yy, mm = P.shift_month(asof.year, asof.month, -2)
+        return [P.month(mm, yy)], None, info
+    m = re.search(r"\bcuoi tuan (truoc|roi|qua|vua roi)\b", t)
+    if m:
+        a, b = P.last_week(asof)
+        return [(b - dt.timedelta(days=1), b)], None, info
+    m = re.search(r"\b(thu hai|thu ba|thu tu|thu nam|thu sau|thu bay|chu nhat) (tuan truoc|tuan roi|tuan nay|vua roi|vua qua)\b", t)
+    if m:
+        wd = _WD[m.group(1)]
+        if m.group(2) in ("tuan nay",):
+            a, _ = P.this_week(asof)
+        elif m.group(2) in ("vua roi", "vua qua"):
+            d = asof - dt.timedelta(days=1)
+            while d.weekday() != wd:
+                d -= dt.timedelta(days=1)
+            return [(d, d)], None, info
+        else:
+            a, _ = P.last_week(asof)
+        d = a + dt.timedelta(days=wd)
+        return [(d, d)], None, info
+    if re.search(r"\bquy (truoc|roi|vua roi|vua qua)\b", t):
+        q = (asof.month - 1) // 3 + 1
+        yy, q2 = (asof.year, q - 1) if q > 1 else (asof.year - 1, 4)
+        return [P.quarter(q2, yy)], None, info
+    m = re.search(r"\b(nua dau|6 thang dau)( nam)?(?: (20\d\d))?\b", t)
+    if m:
+        yy = int(m.group(3)) if m.group(3) else y0
+        return [(D(yy, 1, 1), D(yy, 6, 30))], None, info
+    m = re.search(r"\b(nua cuoi|6 thang cuoi)( nam)?(?: (20\d\d))?\b", t)
+    if m:
+        yy = int(m.group(3)) if m.group(3) else (y0 if asof.month == 12 else y0 - 1)
+        return [(D(yy, 7, 1), D(yy, 12, 31))], None, info
+    if cal:
+        m = re.search(r"\btrung thu(?: nam)? (20\d\d)?", t)
+        if m:
+            yy = int(m.group(1)) if m.group(1) else y0
+            d = P.lunar_to_solar(cal, yy, 8, 15)
+            if d:
+                return [(d, d)], None, info
+        hol = _holiday(t, asof, cal)
+        if hol:
+            return [hol], None, info
     # explicit range
     m = re.search(r"tu (?:ngay )?" + _DATE + r" (?:den|toi|-) (?:het )?(?:ngay )?" + _DATE, t)
     if m:
@@ -185,6 +281,42 @@ def parse_periods(t: str, asof: D, cal: str | None) -> tuple[list, object, dict]
         elif re.search(r"(thang|tuan|ky|quy|nam) (lien )?(truoc|roi)|ky truoc", t) and len(out) == 1:
             cmp_ = "prev"
     return out, cmp_, info
+
+
+def _holiday(t: str, asof: D, cal: str):
+    """A day named in calendar.csv's holiday column ("dịp Quốc khánh 2025", "lễ 30/4")."""
+    import csv
+    try:
+        rows = list(csv.DictReader(open(cal, encoding="utf-8")))
+    except OSError:
+        return None
+    names = {}
+    for r in rows:
+        h = fold(r.get("holiday") or "")
+        if h:
+            names.setdefault(h, []).append(D.fromisoformat(r["date"]))
+    alias = {"quoc khanh": "2/9", "le 2/9": "2/9", "ngay 2/9": "2/9", "giai phong mien nam": "30/4", "thong nhat": "30/4",
+             "le 30/4": "30/4", "quoc te lao dong": "1/5", "le 1/5": "1/5", "gio to hung vuong": "gio to", "gio to": "gio to",
+             "tet duong lich": "tet duong lich", "tet tay": "tet duong lich", "nam moi duong lich": "tet duong lich"}
+    for a, h in sorted(alias.items(), key=lambda kv: -len(kv[0])):
+        if re.search(r"\b" + re.escape(a) + r"\b", t) and h in names:
+            m = re.search(re.escape(a) + r"(?: nam)? (20\d\d)", t)
+            ds = [d for d in names[h] if (d.year == int(m.group(1)) if m else d <= asof)]
+            if ds:
+                d = max(ds)
+                return d, d
+    for h in sorted(names, key=len, reverse=True):
+        if len(h) >= 5 and h in t:
+            m = re.search(re.escape(h) + r"(?: nam)? (20\d\d)", t)
+            ds = names[h]
+            if m:
+                ds = [d for d in ds if d.year == int(m.group(1))]
+            else:
+                ds = [d for d in ds if d <= asof]
+            if ds:
+                d = max(ds)
+                return d, d
+    return None
 
 
 UNITS = ["ly", "chai", "lon", "kg", "goi", "hop", "cay", "bao", "thung", "cai", "vien", "phan", "dia", "m3", "tui",

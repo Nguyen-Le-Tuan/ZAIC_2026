@@ -21,6 +21,7 @@ from .assemble import build
 from .canon import open_business
 from .engine import Answer, Ctx, answer
 from .qparse import parse
+from .rules import Guard
 
 
 def load_questions(split: str):
@@ -45,7 +46,10 @@ def _jsonable(x):
     return x
 
 
-def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False):
+DEFAULT_REF = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ref", "rulebook_train.md")
+
+
+def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False, guard=True, ref_rulebook=None):
     os.makedirs(os.path.join(out, "logs"), exist_ok=True)
     qs = load_questions(split)
     if ids is not None:
@@ -57,6 +61,15 @@ def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False):
         by_biz[q["business_id"]].append(q)
     cal = os.path.join(split, "calendar.csv")
     cal = cal if os.path.exists(cal) else None
+    G = None
+    if guard:
+        ref_path = ref_rulebook or DEFAULT_REF
+        rb_path = os.path.join(split, "rulebook.md")
+        ref_md = open(ref_path, encoding="utf-8").read() if os.path.exists(ref_path) else None
+        rb_md = open(rb_path, encoding="utf-8").read() if os.path.exists(rb_path) else None
+        G = Guard(ref_md, rb_md)
+        if verbose:
+            print(f"rulebook guard: active={G.active} changed_rows={len(G.changed)}", file=sys.stderr)
     sub = open(os.path.join(out, "submission.jsonl"), "w", encoding="utf-8")
     log = open(os.path.join(out, "logs", "log.jsonl"), "w", encoding="utf-8")
     t_all = time.time()
@@ -81,7 +94,11 @@ def run(split: str, out: str, ids=None, bizs=None, cache=None, verbose=False):
             else:
                 try:
                     qq = parse(q["question"], asof, ctx, cal)
-                    ans = answer(qq, ctx, asof)
+                    blk = G.blocking(qq) if G is not None else []
+                    if blk:
+                        ans = Answer("abstain", why=f"luật của split khác luật train ({len(blk)} dòng)")
+                    else:
+                        ans = answer(qq, ctx, asof)
                 except Exception as e:
                     qq = None
                     ans = Answer("abstain", why=f"{type(e).__name__}: {e}")
@@ -113,10 +130,12 @@ def main():
     ap.add_argument("--biz")
     ap.add_argument("--cache")
     ap.add_argument("-v", action="store_true")
+    ap.add_argument("--no-guard", action="store_true")
+    ap.add_argument("--ref-rulebook")
     a = ap.parse_args()
     ids = set(l.strip() for l in open(a.ids)) if a.ids else None
     bizs = set(a.biz.split(",")) if a.biz else None
-    secs = run(a.split, a.out, ids, bizs, a.cache, a.v)
+    secs = run(a.split, a.out, ids, bizs, a.cache, a.v, guard=not a.no_guard, ref_rulebook=a.ref_rulebook)
     print(f"done in {secs:.1f}s", file=sys.stderr)
 
 

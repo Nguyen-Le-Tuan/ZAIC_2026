@@ -229,8 +229,8 @@ def parse(question: str, asof: D, ctx=None, cal: str | None = None) -> Query:
     if "tet" in info:
         q.extra["tet"] = info["tet"]
     # k for top-k
-    m = re.search(r"\btop (\d+)\b|\b(\d+) (?:mat hang|mon|san pham|hang|khach|khach hang|nguoi|nhan vien|thuoc|loai)\b", t)
-    if m:
+    m = re.search(r"\btop (\d+)\b|(?<![/\d])\b(\d+) (?:mat hang|mon|san pham|hang|khach|khach hang|nguoi|nhan vien|thuoc|loai)\b", t)
+    if m and int(m.group(1) or m.group(2)) <= 50:
         q.k = int(m.group(1) or m.group(2))
     # filters
     f = q.filters
@@ -322,7 +322,7 @@ def classify(t: str, q: Query) -> tuple[str, str]:
         return "purchase_minus_sales", "value"
     if re.search(r"nha cung cap", t):
         return "purchase_supplier_top", "value"
-    if re.search(r"(gia nhap|nhap (vao )?(gia )?binh quan|binh quan .*nhap|nhap vao gia)", t):
+    if re.search(r"(gia nhap|nhap (vao )?(gia )?binh quan|binh quan .*nhap|nhap vao gia|nhap .*binh quan)", t):
         return "purchase_avg_price", "value"
     if re.search(r"nhap hang|phieu nhap|tien nhap|nhap vao|\bnhap\b", t):
         return "purchase_total", "value"
@@ -347,7 +347,7 @@ def classify(t: str, q: Query) -> tuple[str, str]:
             return "cancel_rate", "value"
         return "cancel_count", "value"
     # ---- customers ----
-    if re.search(r"khach .*it nhat \d+ don|khach mua (tu )?\d+ don", t):
+    if re.search(r"khach .*it nhat \d+ don|khach mua (tu )?\d+ don|khach .*(>=|≥|tu) ?\d+ don|khach .*\d+ don (tro len|tro len)", t):
         return ("customers_min_orders_pct" if (re.search(r"ti le|ty le", t) or pct) else "customers_min_orders"), "value"
     if re.search(r"(bao nhieu|may|so) khach", t) and not re.search(r"\bno\b|thieu", t):
         if re.search(r"duong|o pho|o quan|dia chi|song o|nha o", t):

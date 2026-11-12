@@ -120,6 +120,8 @@ def stock_at(ctx: Ctx, product, d: dt.date):
             return 0.0
         return float(m.sort_values(["ts"]).iloc[-1]["stock"])
     st = ctx.C.get("stock")
+    if (st is None or "stock" not in st) and ctx.C.get("lots") is not None and ctx.C.get("lot_sales") is not None:
+        return _stock_from_lots(ctx, product, d)
     if st is None or "stock" not in st:
         raise Unanswerable("không có dữ liệu tồn kho")
     st = st.copy()
@@ -230,11 +232,18 @@ def answer2(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
             raise Abstain("không rõ kỳ")
         p = q.periods[0]
         H = ctx.C.get("po_headers")
-        if H is None or ("supplier" not in H and "supplier_id" not in H):
-            raise Unanswerable("không ghi nhà cung cấp")
-        h = H[(H["date"] >= _ts(p[0])) & (H["date"] <= _ts(p[1])) & ~H["cancelled"].astype(bool)]
-        col = "supplier" if "supplier" in h else "supplier_id"
-        g = h.groupby(col)["total"].sum().sort_values(ascending=False)
+        if H is not None and ("supplier" in H or "supplier_id" in H) and H["total"].notna().any():
+            h = H[(H["date"] >= _ts(p[0])) & (H["date"] <= _ts(p[1])) & ~H["cancelled"].astype(bool)]
+            col = "supplier" if "supplier" in h else "supplier_id"
+            g = h.groupby(col)["total"].sum()
+        else:
+            PL = _po_lines(ctx)
+            col = "supplier" if "supplier" in PL else ("supplier_id" if "supplier_id" in PL else None)
+            if col is None:
+                raise Unanswerable("không ghi nhà cung cấp")
+            PL = PL[(PL["date"] >= _ts(p[0])) & (PL["date"] <= _ts(p[1])) & ~PL["cancelled"]]
+            g = PL.groupby(col)["amount"].sum()
+        g = g[g.index != ""].sort_values(ascending=False)
         if len(g) == 0:
             raise Unanswerable("không có phiếu nhập")
         name = g.index[0]
@@ -323,6 +332,10 @@ def answer2(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
             if "pay" not in O:
                 raise Unanswerable("không ghi hình thức thanh toán")
             O = O[O["pay"] == "debt"]
+            if "customer" in f:
+                key = ctx.customer_key(O)
+                ck = fold(f["customer"])
+                O = O[(O["cust_name"].map(fold) == ck) | (key == ck)]
             Pm = _payments(ctx)
             if Pm is None:
                 raise Unanswerable("không có lịch sử trả tiền")
@@ -350,3 +363,37 @@ def answer2(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
         cols = [c for c in ("order_id", "deliv_round") if c in dd]
         return Answer("number", int(dd.drop_duplicates(subset=cols + ["date"] if "deliv_round" not in dd else cols).shape[0]))
     raise Abstain(f"chưa làm intent {it}")
+
+
+def _stock_from_lots(ctx: Ctx, product, d: dt.date):
+    lots = ctx.C["lots"].copy()
+    ls = ctx.C["lot_sales"].copy()
+    pid = ctx.prod_id_of(product)
+    if "prod_id" in lots and pid:
+        lots = lots[lots["prod_id"] == pid]
+    elif "prod_name" in lots:
+        lots = lots[lots["prod_name"].map(pkey) == pkey(product)]
+    else:
+        raise Abstain("lô không ghi mặt hàng")
+    from .values import to_number_series
+    from .assemble import _dates
+    lots["qb"] = to_number_series(lots["qty_base"]) if "qty_base" in lots else np.nan
+    if "po_date" in lots:
+        lots["d"] = _dates(lots, "po_date")
+    elif "po_id" in lots and ctx.C.get("po_headers") is not None:
+        H = ctx.C["po_headers"]
+        lots["d"] = lots["po_id"].map(dict(zip(H["po_id"], H["date"])))
+    else:
+        lots["d"] = pd.NaT
+    lots = lots[lots["d"].isna() | (lots["d"] <= _ts(d))]
+    stock_in = float(lots["qb"].sum())
+    ls = ls[ls["lot_id"].isin(set(lots["lot_id"]))]
+    O = ctx.O
+    od = dict(zip(O["order_id"], O["date"]))
+    ost = dict(zip(O["order_id"], O["status"]))
+    ls["d"] = ls["order_id"].map(od)
+    ls["st"] = ls["order_id"].map(ost)
+    ls = ls[(ls["d"] <= _ts(d)) & (ls["st"] != "cancelled")]
+    out = float(to_number_series(ls["qty_base"]).sum())
+    back = float(to_number_series(ls["ret_qty_base"]).fillna(0).sum()) if "ret_qty_base" in ls else 0.0
+    return stock_in - out + back

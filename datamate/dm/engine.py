@@ -158,6 +158,10 @@ class Ctx:
         b = find(self.prod_names)
         if b:
             q.filters["product"] = b[0]
+        if self.customers and re.search(r"\bkhach\b|\bkh\b|ghi no|tra no", raw_fold):
+            b = find(self.customers)
+            if b and len(b[1]) >= 2:
+                q.filters["customer"] = b[0]
         if self.staff and "nhan vien" in raw_fold:
             b = find(self.staff)
             if b:
@@ -569,8 +573,8 @@ def _answer(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
     if it in ("customers_min_orders", "customers_min_orders_pct"):
         p = _per(q, asof)
         ctx.check_period(p)
-        m = re.search(r"it nhat (\d+) don|tu (\d+) don", q.text)
-        n = int(m.group(1) or m.group(2)) if m else None
+        m = re.search(r"it nhat (\d+) don|tu (\d+) don|(?:>=|≥) ?(\d+) don", q.text)
+        n = int(m.group(1) or m.group(2) or m.group(3)) if m else (int(q.threshold[1]) if q.threshold else None)
         if n is None:
             raise Abstain("không rõ số đơn")
         O = ctx.apply_order_filters(ctx.orders_in(p), f)

@@ -137,6 +137,30 @@ def test_cli_rejects_duplicate_ids():
 def test_cli_rejects_ids_outside_split():
     p = _cli([{"id": "train_9999", "tool_calls": [], "state_hash": "x"}], None)
     assert p.returncode != 0 and "not in split" in p.stderr
+
+
+def test_extra_optional_arg_still_matches_per_faq():
+    # organisers' FAQ (09/11/2026): only the arguments of the gold call are compared
+    from lifemate.scorer import calls_match
+    sub = {"name": "alarm.create", "arguments": {"time": "2026-10-30T06:00:00+07:00", "label": "dậy"}}
+    assert calls_match(sub, CALL, {}) is True
+    assert calls_match(sub, CALL, {}, strict=True) is False
+
+
+def test_missing_gold_arg_is_no_match():
+    from lifemate.scorer import calls_match
+    gold = {"name": "alarm.create", "arguments": {"time": "2026-10-30T06:00:00+07:00", "label": "dậy"}}
+    assert calls_match(CALL, gold, {}) is False
+
+
+def test_ask_params_compared_as_a_set():
+    from lifemate.scorer import calls_match
+    gold = {"name": "sys.ask_missing_info", "arguments": {"tool_name": "ewallet.transfer", "params": ["amount", "to"]}}
+    same = {"name": "sys.ask_missing_info", "arguments": {"tool_name": "ewallet.transfer", "params": ["to", "amount"]}}
+    fewer = {"name": "sys.ask_missing_info", "arguments": {"tool_name": "ewallet.transfer", "params": ["amount"]}}
+    assert calls_match(same, gold, {}) is True
+    assert calls_match(fewer, gold, {}) is False
+    assert calls_match(same, gold, {}, strict=True) is False
     p = _cli([], ["train_9999"])
     assert p.returncode != 0 and "not in split" in p.stderr
 

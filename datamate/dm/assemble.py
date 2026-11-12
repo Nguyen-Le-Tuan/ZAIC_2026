@@ -443,24 +443,31 @@ def build(b: Business) -> dict:
     return C
 
 
-_TOTAL = re.compile(r"^(tong|cong|total|sum|subtotal|tong cong|cong don|luy ke)\b")
+_TOTAL = re.compile(r"^(?:(?:tong|cong)(?: (?:ngay|thang|cong|so|ca|tuan|quy|nam|ky|tien|doanh thu|don|hang))*"
+                    r"\s*(?:\d[\d/.\- ]*)?\s*(?::.*)?$|total\b.*|subtotal\b.*|grand total.*|(?:ghi chu|luu y|chu thich)\s*:.*)")
+_NAME_COLS = {"cust_name", "staff", "staff_name", "supplier", "cust_id", "address", "phone", "name"}
 
 
 def _drop_total_rows(df: pd.DataFrame, notes: list, what: str) -> pd.DataFrame:
-    """Subtotal rows inside exports ("Tổng ngày 01/04", "Cộng tháng"): a text cell starting with Tổng/Cộng/Total in a
-    row without a quantity."""
+    """Rows that are not records: subtotals ("Tổng ngày 01/04", "Tổng tháng", "Cộng tháng") and notes
+    ("Ghi chú: tiền tính bằng đồng"), in any column; and, for line tables, rows with neither a product nor a quantity."""
     if len(df) == 0:
         return df
-    text_cols = [c for c in ("prod_name", "prod_id", "order_id", "po_id", "cust_name", "note") if c in df]
-    if not text_cols:
-        return df
+    cols = [c for c in df.columns if not c.startswith("_") and c not in _NAME_COLS]
     hit = pd.Series(False, index=df.index)
-    for c in text_cols:
-        hit |= df[c].map(lambda v: bool(_TOTAL.match(fold(v))) if v else False)
-    if "qty" in df:
-        hit &= df["qty"].map(lambda v: str(v).strip() == "")
+    for c in cols:
+        v = df[c]
+        m = v.map(lambda x: bool(_TOTAL.match(fold(x))) if isinstance(x, str) and x else False)
+        hit |= m
+    if what == "lines":
+        noprod = pd.Series(True, index=df.index)
+        for c in ("prod_name", "prod_id"):
+            if c in df:
+                noprod &= df[c] == ""
+        noqty = df["qty"] == "" if "qty" in df else pd.Series(True, index=df.index)
+        hit |= noprod & noqty
     if hit.any():
-        notes.append(f"{what}: dropped {int(hit.sum())} subtotal rows")
+        notes.append(f"{what}: dropped {int(hit.sum())} subtotal/note rows")
     return df[~hit].copy()
 
 

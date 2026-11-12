@@ -56,8 +56,9 @@ def _telex_word(w: str) -> str:
 ABBR = [
     (r"\bbest ?seller\b", "ban chay nhat"),
     (r"\brevenue\b|\bdthu\b|\bdoanh so\b", "doanh thu"),
-    (r"\bbnhiu\b|\bbnh\b|\bbn\b|\bbao nhiu\b|\bnhiu\b", "bao nhieu"),
-    (r"(?<!bao )\bnhieu (tien|don|ly|chai|kg|goi|hop|lon|phan|dia|cai|%)", r"bao nhieu \1"),
+    (r"\bbnhiu\b|\bbnh\b|\bbn\b|\bbao nhiu\b", "bao nhieu"),
+    (r"\bnhiu\b|\bnhìu\b", "nhieu"),
+    (r"(?<!bao )\bnhieu (tien|don|ly|chai|kg|goi|hop|lon|phan|dia|cai|%)(?!\s+(?:\w+\s+)?nhat)", r"bao nhieu \1"),
     (r"\bdc\b|\bdk\b|\bduoc\b", "duoc"),
     (r"\bhnay\b", "hom nay"),
     (r"\bhqua\b|\bbua qua\b|\bbua truoc\b", "hom qua"),

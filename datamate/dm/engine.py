@@ -217,8 +217,11 @@ class Ctx:
 
     def apply_line_filters(self, df, f):
         if "product" in f:
-            df = df[df["prod_name"] == f["product"]] if (df["prod_name"] == f["product"]).any() else \
-                df[df["pkey"] == pkey(f["product"])]
+            pid = self.prod_id_of(f["product"])
+            if pid and (df["prod_id"] == pid).any():
+                df = df[df["prod_id"] == pid]
+            else:
+                df = df[df["pkey"] == pkey(f["product"])]
         if "category" in f:
             cat = self._prod_attr("category")
             df = df[df["prod_id"].map(cat.get("id", {})).fillna(df["pkey"].map(cat.get("name", {}))) == f["category"]]
@@ -234,6 +237,20 @@ class Ctx:
             v = df["prod_id"].map(ing.get("id", {})).fillna(df["pkey"].map(ing.get("name", {})))
             df = df[v == f["ingredient"]]
         return df
+
+    def prod_id_of(self, name):
+        if not hasattr(self, "_pid"):
+            self._pid = {}
+            src = []
+            if self.Pr is not None and "prod_id" in self.Pr:
+                src.append(self.Pr[["prod_id", "pkey"]])
+            if self.L is not None and "prod_id" in self.L:
+                src.append(self.L[["prod_id", "pkey"]].drop_duplicates())
+            for d in src:
+                for pid, pk in zip(d["prod_id"], d["pkey"]):
+                    if pid and pk and pk not in self._pid:
+                        self._pid[pk] = pid
+        return self._pid.get(pkey(name))
 
     def _prod_attr(self, col):
         Pr = self.Pr
@@ -311,11 +328,14 @@ class Ctx:
         return out
 
     def daily_revenue(self, p, f):
-        O = self.apply_order_filters(self.orders_in(p), f)
-        if self.has_line_filter(f):
+        if self.O is None:
+            L = self.apply_line_filters(self.apply_order_filters(self.lines_in(p), f), f)
+            s = L.groupby("date")["line_amount"].sum()
+        elif self.has_line_filter(f):
             L = self.apply_line_filters(self.lines_in(p), f)
             s = L.groupby("date")["line_amount"].sum()
         else:
+            O = self.apply_order_filters(self.orders_in(p), f)
             s = O.groupby("date")["revenue"].sum()
         idx = pd.date_range(pd.Timestamp(p[0]), pd.Timestamp(p[1]), freq="D")
         lo = max(pd.Timestamp(p[0]), self.start) if self.start is not None else pd.Timestamp(p[0])
@@ -346,7 +366,8 @@ class Ctx:
             return O["cust_id"].where(O["cust_id"] != "", None)
         self.require("cust_name" in O, "không ghi khách")
         nm = O["cust_name"].map(lambda s: fold(s))
-        walk = nm.isin(["", "khach le", "le", "khach vang lai", "vang lai", "khach"])
+        walk = nm.isin(["", "khach le", "le", "khach vang lai", "vang lai", "khach", "kl", "k l", "k.l", "-", "khong ten",
+                        "khach ghe", "khach qua duong", "guest", "walk in", "walk-in"])
         return nm.where(~walk, None)
 
     def customer_count(self, p, f):
@@ -515,8 +536,9 @@ def _answer(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
         L = ctx.apply_line_filters(L, {k: v for k, v in f.items() if k != "product"})
         L = L[~L["is_fee"]]
         by_money = bool(re.search(r"doanh thu|nhieu tien|tien nhat", q.text))
-        g = L.groupby("pkey").agg(v=("line_amount" if by_money else "qty_base", "sum"), name=("prod_name", "first"),
-                                  pid=("prod_id", "first"))
+        gk = L["prod_id"].where(L["prod_id"] != "", L["pkey"])
+        g = L.assign(_g=gk).groupby("_g").agg(v=("line_amount" if by_money else "qty_base", "sum"),
+                                               name=("prod_name", lambda s: s.mode().iat[0]), pid=("prod_id", "first"))
         low = bool(re.search(r"it nhat|cham nhat|e nhat|thap nhat", q.text))
         g = g.assign(code=g["pid"].where(g["pid"] != "", g["name"]))
         g = g.sort_values(["v", "code"], ascending=[low, True])

@@ -357,12 +357,16 @@ def classify(t: str, q: Query) -> tuple[str, str]:
         return "customer_count", out
     if re.search(r"khach .*(nu|nam gioi|phu nu|dan ong)|gioi tinh|do tuoi|sinh nhat", t):
         return "unanswerable_attr", "value"
-    if re.search(r"khach|ai (la|mua|chi)|nguoi mua", t) and re.search(r"nhieu|nhat|cao|top|lon", t):
-        if re.search(r"nhieu don|so don|mua nhieu lan", t):
+    if re.search(r"ti trong|ty trong|chiem|dong gop|phan cua", t) and re.search(r"doanh thu|tien", t):
+        return "share", "value"
+    if re.search(r"khach|ai (la|mua|chi)|nguoi mua", t) and \
+            re.search(r"nhieu (tien |don |don hang |lan |bill )?nhat|cao nhat|lon nhat|\btop\b|chi tieu nhieu|mua nhieu|nhieu tien",
+                      t.replace("bao nhieu", "")):
+        if re.search(r"nhieu (don|lan|bill)|so don|mua nhieu lan", t):
             return "top_customers_orders", "value"
         return "top_customers", "value"
     # ---- items ----
-    if re.search(r"(bi|hang|mat hang|mon) e\b|khong ban duoc|ban khong duoc|ban cham|ton nhieu", t):
+    if re.search(r"(bi|hang|mat hang|mon) e\b|khong ban (ra )?duoc|ban khong duoc|ban cham|ton nhieu|khong ban ra", t):
         return "unsold", "value"
     if re.search(r"(duoc mua|co mat|xuat hien) (o|trong) (it nhat )?\d+ don|\d+ don khac nhau", t):
         return "items_in_orders", "value"

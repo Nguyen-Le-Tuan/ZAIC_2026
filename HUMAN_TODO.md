@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 18:59 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 19:35 ngày 11/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **19:35 ngày 11/11:** **DataMate bản chỉ CPU đạt PA 0,835 trên phần train dùng để viết luật** (sai 32/1.990). Claude làm tiếp nhập hàng, tồn kho, công nợ, giao hàng; Anh chưa phải làm gì cho DataMate tới tối thứ Năm (JOURNAL entry 146).
 > - **18:59 ngày 11/11:** **Anh chọn không thuê máy (B51, B52 đóng).** DataMate nộp image A (chỉ CPU): Anh nộp public tối thứ Năm và thứ Sáu, tải image A (1–2 GB) lên và nộp chiều thứ Bảy. Claude bắt đầu code tối nay (JOURNAL entry 145).
 > - **18:54 ngày 11/11:** **Không thuê máy ảo GPU cũng được:** DataMate nộp image A (chỉ CPU), 0 USD, tải lên 1–2 GB; mất phần LLM giúp ở file lạ và loại tiệm mới. Lịch riêng ở mục 10 của `docs/DATAMATE_PLAN_2026-11-11.md`. **Anh chọn ở B51: không thuê (Claude đề xuất) hay thuê** (JOURNAL entry 144).
 > - **18:48 ngày 11/11:** **Anh chọn làm DataMate bản đầy đủ (B50 xong). Kế hoạch tới hạn 16/11: [`docs/DATAMATE_PLAN_2026-11-11.md`](docs/DATAMATE_PLAN_2026-11-11.md).** Image A chỉ CPU nộp chiều thứ Bảy 14/11 (lưới an toàn), image B có LLM nộp tối Chủ nhật 15/11 nếu qua cửa. **Anh: B51 (thuê máy ảo GPU có Docker, trước 08:00 thứ Sáu) và B52 (đo tốc độ tải lên Drive).** Leader không có việc DataMate bắt buộc; LifeMate đi trước khi trùng việc (JOURNAL entry 143).

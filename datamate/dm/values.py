@@ -41,6 +41,12 @@ def parse_number(v):
                 s = f"{s}.{m.group(3)}"
     if not re.fullmatch(r"[\d.,]+", s):
         return None
+    if mult > 1:
+        try:
+            val = float(s.replace(",", ".")) * mult
+        except ValueError:
+            return None
+        return -val if neg else val
     if re.fullmatch(r"\d{1,3}([.,]\d{3})+", s) and not (mult > 1 and re.fullmatch(r"\d+[.,]\d{1,2}", s)):
         # thousands separators; but "1,500" with both separators the same could also be a decimal: VN data uses
         # separators for money, so treat as integer

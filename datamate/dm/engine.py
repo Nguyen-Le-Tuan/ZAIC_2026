@@ -629,6 +629,10 @@ def _answer(q: Query, ctx: Ctx, asof: dt.date) -> Answer:
         if vb == 0:
             raise Unanswerable("không có số bán kỳ trước")
         return Answer("percent", pct(100.0 * (va - vb) / vb))
+    if it.startswith("purchase") or it.startswith("stock") or it.startswith("debt") or it in (
+            "delivery_rounds", "stockout_count", "stockout_list", "net_profit", "top_profit_item"):
+        from .engine2 import answer2
+        return answer2(q, ctx, asof)
     raise Abstain(f"chưa làm intent {it}")
 
 

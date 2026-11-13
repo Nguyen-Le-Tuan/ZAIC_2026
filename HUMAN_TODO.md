@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:55 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 23:05 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **23:05 ngày 12/11:** **Code Docker đã đổi sang hệ thống 59,42: [PR #19](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/19), nhánh `docker-final`.** Chạy thử trên GPU laptop khớp file 59,42. **Anh tải `~/gui_leader_v7q35avg_2026-11-12.tar` (509 MB) lên Drive và gửi Leader [`docs/LEADER_DOCKER_FINAL_2026-11-12.md`](docs/LEADER_DOCKER_FINAL_2026-11-12.md) (B61)** (JOURNAL entry 154).
 > - **22:55 ngày 12/11:** **B55 và B60 xong. File adapter gộp 59,42 (qua cửa 57,92): bản nộp cuối dùng adapter gộp hai seed Qwen3.5** (`ckpt/v7q35_avg/final`, chỉ có trên laptop Anh). M1–M3 về sáng/trưa thứ Sáu; M3 chỉ thay bản cuối khi file gộp của nó ≥ 60,92. **Docker (L9) còn để Qwen3-4B cũ và chưa có D5: Anh báo Leader đổi (B61)** (JOURNAL entry 153).
 > - **22:50 ngày 12/11:** **B59 xong. Điểm public v7: Qwen3.5 59,06 và 56,78 (trung bình 57,92); Qwen3-4B 55,61 và 53,23 (54,42). Giữ Qwen3.5, seed 0.** **Anh nộp file 5 (adapter gộp) rồi báo điểm (B60):** ≥ 57,92 thì bản cuối dùng adapter gộp, dưới thì seed 0. Hai seed lệch khoảng 2,3 điểm, nên chênh dưới 2,5 điểm giữa hai file đơn lẻ chưa nói được gì (JOURNAL entry 152).
 > - **11:30 ngày 12/11:** **LifeMate: kết quả v7 về đủ và sạch** (dữ liệu train đúng luật FAQ; 4 file public đạt kiểm định dạng). **Anh nộp 4 file v7 rồi báo điểm (B59).** Laptop đang chạy file public của adapter gộp 2 seed (xong khoảng 13:15, dành lần nộp thứ 5). **Gửi anh trai hướng dẫn V8b thay V8** (B55): cả ba máy chạy ngay (JOURNAL entry 151).
@@ -282,9 +283,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B61. (22:55 ngày 12/11)** (5 phút báo; Leader khoảng nửa ngày) **[Anh, cùng Leader] Docker L9 phải dùng hệ thống nộp cuối mới.** Nhánh `docker-submit` vẫn để Qwen3-4B-Instruct-2507 + `ckpt/q4b4_all/final`, không có D5.
-  1. Anh báo Leader: model gốc `principled-intelligence/Qwen3.5-4B-text-only` (revision `efe91c59becdb61ece99546002ab3ce51606ea1b`), adapter `ckpt/v7q35_avg/final` (485 MB, sha256 `7f69d43e8a2a438d…`), bật D5 (search guard), hạn 25 giây, code suy luận commit `a71ea32`. ASR giữ nguyên.
-  2. Adapter chỉ có trên laptop Anh: hoặc Leader build trên laptop Anh, hoặc Anh tải thư mục `lifemate/ckpt/v7q35_avg/final` lên Drive cho Leader (485 MB, quá giới hạn 10 MB của Claude).
+- [ ] **B61. (22:55 ngày 12/11)** *(23:05: code đã sửa ở [PR #19](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/19), chạy thử khớp file 59,42; JOURNAL entry 154.)* (10 phút; Leader khoảng nửa ngày) **[Anh, cùng Leader] Docker L9 dùng hệ thống nộp cuối mới (59,42).**
+  1. Chrome trên laptop: thư mục ZAIC_2026 trên Drive → New → File upload → Ctrl+L → `/home/truyen-anh-thach/gui_leader_v7q35avg_2026-11-12.tar` → Open (509 MB; quá giới hạn 10 MB của Claude). Drive hiện khoảng 485 MB.
+  2. Gửi Leader link file đó, link [PR #19](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/19) và hướng dẫn [`docs/LEADER_DOCKER_FINAL_2026-11-12.md`](docs/LEADER_DOCKER_FINAL_2026-11-12.md) (trên `main`).
+  3. Leader build image từ nhánh `docker-final`, chạy thử 12 mẫu theo hướng dẫn, báo Claude kết quả và thời gian.
   - Cấu hình có thể đổi thêm nếu M1 (luật tham số an toàn, bf16) hoặc M3 qua cửa; chốt trước 18:00 thứ Sáu 13/11.
 - [x] **B60. (22:50 ngày 12/11)** *(22:55: xong, 59,42, qua cửa 57,92; bản cuối dùng adapter gộp; JOURNAL entry 153.)* (2 phút) **[Anh] Nộp file 5 của LifeMate (adapter gộp 2 seed Qwen3.5) rồi báo điểm cho Claude.**
   1. Trang LifeMate → Public Submissions → Submit new entry: `cloud_results/nop_public_2026-11-12/5_v7q35_avg.jsonl`. Chọn loại **SLM** (file 3 lần trước hiện "APIs/Others").

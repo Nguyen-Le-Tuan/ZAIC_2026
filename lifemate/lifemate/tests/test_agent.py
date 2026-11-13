@@ -248,6 +248,22 @@ def test_openai_client_without_deadline_waits_and_raises_on_timeout():
         srv.shutdown()
 
 
+# ------------------------------------------------------------------ rarely filled optional params
+
+def test_drop_params_strips_before_the_call():
+    from lifemate.rare_params import rare_params
+    _, tools, _, items = _data()
+    rows = rare_params(items.values(), tools)
+    assert {"tool": "alarm.create", "param": "repeat"} in [{"tool": r["tool"], "param": r["param"]} for r in rows]
+    item = next(items[s] for s in sorted(items) if [c["name"] for c in items[s]["label"]["tool_calls"]] == ["alarm.create"])
+    gold = item["label"]["tool_calls"]
+    extra = [{"name": "alarm.create", "arguments": {**gold[0]["arguments"], "repeat": "once"}}]
+    trace, env = _run(item, OracleBackend(extra), drop_params={("alarm.create", "repeat")})
+    assert env.get_tool_calls() == gold and trace["steps"][0]["dropped"] == [["repeat"]]
+    _, env2 = _run(item, OracleBackend(extra))  # off by default: the extra argument is sent
+    assert env2.get_tool_calls() == extra
+
+
 # ------------------------------------------------------------------ warm-up (untimed generation after loading)
 
 def test_warmup_prompt_uses_only_the_context():

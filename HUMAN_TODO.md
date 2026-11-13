@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:50 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 22:55 ngày 12/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **22:55 ngày 12/11:** **B55 và B60 xong. File adapter gộp 59,42 (qua cửa 57,92): bản nộp cuối dùng adapter gộp hai seed Qwen3.5** (`ckpt/v7q35_avg/final`, chỉ có trên laptop Anh). M1–M3 về sáng/trưa thứ Sáu; M3 chỉ thay bản cuối khi file gộp của nó ≥ 60,92. **Docker (L9) còn để Qwen3-4B cũ và chưa có D5: Anh báo Leader đổi (B61)** (JOURNAL entry 153).
 > - **22:50 ngày 12/11:** **B59 xong. Điểm public v7: Qwen3.5 59,06 và 56,78 (trung bình 57,92); Qwen3-4B 55,61 và 53,23 (54,42). Giữ Qwen3.5, seed 0.** **Anh nộp file 5 (adapter gộp) rồi báo điểm (B60):** ≥ 57,92 thì bản cuối dùng adapter gộp, dưới thì seed 0. Hai seed lệch khoảng 2,3 điểm, nên chênh dưới 2,5 điểm giữa hai file đơn lẻ chưa nói được gì (JOURNAL entry 152).
 > - **11:30 ngày 12/11:** **LifeMate: kết quả v7 về đủ và sạch** (dữ liệu train đúng luật FAQ; 4 file public đạt kiểm định dạng). **Anh nộp 4 file v7 rồi báo điểm (B59).** Laptop đang chạy file public của adapter gộp 2 seed (xong khoảng 13:15, dành lần nộp thứ 5). **Gửi anh trai hướng dẫn V8b thay V8** (B55): cả ba máy chạy ngay (JOURNAL entry 151).
 > - **01:27 ngày 12/11:** **DataMate image A đã đóng và kiểm** (144 MB, md5 `c4c14e554b78792ba3b5678caedb5d3c`). **Anh báo tên đội viết thường, rồi tải lên Drive và nộp Solution lần 1 (B58).** B57 (2 file thăm dò) vẫn chờ (JOURNAL entry 150).
@@ -281,7 +282,11 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
-- [ ] **B60. (22:50 ngày 12/11)** (2 phút) **[Anh] Nộp file 5 của LifeMate (adapter gộp 2 seed Qwen3.5) rồi báo điểm cho Claude.**
+- [ ] **B61. (22:55 ngày 12/11)** (5 phút báo; Leader khoảng nửa ngày) **[Anh, cùng Leader] Docker L9 phải dùng hệ thống nộp cuối mới.** Nhánh `docker-submit` vẫn để Qwen3-4B-Instruct-2507 + `ckpt/q4b4_all/final`, không có D5.
+  1. Anh báo Leader: model gốc `principled-intelligence/Qwen3.5-4B-text-only` (revision `efe91c59becdb61ece99546002ab3ce51606ea1b`), adapter `ckpt/v7q35_avg/final` (485 MB, sha256 `7f69d43e8a2a438d…`), bật D5 (search guard), hạn 25 giây, code suy luận commit `a71ea32`. ASR giữ nguyên.
+  2. Adapter chỉ có trên laptop Anh: hoặc Leader build trên laptop Anh, hoặc Anh tải thư mục `lifemate/ckpt/v7q35_avg/final` lên Drive cho Leader (485 MB, quá giới hạn 10 MB của Claude).
+  - Cấu hình có thể đổi thêm nếu M1 (luật tham số an toàn, bf16) hoặc M3 qua cửa; chốt trước 18:00 thứ Sáu 13/11.
+- [x] **B60. (22:50 ngày 12/11)** *(22:55: xong, 59,42, qua cửa 57,92; bản cuối dùng adapter gộp; JOURNAL entry 153.)* (2 phút) **[Anh] Nộp file 5 của LifeMate (adapter gộp 2 seed Qwen3.5) rồi báo điểm cho Claude.**
   1. Trang LifeMate → Public Submissions → Submit new entry: `cloud_results/nop_public_2026-11-12/5_v7q35_avg.jsonl`. Chọn loại **SLM** (file 3 lần trước hiện "APIs/Others").
   2. Nếu trang báo hết lượt hôm nay thì nộp sáng 13/11.
   - Điểm ≥ 57,92: bản nộp cuối dùng adapter gộp. Dưới 57,92: dùng seed 0 (59,06).
@@ -289,7 +294,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   1. Trang LifeMate → Public Submissions → Submit new entry, lần lượt: `cloud_results/nop_public_2026-11-12/1_v7q35_seed0.jsonl`, `2_v7q35_seed1.jsonl`, `3_v7q3_seed0.jsonl`, `4_v7q3_seed1.jsonl`.
   2. Báo 4 điểm cho Claude. Claude áp luật entry 138: chọn Qwen3.5 hay Qwen3-4B, rồi chọn seed.
   - Mỗi ngày nộp tối đa 5 lần: để dành 1 lần cho file của adapter gộp (laptop xong khoảng 13:15; Claude báo khi sẵn).
-- [ ] **B55. (20:20 ngày 11/11)** (3 phút) **[Anh] Tải gói v8 lên Drive và gửi anh trai hướng dẫn V8b kèm "go".**
+- [x] **B55. (20:20 ngày 11/11)** *(22:50 ngày 12/11: Anh đã tải gói v8 và gửi V8b; JOURNAL entry 153.)* (3 phút) **[Anh] Tải gói v8 lên Drive và gửi anh trai hướng dẫn V8b kèm "go".**
   1. Chrome trên laptop: thư mục ZAIC_2026 → New → File upload → Ctrl+L → `/home/truyen-anh-thach/zac_cloud_bundle_20261111_v8.tar.gz` → Open (Drive hiện khoảng 4,5 MB).
   2. Gửi anh trai **`cloud_results/anh_trai/BROTHER_AI_GUIDE_V8b_2026-11-12_EN.md`** kèm chữ "go". *(Đổi lúc 11:30 ngày 12/11: dùng V8b, không dùng V8. v7 đã xong nên cả ba lượt chạy ngay: M1 trên máy v5, M2 trên máy v7q3, M3 trên máy v7q35.)*
   - Kết quả về: M1 khoảng 8 giờ sau khi bắt đầu, M3 khoảng 10–11 giờ, M2 khoảng 13–14 giờ (máy 3090 chậm hơn).

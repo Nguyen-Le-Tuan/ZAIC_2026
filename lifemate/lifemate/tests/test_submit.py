@@ -117,11 +117,11 @@ def test_find_split_rules():
 
 def test_settings_defaults_and_overrides():
     s = settings({})
-    assert s == {"asr_model": "ckpt/asr_phoft/merged", "adapter": "ckpt/q4b4_all/final",
-                 "llm": "Qwen/Qwen3-4B-Instruct-2507", "load_4bit": True, "time_budget": 25.0, "warmup": True, "seed": 0,
-                 "search_guard": False}
+    assert s == {"asr_model": "ckpt/asr_phoft/merged", "adapter": "ckpt/v7q35_avg/final",
+                 "llm": "principled-intelligence/Qwen3.5-4B-text-only", "load_4bit": True, "time_budget": 25.0,
+                 "warmup": True, "seed": 0, "search_guard": True}
     assert settings({"TIME_BUDGET": "20", "WARMUP": "0", "ADAPTER": ""}) == {**s, "time_budget": 20.0, "warmup": False}
-    assert settings({"SEARCH_GUARD": "1"}) == {**s, "search_guard": True}
+    assert settings({"SEARCH_GUARD": "0"}) == {**s, "search_guard": False}
     for bad in ({"TIME_BUDGET": "30"}, {"TIME_BUDGET": "0"}, {"LOAD_4BIT": "yes"}, {"WARMUP": "2"}, {"SEARCH_GUARD": "on"}):
         try:
             settings(bad)

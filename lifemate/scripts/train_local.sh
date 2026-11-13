@@ -8,7 +8,10 @@
 #   FIT_SFT_ARGS (default: --drop-apps splits/heldout_apps.json for fit_lao), EVAL_STEPS=0 (only evaluate final),
 #   EXTRA_SAMPLES=gen/x.jsonl (appended with sft --extra-samples; the train file is then sft/${FIT}_$TAG.jsonl),
 #   ASR_FIT=asr/x.jsonl (user turns of the SFT rows from that ASR file instead of audio_text; train file
-#   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr).
+#   sft/${FIT}_$TAG.jsonl), ASR_DEV=asr/y.jsonl (also roll out final on ASR text of $DEV -> runs/sft_${TAG}_asr),
+#   EXTRA_SFT=gen/x.jsonl (SFT rows built elsewhere, e.g. `lifemate.synth sft`, appended to the fit rows; the train
+#   file is then sft/${FIT}_$TAG.jsonl; train.py shuffles), EVAL_LOSS=0 (no teacher-forced dev loss per checkpoint),
+#   EVAL_ARGS (extra args for lifemate.infer in eval_ckpt.sh, e.g. "--load-4bit --time-budget 60").
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODEL=${MODEL:-Qwen/Qwen3-1.7B}
@@ -45,6 +48,8 @@ sys.exit(f"missing e.g. {miss[:3]}" if miss else 0)
 EOF
 fi
 [ -z "${ASR_DEV:-}" ] || [ -f "$ASR_DEV" ] || { echo "no $ASR_DEV" >&2; exit 1; }
+[ -z "${EXTRA_SFT:-}" ] || [ -f "$EXTRA_SFT" ] || { echo "no $EXTRA_SFT" >&2; exit 1; }
+[ -z "${EXTRA_SFT:-}" ] || [ -z "${EXTRA_SAMPLES:-}${ASR_FIT:-}" ] || { echo "EXTRA_SFT goes alone (no EXTRA_SAMPLES/ASR_FIT)" >&2; exit 1; }
 mkdir -p runs ckpt sft
 stamp() { echo "[$(date '+%F %T')] $*"; }
 
@@ -57,6 +62,11 @@ overlap=$(comm -12 <(tr -s ' \n' '\n' < "splits/$FIT.txt" | sort -u) <(tr -s ' \
 # shellcheck disable=SC2086
 $PY -m lifemate.sft --reuse --fit "splits/$FIT.txt" $FIT_SFT_ARGS --out "$SFT_FIT"
 $PY -m lifemate.sft --reuse --fit "splits/$DEV.txt" --rename 0 --p-remove 0 --p-distract 0 --p-lower 0 --out "sft/$DEV.jsonl"
+if [ -n "${EXTRA_SFT:-}" ]; then
+  cat "$SFT_FIT" "$EXTRA_SFT" > "sft/${FIT}_$TAG.jsonl.tmp" && mv "sft/${FIT}_$TAG.jsonl.tmp" "sft/${FIT}_$TAG.jsonl"
+  stamp "train rows: $(wc -l < "$SFT_FIT") from $SFT_FIT ($(sha256sum "$SFT_FIT" | cut -c1-12)) + $(wc -l < "$EXTRA_SFT") from $EXTRA_SFT ($(sha256sum "$EXTRA_SFT" | cut -c1-12))"
+  SFT_FIT=sft/${FIT}_$TAG.jsonl
+fi
 
 if [ "${SKIP_ZS:-0}" != 1 ]; then
   stamp "zero-shot baseline on $DEV"
@@ -77,7 +87,7 @@ for c in "${CKPTS[@]}"; do
   suffix=$([ "$c" = final ] && echo "" || echo "_s${c#step_}")
   stamp "eval $c"
   adapter="ckpt/$TAG/$c"
-  TAG="$TAG$suffix" ADAPTER="$adapter" MODEL="$MODEL" DEV="$DEV" LOSS=1 bash scripts/eval_ckpt.sh
+  TAG="$TAG$suffix" ADAPTER="$adapter" MODEL="$MODEL" DEV="$DEV" LOSS=${EVAL_LOSS:-1} bash scripts/eval_ckpt.sh
 done
 if [ -n "${ASR_DEV:-}" ]; then
   stamp "eval final on $DEV with ASR text from $ASR_DEV"

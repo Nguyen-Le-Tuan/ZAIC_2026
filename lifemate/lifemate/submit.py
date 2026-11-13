@@ -30,13 +30,13 @@ from .runinfo import percentile
 
 DEFAULTS = {
     "ASR_MODEL": "ckpt/asr_phoft/merged",          # PhoWhisper-large fine-tuned on all train audio, merged
-    "ADAPTER": "ckpt/q4b4_all/final",              # LoRA trained on the 4-bit base, all train samples
-    "LLM": "Qwen/Qwen3-4B-Instruct-2507",          # base model, from the image's Hugging Face cache (offline)
+    "ADAPTER": "ckpt/v7q35_avg/final",             # average of the two v7q35 LoRA seeds (4-bit base, all train samples)
+    "LLM": "principled-intelligence/Qwen3.5-4B-text-only",  # @efe91c59, from the image's Hugging Face cache (offline)
     "LOAD_4BIT": "1",                              # NF4 base + adapter not merged, as in every scored 4B run
     "TIME_BUDGET": "25",                           # seconds per sample, ASR included
     "WARMUP": "1",                                 # untimed warm-up generation after loading
     "SEED": "0",                                   # = training seed
-    "SEARCH_GUARD": "0",                           # 1 = lifemate.infer --search-guard; flip only after a public run
+    "SEARCH_GUARD": "1",                           # 1 = lifemate.infer --search-guard (D5), on in every Qwen3.5 file
 }
 MAX_TOKENS = 512  # per agent step; lifemate.infer --max-tokens default
 

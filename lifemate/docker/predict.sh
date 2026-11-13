@@ -33,15 +33,17 @@ DATA_ROOT=$(realpath -e "${DATA_ROOT:-/data}")
 RESULT_DIR=$(realpath -m "${RESULT_DIR:-/result}")
 IDS=${IDS:+$(realpath -e "$IDS")}
 ASR_MODEL=${ASR_MODEL:-ckpt/asr_phoft/merged}
-ADAPTER=${ADAPTER:-ckpt/q4b4_all/final}
-LLM=${LLM:-Qwen/Qwen3-4B-Instruct-2507}
+# Final system (JOURNAL entries 152-153): public 59.42. Base model at revision efe91c59becdb61ece99546002ab3ce51606ea1b
+# in the image's Hugging Face cache; the adapter is the average of the two v7q35 seeds (scripts/avg_adapters.py).
+ADAPTER=${ADAPTER:-ckpt/v7q35_avg/final}
+LLM=${LLM:-principled-intelligence/Qwen3.5-4B-text-only}
 LOAD_4BIT=${LOAD_4BIT:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
-# search guard: flip the default to 1 here and in lifemate/submit.py only after a public run with it scores at least
-# the 05/11 system
-SEARCH_GUARD=${SEARCH_GUARD:-0}
+# search guard (D5): on since its public run of 09/11 (52.68 vs 51.07 without it, JOURNAL entry 119); every
+# Qwen3.5 file was made with it
+SEARCH_GUARD=${SEARCH_GUARD:-1}
 if [ -z "${PY:-}" ]; then
   if [ -x "$LIFEMATE_DIR/.venv/bin/python" ]; then PY=$LIFEMATE_DIR/.venv/bin/python; else PY=$(command -v python3); fi
 fi

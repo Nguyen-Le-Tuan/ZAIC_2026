@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # One offline command from the data folder to a checked submission.jsonl: ASR on every wav of the split -> agent loop
 # (one ToolEnv per sample) -> format and schema checks. This is the core a Docker image will wrap.
-# Current system (JOURNAL entries 52, 58, 62): fine-tuned Whisper-turbo (merged) + Qwen3-4B-Instruct-2507 in 4-bit
-# with a LoRA adapter trained on that 4-bit base:
+# Final system (JOURNAL entries 152-153): fine-tuned PhoWhisper-large (merged) + Qwen3.5-4B-text-only in 4-bit with the
+# averaged v7q35 LoRA and the search guard (docker/predict.sh holds the submitted values):
+#   SPLIT=public_test ASR_MODEL=ckpt/asr_phoft/merged ADAPTER=ckpt/v7q35_avg/final OUT=runs/pub.jsonl bash scripts/predict.sh
+# Earlier Qwen3-4B system (JOURNAL entries 52, 58, 62):
+#   LLM=Qwen/Qwen3-4B-Instruct-2507 SEARCH_GUARD=0 \
 #   SPLIT=public_test ASR_MODEL=ckpt/asr_turboft/merged ADAPTER=ckpt/q4b4_fit_random/final \
 #     OUT=runs/e2e_public_q4b.jsonl bash scripts/predict.sh
 # Older 1.7B system: LLM=Qwen/Qwen3-1.7B LOAD_4BIT=0 ADAPTER=ckpt/q17b_fit_random/final ...
 # Env: SPLIT, ASR_MODEL, ADAPTER, OUT (required);
-#      LLM (default Qwen/Qwen3-4B-Instruct-2507);
+#      LLM (default principled-intelligence/Qwen3.5-4B-text-only);
 #      LOAD_4BIT (default 1: base in NF4, adapter not merged, as in every 4B dev run; 0 = bf16 + merged adapter, whose
 #        score has not been checked yet, HUMAN_TODO B16);
 #      TIME_BUDGET (default 25: seconds per sample, the sample's ASR seconds included; the competition limit is 30 on
@@ -17,7 +20,7 @@
 #      ASR_REV, DATA (default the repo's data folder), IDS (subset), ASR_BATCH (default 1 = per-file latency),
 #      ASR_OUT (default ${OUT%.jsonl}_asr.jsonl), SEED (default 0, the training seed),
 #      PY (default .venv/bin/python, else python3);
-#      SEARCH_GUARD (default 0 = the 05/11 system; 1 = retry empty filtered reads once with looser arguments and stop
+#      SEARCH_GUARD (default 1 = retry empty filtered reads once with looser arguments and stop
 #        repeated-read loops, `lifemate.infer --search-guard`).
 # Rows carry the organisers' "time" (integer ms: the sample's ASR seconds + its agent seconds). The final Docker entry
 # point docker/predict.sh (copied to /code/predict.sh) calls this script with the submitted settings.
@@ -27,12 +30,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${SPLIT:?set SPLIT}" "${ASR_MODEL:?set ASR_MODEL}" "${ADAPTER:?set ADAPTER}" "${OUT:?set OUT}"
 DATA=${DATA:-../data/train+public_test}
-LLM=${LLM:-Qwen/Qwen3-4B-Instruct-2507}
+LLM=${LLM:-principled-intelligence/Qwen3.5-4B-text-only}
 LOAD_4BIT=${LOAD_4BIT:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
 SEED=${SEED:-0}
-SEARCH_GUARD=${SEARCH_GUARD:-0}
+SEARCH_GUARD=${SEARCH_GUARD:-1}
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}
 IDS=${IDS:-}

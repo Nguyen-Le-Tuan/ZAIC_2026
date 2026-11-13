@@ -180,6 +180,7 @@ class Agent:
                     stop = True
                     break
             results += [{"ok": False, "error": e} for e in errors]
+            step["results"] = results  # what the model is shown next; kept so audits need no replay
             msgs.append({"role": "assistant", "content": render_calls(processed) if processed else out})
             msgs.append({"role": "user", "content": render_results(results)})
             if stop:

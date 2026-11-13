@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:40 ngày 13/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:45 ngày 13/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **09:45 ngày 13/11:** **Drive chưa có kết quả M1–M3, cũng không có gói v8. Anh hỏi anh trai M1–M3 bắt đầu lúc nào và đã nhận gói v8 chưa (B63 bước 2).** M3 bắt đầu sau khoảng 07:00 thì không kịp chốt 18:00 hôm nay (JOURNAL entry 159).
 > - **09:40 ngày 13/11:** **Laptop đang chạy file public bản 59,42 có bật luật tham số an toàn (xong khoảng 11:20). Anh nộp và báo điểm; báo Claude ngay khi M1 hoặc M3 lên Drive (B63).** Giữ luật khi file ≥ 59,42 và M1 qua cửa dev (JOURNAL entry 158).
 > - **02:50 ngày 13/11:** **Image LifeMate chạy đủ public trong container đúng lệnh BTC: 626/634 dòng giống hệt file 59,42, 632/634 cùng `state_hash`; 8 dòng khác đều giải thích được.** Chờ chốt cấu hình (18:00 thứ Sáu) rồi Claude xuất `zac2026_helix.tar.gz` (JOURNAL entry 157).
 > - **02:05 ngày 13/11:** **B62 xong: tên đội `helix`.** Image LifeMate mang tên `zaic2026_lifemate_helix:final`; file nộp LifeMate xuất khi chốt cấu hình (18:00 thứ Sáu). **DataMate: file nộp mới `~/zac-dm/docker_out/zaic2026_datamate_helix.tar.gz`, md5 `3c8e2d210ed240c14ac1633880bd20d0`: Anh tải lên Drive và nộp (B58)** (JOURNAL entry 156).
@@ -289,7 +290,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Không đạt thì dừng, giữ bản 05/11.
 - [ ] **B63. (09:40 ngày 13/11)** (5 phút, hai lần) **[Anh] Nộp file luật tham số và báo kết quả M1–M3.**
   1. Khoảng 11:20 (Claude báo khi xong và đã kiểm định dạng): nộp `lifemate/runs/pub_v7q35_avg_argrules_laptop_2026-11-13/public_v7q35_avg_argrules.jsonl` ở bảng LifeMate, báo điểm. Giữ luật khi ≥ 59,42 và M1 qua cửa dev (JOURNAL entry 158).
-  2. Khi anh trai tải M1 hay M3 lên Drive: báo Claude (hoặc cho Claude mở Drive tải về). M3: nộp 2 file public trước, báo 2 điểm; trung bình ≥ 59,42 thì Claude gộp 2 seed và chạy file gộp trên laptop.
+  2. **Ngay bây giờ: hỏi anh trai M1–M3 bắt đầu lúc nào, đang tới đâu, đã nhận gói v8 chưa** (9:45 trên Drive chưa có gì, cũng không có gói v8; JOURNAL entry 159). Anh đã cho Claude mở Drive tải kết quả về khi có (09:35). M3: nộp 2 file public trước, báo 2 điểm; trung bình ≥ 59,42 thì Claude gộp 2 seed và chạy file gộp trên laptop.
 - [x] **B62. (00:55 ngày 13/11)** *(02:05 ngày 13/11: Anh báo `helix`; image LifeMate `zaic2026_lifemate_helix:final`, file DataMate xuất lại; JOURNAL entry 156.)* (1 phút) **[Anh] Báo Claude tên đội viết thường** (như B58) để đặt tên image `zaic2026_lifemate_<tên đội>:final` và tên file nộp `zac2026_<TeamName>.tar.gz`.
   - Sau đó Claude xuất file nén (khoảng 15 GB) và md5 khi cấu hình chốt (18:00 thứ Sáu); Anh tải lên Drive, chia sẻ "Anyone with the link" và nộp.
 - [x] **B61. (22:55 ngày 12/11)** *(00:55 ngày 13/11: Anh chọn build trên laptop; Claude build image `zaic2026_lifemate:final-cand1`, chạy đúng khi tắt mạng; Leader không phải build. Code ở [PR #19](https://github.com/Nguyen-Le-Tuan/ZAIC_2026/pull/19); JOURNAL entry 154–155.)* **[Anh, cùng Leader] Docker L9 dùng hệ thống nộp cuối mới (59,42).**

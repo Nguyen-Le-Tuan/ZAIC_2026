@@ -15,7 +15,10 @@
 #      WARMUP (default 1: one untimed generation after loading, so the first sample does not pay the first-call
 #        cost; 0 skips it);
 #      ASR_REV, DATA (default the repo's data folder), IDS (subset), ASR_BATCH (default 1 = per-file latency),
-#      ASR_OUT (default ${OUT%.jsonl}_asr.jsonl).
+#      ASR_OUT (default ${OUT%.jsonl}_asr.jsonl), SEED (default 0, the training seed),
+#      PY (default .venv/bin/python, else python3).
+# Rows carry the organisers' "time" (integer ms: the sample's ASR seconds + its agent seconds). The final Docker entry
+# point docker/predict.sh (copied to /code/predict.sh) calls this script with the submitted settings.
 # Models must already be in the Hugging Face cache or on disk: nothing is downloaded (HF_HUB_OFFLINE=1). Re-running
 # skips the ASR step when its file exists; the agent step refuses to overwrite OUT.
 set -euo pipefail
@@ -26,13 +29,16 @@ LLM=${LLM:-Qwen/Qwen3-4B-Instruct-2507}
 LOAD_4BIT=${LOAD_4BIT:-1}
 TIME_BUDGET=${TIME_BUDGET:-25}
 WARMUP=${WARMUP:-1}
+SEED=${SEED:-0}
 ASR_REV=${ASR_REV:-}
 ASR_BATCH=${ASR_BATCH:-1}
 IDS=${IDS:-}
 ASR_OUT=${ASR_OUT:-${OUT%.jsonl}_asr.jsonl}
 TRACE=${OUT%.jsonl}_trace.jsonl
-PY=.venv/bin/python
-export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+if [ -z "${PY:-}" ]; then PY=.venv/bin/python; [ -x "$PY" ] || PY=python3; fi
+# PYTHONHASHSEED must be set before Python starts; no bytecode is written next to the split's zaic_tools (read-only)
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+  PYTHONHASHSEED=$SEED PYTHONDONTWRITEBYTECODE=1
 stamp() { echo "[$(date '+%F %T')] $*"; }
 case $LOAD_4BIT in 1) Q=(--load-4bit) ;; 0) Q=() ;; *) echo "LOAD_4BIT must be 0 or 1" >&2; exit 1 ;; esac
 case $WARMUP in 1) W=() ;; 0) W=(--no-warmup) ;; *) echo "WARMUP must be 0 or 1" >&2; exit 1 ;; esac
@@ -42,14 +48,14 @@ if [ -e "$ASR_OUT" ]; then
   stamp "reuse $ASR_OUT"
 else
   stamp "asr $SPLIT with $ASR_MODEL -> $ASR_OUT"
-  $PY -m lifemate.asr --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --model "$ASR_MODEL" \
-      ${ASR_REV:+--revision "$ASR_REV"} --batch-size "$ASR_BATCH" --out "$ASR_OUT"
+  "$PY" -m lifemate.asr --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --model "$ASR_MODEL" \
+      ${ASR_REV:+--revision "$ASR_REV"} --batch-size "$ASR_BATCH" "${W[@]}" --seed "$SEED" --out "$ASR_OUT"
 fi
-stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP) -> $OUT"
-$PY -m lifemate.infer --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --text asr --asr-file "$ASR_OUT" \
+stamp "agent $LLM + $ADAPTER (4-bit=$LOAD_4BIT, budget ${TIME_BUDGET}s, warm-up=$WARMUP, seed $SEED) -> $OUT"
+"$PY" -m lifemate.infer --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --text asr --asr-file "$ASR_OUT" \
     --backend hf --model "$LLM" "${Q[@]}" --adapter "$ADAPTER" --time-budget "$TIME_BUDGET" "${W[@]}" \
-    --out "$OUT" --trace "$TRACE"
+    --seed "$SEED" --out "$OUT" --trace "$TRACE"
 stamp "check $OUT"
-$PY scripts/check_submission.py "$OUT" --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} \
+"$PY" scripts/check_submission.py "$OUT" --split "$SPLIT" --root "$DATA" ${IDS:+--ids "$IDS"} --require-time \
     --asr-file "$ASR_OUT" --trace "$TRACE" --json "${OUT%.jsonl}_check.json"
 stamp "predict done"

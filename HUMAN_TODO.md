@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 11:22 ngày 13/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:08 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **15:08 ngày 15/11:** **Kết quả M3 về và hợp lệ. Anh nộp ngay 2 file public M3 và báo điểm; khoảng 17:00 nộp file gộp M3 (B64).** File Docker bản 59,42 đang được xuất làm dự phòng; hạn Docker 11:59 thứ Hai (JOURNAL entry 163).
 > - **11:22 ngày 13/11:** **File luật tham số xong nhưng luật không sửa call nào; file trùng file 59,42 trừ 1 dòng, cả 634 dòng cùng `state_hash`. Claude đề xuất không nộp và không đưa luật vào image (B63 bước 1).** Drive chưa có M1–M3 (JOURNAL entry 162).
 > - **09:50 ngày 13/11:** **Anh chọn lùi giờ chốt cấu hình sang 20:00 thứ Bảy 14/11 để chờ M3.** Docker lần 1 nộp Chủ nhật như cũ (JOURNAL entry 161).
 > - **09:45 ngày 13/11:** **Gói v8 đã lên Drive (Claude tải lúc 09:43, đúng mã băm V8b). Anh nhắn anh trai bắt đầu M1–M3 ngay (B63).** M3 về khoảng 20:00–21:00, nên đề xuất lùi giờ chốt cấu hình sang tối thứ Bảy (JOURNAL entry 160).
@@ -291,8 +292,12 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Sau đó:**
     - Claude áp luật ghi trước. Đạt thì sinh dữ liệu cho 11 app public (khoảng 15 USD) và chuẩn bị lần chạy 2: train bản cuối trên đủ 1.545 mẫu.
     - Không đạt thì dừng, giữ bản 05/11.
+- [ ] **B64. (15:08 ngày 15/11)** (5 phút, hai lần) **[Anh] Nộp các file public của M3 rồi báo điểm cho Claude.**
+  1. **Ngay bây giờ:** trang LifeMate → Public Submissions → Submit new entry, loại **SLM**: `cloud_results/nop_public_2026-11-15/1_v8q35e2_seed0.jsonl` rồi `2_v8q35e2_seed1.jsonl`. Báo 2 điểm.
+  2. **Khoảng 17:00** (Claude báo khi xong và đã kiểm định dạng): file gộp `3_v8q35e2_avg.jsonl` trong cùng thư mục. Báo điểm.
+  - Cửa (JOURNAL entry 163): trung bình file 1 và 2 ≥ 59,42 thì xét file 3; file 3 ≥ 60,92 thì image đổi sang M3, Claude build và kiểm lại (khoảng 2 giờ 30 phút). Không thì nộp Docker bản 59,42, file đang được xuất ở `~/zac_lm_docker_out/v7q35avg_5942/`.
 - [ ] **B63. (09:40 ngày 13/11)** (5 phút, hai lần) **[Anh] Nộp file luật tham số và báo kết quả M1–M3.**
-  1. *(11:22: file xong, kiểm đạt, nhưng luật không sửa call nào; trùng file 59,42 trừ `public_0373`; JOURNAL entry 162.)* **Claude đề xuất không nộp file này** (điểm gần như chắc bằng 59,42) và không đưa luật vào image. Anh muốn vẫn nộp thì file ở `lifemate/runs/pub_v7q35_avg_argrules_laptop_2026-11-13/public_v7q35_avg_argrules.jsonl`.
+  1. *(15/11: image không đổi, file này không cần nộp.)* *(11:22: file xong, kiểm đạt, nhưng luật không sửa call nào; trùng file 59,42 trừ `public_0373`; JOURNAL entry 162.)* **Claude đề xuất không nộp file này** (điểm gần như chắc bằng 59,42) và không đưa luật vào image. Anh muốn vẫn nộp thì file ở `lifemate/runs/pub_v7q35_avg_argrules_laptop_2026-11-13/public_v7q35_avg_argrules.jsonl`.
   2. *(09:45: gói v8 chưa từng lên Drive; Claude đã tải lên lúc 09:43, JOURNAL entry 160.)* **Ngay bây giờ: nhắn anh trai "Gói v8 đã lên Drive (`zac_cloud_bundle_20261111_v8.tar.gz`, 4.705.213 byte), chạy M1, M2, M3 theo V8b ngay".** Trước đó: (9:45 trên Drive chưa có gì, cũng không có gói v8; JOURNAL entry 159). Anh đã cho Claude mở Drive tải kết quả về khi có (09:35). M3: nộp 2 file public trước, báo 2 điểm; trung bình ≥ 59,42 thì Claude gộp 2 seed và chạy file gộp trên laptop.
 - [x] **B62. (00:55 ngày 13/11)** *(02:05 ngày 13/11: Anh báo `helix`; image LifeMate `zaic2026_lifemate_helix:final`, file DataMate xuất lại; JOURNAL entry 156.)* (1 phút) **[Anh] Báo Claude tên đội viết thường** (như B58) để đặt tên image `zaic2026_lifemate_<tên đội>:final` và tên file nộp `zac2026_<TeamName>.tar.gz`.
   - Sau đó Claude xuất file nén (khoảng 15 GB) và md5 khi cấu hình chốt (20:00 thứ Bảy 14/11, lùi từ 18:00 thứ Sáu theo JOURNAL entry 161); Anh tải lên Drive, chia sẻ "Anyone with the link" và nộp.

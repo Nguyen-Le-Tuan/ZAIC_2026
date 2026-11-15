@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 15:13 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 16:07 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **16:07 ngày 15/11:** **Tải `zac2026_helix.tar.gz` lên Drive lỗi: Drive còn 9,48 GB, cần khoảng 12,5. Anh chọn xoá 4 file ZAC cũ trên Drive (còn bản trên laptop) hay tự mua Google One (B65).** (JOURNAL entry 166)
 > - **15:13 ngày 15/11:** **M3 không qua cửa (55,93 và 59,36). Bản cuối giữ hệ thống 59,42: Anh nộp Docker lần 1 bằng `zac2026_helix.tar.gz` ngay khi tải lên Drive xong (B65).** B64 xong (JOURNAL entry 165).
 > - **15:12 ngày 15/11:** **File Docker LifeMate bản 59,42 đã xuất. Anh tải lên Drive ngay nhưng chưa nộp (B65).** Nộp sau khi có điểm file gộp M3 (JOURNAL entry 164).
 > - **15:08 ngày 15/11:** **Kết quả M3 về và hợp lệ. Anh nộp ngay 2 file public M3 và báo điểm; khoảng 17:00 nộp file gộp M3 (B64).** File Docker bản 59,42 đang được xuất làm dự phòng; hạn Docker 11:59 thứ Hai (JOURNAL entry 163).
@@ -296,6 +297,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
     - Không đạt thì dừng, giữ bản 05/11.
 - [ ] **B65. (15:12 ngày 15/11)** *(15:13: M3 không qua cửa; nộp file này ngay khi tải lên xong, theo bước 2 "không qua cửa"; JOURNAL entry 165.)* (vài giờ tải lên, 5 phút nộp) **[Anh] Tải file Docker LifeMate bản 59,42 lên Drive rồi nộp.**
   1. Tải **`~/zac_lm_docker_out/v7q35avg_5942/zac2026_helix.tar.gz`** (13.306.418.699 byte, khoảng 12,4 GB) lên Drive, chia sẻ "Anyone with the link".
+     *(16:07: lần tải đầu lỗi vì Drive chỉ còn 9,48 GB. Trước khi tải lại, chọn một cách: (a) Claude xoá hẳn 4 file ZAC cũ trên Drive (`gui_leader_phoft_2026-11-05.tar`, `zac_asr_bundle_20261031.tar.gz`, `zac_cloud_bundle_20261110_d1full.tar.gz`, `zac_cloud_bundle_20261031_v3.tar.gz`; đều còn bản trên laptop), hoặc (b) Anh tự mua Google One 100 GB. JOURNAL entry 166.)*
   2. Chờ điểm file gộp M3 (B64 bước 2, khoảng 17:00):
      - Không qua cửa: nộp form LifeMate với link này, **md5 `59c98644358041dacc201e0ec6686a48`**, cỡ `.tar` chưa nén **13.318.042.624 byte**.
      - Qua cửa: Claude build image M3 và xuất file mới (khoảng 2 giờ 30 phút); Anh nộp file M3. File này giữ làm dự phòng.

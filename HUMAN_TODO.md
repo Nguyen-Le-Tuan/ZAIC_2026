@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 17:45 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:22 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **20:22 ngày 15/11:** **Anh đã nộp Docker lần 1 cho cả LifeMate và DataMate (B65, B58 xong).** Còn 1 lần nộp mỗi bảng tới 11:59 thứ Hai, chỉ dùng nếu thấy lỗi. Giữ nguyên hai file trên Drive. Việc tiếp: vòng private từ 21:00 thứ Năm 19/11 (B66) (JOURNAL entry 169).
 > - **17:45 ngày 15/11:** **Cả hai file Docker đã lên Drive; Claude kiểm link mở được khi không đăng nhập, đủ byte. Anh nộp form "Solution Submission" trên portal: LifeMate (B65) và DataMate (B58); hạn 11:59 thứ Hai 16/11.** Vòng private: Anh và Claude chạy image đã nộp trên private test từ 21:00 thứ Năm 19/11 (B66) (JOURNAL entry 168).
 > - **16:18 ngày 15/11:** **Đã xoá 4 file ZAC cũ khỏi Drive (Anh đồng ý); Drive trống khoảng 13,94 GB. Anh tải lại `zac2026_helix.tar.gz` rồi nộp Docker LifeMate (B65).** (JOURNAL entry 167)
 > - **16:07 ngày 15/11:** **Tải `zac2026_helix.tar.gz` lên Drive lỗi: Drive còn 9,48 GB, cần khoảng 12,5. Anh chọn xoá 4 file ZAC cũ trên Drive (còn bản trên laptop) hay tự mua Google One (B65).** (JOURNAL entry 166)
@@ -300,8 +301,9 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 - [ ] **B66. (17:45 ngày 15/11)** (khoảng 1 ngày chạy, từ 21:00 thứ Năm 19/11) **[Anh, cùng Claude] Vòng private: chạy image đã nộp trên private test rồi nộp file JSONL.**
   - BTC công bố private test lúc 9:00 ngày 20/11 GMT+7, tức **21:00 thứ Năm 19/11 giờ máy**. Hạn nộp file: 23:59 ngày 23/11 GMT+7, tức **11:59 thứ Hai 23/11 giờ máy**.
   - Phải chạy đúng bản đã nộp Docker (BTC kiểm lại). Bảng private xếp theo thời điểm nộp, nên nộp sớm.
+  - Giữ nguyên hai file Docker trên Drive (không xoá, không đổi quyền chia sẻ) tới khi BTC kiểm xong.
   - Anh cho Claude tải private test khi có; Claude chạy image `zaic2026_lifemate_helix:final` trên laptop, kiểm định dạng, rồi Anh nộp. Top 2 công bố 2/12 (JOURNAL entry 168).
-- [ ] **B65. (15:12 ngày 15/11)** *(15:13: M3 không qua cửa; nộp file này ngay khi tải lên xong, theo bước 2 "không qua cửa"; JOURNAL entry 165.)* (vài giờ tải lên, 5 phút nộp) **[Anh] Tải file Docker LifeMate bản 59,42 lên Drive rồi nộp.**
+- [x] **B65. (15:12 ngày 15/11)** *(20:22: xong. Anh đã nộp form "Solution Submission" của LifeMate, lần 1; JOURNAL entry 169.)* *(15:13: M3 không qua cửa; nộp file này ngay khi tải lên xong, theo bước 2 "không qua cửa"; JOURNAL entry 165.)* (vài giờ tải lên, 5 phút nộp) **[Anh] Tải file Docker LifeMate bản 59,42 lên Drive rồi nộp.**
   1. Tải **`~/zac_lm_docker_out/v7q35avg_5942/zac2026_helix.tar.gz`** (13.306.418.699 byte, khoảng 12,4 GB) lên Drive, chia sẻ "Anyone with the link".
      *(17:45: xong. Link công khai, mở được khi không đăng nhập, đủ 13.306.418.699 byte; JOURNAL entry 168.)*
      *(16:18: đã xoá 4 file cũ, Drive trống khoảng 13,94 GB; tải lại được; JOURNAL entry 167.)* *(16:07: lần tải đầu lỗi vì Drive chỉ còn 9,48 GB. Trước khi tải lại, chọn một cách: (a) Claude xoá hẳn 4 file ZAC cũ trên Drive (`gui_leader_phoft_2026-11-05.tar`, `zac_asr_bundle_20261031.tar.gz`, `zac_cloud_bundle_20261110_d1full.tar.gz`, `zac_cloud_bundle_20261031_v3.tar.gz`; đều còn bản trên laptop), hoặc (b) Anh tự mua Google One 100 GB. JOURNAL entry 166.)*
@@ -332,7 +334,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - Kết quả về: M1 khoảng 8 giờ sau khi bắt đầu, M3 khoảng 10–11 giờ, M2 khoảng 13–14 giờ (máy 3090 chậm hơn).
 - [x] **B53. (19:37 ngày 11/11)** *(20:20 ngày 11/11: Anh duyệt "Duyệt, làm ngay"; code ở PR #18, gói v8, hướng dẫn V8; JOURNAL entry 148.)* (5 phút quyết) **[Anh, cùng Leader] Duyệt kế hoạch ROI LifeMate tới 16/11** ([`docs/LIFEMATE_ROI_PLAN_2026-11-11.md`](docs/LIFEMATE_ROI_PLAN_2026-11-11.md), JOURNAL entry 146): 4 thay đổi rẻ lúc suy luận (bộ chấm theo FAQ, luật tham số an toàn, ASR beam 4, trung bình 2 seed), bf16 nếu qua cửa, và lượt đo train thêm 1 epoch (M1–M3 trên máy anh trai từ sáng thứ Năm). Kỳ vọng +1 đến +3 điểm public.
 - [ ] **B54. (19:37 ngày 11/11)** (2 phút) **[Anh] Hỏi anh trai:** adapter fit_lao của A1 (`~/zac_v5/ZAIC_2026/lifemate/ckpt/a1_q35t_lao_s{0,1}/final`) còn không; nhờ giữ `~/zac_v5` và để máy rảnh cho M1–M3 từ sáng thứ Năm.
-- [ ] **B58. (01:27 ngày 12/11)** (15 phút) **[Anh] Nộp Docker A của DataMate (lần 1, bản an toàn).**
+- [x] **B58. (01:27 ngày 12/11)** *(20:22 ngày 15/11: xong. Anh đã nộp form "Solution Submission" của DataMate, lần 1; JOURNAL entry 169.)* (15 phút) **[Anh] Nộp Docker A của DataMate (lần 1, bản an toàn).**
   1. ~~Báo Claude tên đội viết thường~~ *(xong 02:05 ngày 13/11: `helix`; Claude đã xuất lại file, JOURNAL entry 156.)*
   2. ~~Tải **`~/zac-dm/docker_out/zaic2026_datamate_helix.tar.gz`** (144.173.889 byte, khoảng 138 MB) lên thư mục Drive, chia sẻ "Anyone with the link".~~ *(17:45 ngày 15/11: xong; link công khai, đủ 144.173.889 byte; JOURNAL entry 168.)*
   3. **Nộp ngay:** Portal → DataMate → tab "Solution Submission": link, **md5 `3c8e2d210ed240c14ac1633880bd20d0`**, cỡ `.tar` chưa nén **144.917.504 byte**.

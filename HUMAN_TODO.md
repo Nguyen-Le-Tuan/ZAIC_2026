@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 01:37 ngày 20/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 09:45 ngày 20/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **09:45 ngày 20/11:** **Chờ kết quả: điểm không cải thiện được nữa. Top 2 công bố 2/12, xếp hạng cuối 12/12.** Trong lúc chờ: giữ nguyên hai file Docker trên Drive và image trên laptop; Anh theo dõi email đăng ký thi (cả thư rác) phòng BTC báo image lỗi; B34 (dọn dữ liệu thi) để sau 12/12 (JOURNAL entry 173)
 > - **01:37 ngày 20/11:** **Vòng private xong, B66 xong: LifeMate nộp lúc 01:36, điểm tạm 51,38 (public 59,42); DataMate nộp lúc 23:15, điểm tạm −0,462.** Mỗi bảng còn 1 lần nộp private tới 11:59 thứ Hai 23/11; Claude đề xuất không dùng. Điểm cuối là lượt BTC chạy lại image; top 2 công bố 2/12. (JOURNAL entry 172)
 > - **23:16 ngày 19/11:** **Vòng private: DataMate đã nộp lúc 23:15, điểm tạm −0,462. LifeMate đang chạy, xong khoảng 01:35; Claude nộp ngay khi kiểm đạt. Lịch tự chạy lúc 20:55 đã dừng ở bước đầu (hộp hỏi quyền), Claude làm tiếp trong phiên chính (B66).** (JOURNAL entry 171)
 > - **20:51 ngày 15/11:** **Vòng private đã đặt lịch: 20:55 thứ Năm 19/11 Claude tự tải, chạy và nộp bằng trình duyệt của Anh. Trước đó Anh đặt việc `zac-private-round` sang chế độ Auto, và tối thứ Năm để laptop bật, cắm sạc, mở app Claude và trình duyệt, trống 6 GB RAM (B66).** (JOURNAL entry 170)

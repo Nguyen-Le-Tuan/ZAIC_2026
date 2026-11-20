@@ -26,10 +26,12 @@ import copy
 import json
 import random
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
-from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl
+from . import runinfo
+from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split
 from .prompt import build_messages, render_calls, render_results
 
 FINAL_DONE = "Đã xong."
@@ -278,6 +280,7 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
         for a in drop_apps:  # leave-apps-out: never show held-out schemas
             s["context"]["installed_apps"].pop(a, None)
         calls, results = s["label"]["tool_calls"], s["label"]["tool_results"]
+        src = s.get("_src", "gold")
         utext, htexts = user_texts(s, asr)
 
         for k in range(1 + rename):
@@ -292,13 +295,13 @@ def build_all(samples, tools, apps, pool, *, rename=2, p_remove=0.3, p_distract=
                 aug = [f"rename{k}"] + aug
             low = rng.random() < p_lower
             u, h = (asr_style(utext), [asr_style(x) for x in htexts]) if low else (utext, htexts)
-            out.append({"id": s["id"], "src": "gold", "aug": aug + (["lower"] if low else []),
+            out.append({"id": s["id"], "src": src, "aug": aug + (["lower"] if low else []),
                         "segments": build_example(it, u, h, cl, results, tb, ab)})
         if calls and rng.random() < p_remove:
             r = make_removal(s, calls, apps)
             if r is not None:
-                out.append({"id": s["id"], "src": "gold", "aug": ["remove"], "segments": build_example(r, utext, htexts, [], [], tools, apps)})
-        if history != "off":
+                out.append({"id": s["id"], "src": src, "aug": ["remove"], "segments": build_example(r, utext, htexts, [], [], tools, apps)})
+        if history != "off" and src == "gold":  # a synthetic sample shares its history with its origin
             out += history_examples(s, htexts + [utext], tools, apps, tagged=history == "tagged")
     return out
 
@@ -316,7 +319,21 @@ def main():
     ap.add_argument("--asr-file", help="use ASR transcripts (k-fold, so not trained on) instead of audio_text")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--extra-samples", help="synthetic samples (lifemate.counterfactual build) appended after --fit; "
+                                           "each _origin must be in --fit")
+    ap.add_argument("--reuse", action="store_true",
+                    help="keep an existing --out only if its manifest matches these settings and its sha256 "
+                         "(a file without manifest is kept only if a rebuild is byte-identical); otherwise rebuild")
     a = ap.parse_args()
+
+    out = Path(a.out)
+    man_path = out.with_name(out.name + ".manifest.json")
+    spec = _spec(a)
+    if a.reuse and out.exists() and man_path.exists():
+        man = json.loads(man_path.read_text())
+        if man.get("spec") == spec and man.get("out_sha256") == runinfo.sha256_file(out):
+            print(json.dumps({"reuse": str(out), "rows": man["rows"], "ids": man["ids"]}))
+            return
 
     cat = load_catalog("train", a.root)
     tools, apps = catalog_tools(cat), {x["id"]: x for x in cat["apps"]}
@@ -327,13 +344,57 @@ def main():
     if a.fit:
         keep = set(Path(a.fit).read_text().split())
         samples = [s for s in samples if s["id"] in keep]
+    if a.extra_samples:
+        if a.asr_file:
+            sys.exit("--extra-samples has rewritten text and no audio: not combinable with --asr-file")
+        extra = load_jsonl(a.extra_samples)
+        outside = sorted({x.get("_origin") for x in extra} - {s["id"] for s in samples})
+        if outside:
+            sys.exit(f"{len(outside)} extra samples come from outside --fit, e.g. {outside[:5]}")
+        samples = samples + extra
     asr = {r["audio"]: r["text"] for r in load_jsonl(a.asr_file)} if a.asr_file else None
     rows = build_all(samples, tools, apps, pool, rename=a.rename, p_remove=a.p_remove, p_distract=a.p_distract,
                      p_lower=a.p_lower, history=a.history, drop_apps=drop, asr=asr, seed=a.seed)
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    write_jsonl(a.out, rows)
+    data = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows).encode()
+    new_sha = runinfo.sha256_bytes(data)
+    status = "new"
+    if out.exists():
+        old_sha = runinfo.sha256_file(out)
+        if old_sha == new_sha:
+            status = "identical rebuild (existing file kept)"
+        else:
+            # the old file may be what a checkpoint was trained on: keep it next to the new one
+            keep = out.with_name(f"{out.name}.prev-{old_sha[:12]}")
+            out.rename(keep)
+            if man_path.exists():
+                man_path.rename(keep.with_name(keep.name + ".manifest.json"))
+            status = f"rebuilt; previous content differed and was moved to {keep.name}"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if not out.exists():
+        out.write_bytes(data)
+    runinfo.write_json(man_path, {
+        "kind": "sft", "created": runinfo.now(), "spec": spec, "rows": len(rows),
+        "ids": runinfo.ids_digest(s["id"] for s in samples), "out_sha256": new_sha,
+        "aug": Counter(x for r in rows for x in (r["aug"] or ["none"])), "git": runinfo.git_state()})
     aug = Counter(x for r in rows for x in (r["aug"] or ["none"]))
-    print(json.dumps({"samples": len(samples), "examples": len(rows), "src": Counter(r["src"] for r in rows), "aug": aug}, ensure_ascii=False))
+    print(json.dumps({"samples": len(samples), "examples": len(rows), "src": Counter(r["src"] for r in rows), "aug": aug,
+                      "status": status, "sha256": new_sha[:12]}, ensure_ascii=False))
+
+
+def _spec(a) -> dict:
+    """Everything that determines the SFT file's content: settings, input files and the code that renders it."""
+    root = Path(a.root)
+    files = {"train_jsonl": root / "train" / "train.jsonl", "train_catalog": root / "train" / "train_tools_catalog.json",
+             "public_catalog": root / "public_test" / "public_test_tools_catalog.json"}
+    return {
+        "args": {k: v for k, v in vars(a).items() if k not in ("out", "reuse", "root")},
+        "fit_ids": runinfo.ids_digest(runinfo.read_ids(a.fit)) if a.fit else "all",
+        "drop_apps": sorted(json.loads(Path(a.drop_apps).read_text())) if a.drop_apps else [],
+        "asr_sha256": runinfo.sha256_file(a.asr_file) if a.asr_file else None,
+        "extra_samples_sha256": runinfo.sha256_file(a.extra_samples) if getattr(a, "extra_samples", None) else None,
+        "inputs_sha256": {k: runinfo.sha256_file(p) for k, p in files.items()},
+        "code_sha256": runinfo.code_digest(("data.py", "prompt.py", "sft.py")),
+    }
 
 
 if __name__ == "__main__":

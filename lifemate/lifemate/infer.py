@@ -13,10 +13,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from . import runinfo
 from .agent import Agent, HFBackend, OpenAICompletionsBackend, OracleBackend, PrefixBackend, VLLMBackend
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl, zaic_tools
 
@@ -46,8 +49,14 @@ def main():
     ap.add_argument("--time-budget", type=float, default=25.0)
     ap.add_argument("--out", default="runs/submission.jsonl")
     ap.add_argument("--trace")
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--overwrite", action="store_true", help="allow replacing an existing --out/--trace")
     a = ap.parse_args()
 
+    meta_path = Path(a.out).with_suffix(".meta.json")
+    runinfo.refuse_existing(a.out, a.trace, meta_path, overwrite=a.overwrite)
+    random.seed(a.seed)
+    started = runinfo.now()
     zt = zaic_tools(a.split, a.root)
     cat = load_catalog(a.split, a.root)
     tools, apps = catalog_tools(cat), {x["id"]: x for x in cat["apps"]}
@@ -87,7 +96,19 @@ def main():
     if a.trace:
         write_jsonl(a.trace, [t for _, t in out])
     secs = [t["seconds"] for _, t in out]
-    print(json.dumps({"n": len(out), "out": a.out, "mean_s": round(sum(secs) / max(len(secs), 1), 3), "max_s": max(secs, default=0)}))
+    timing = {"mean_s": round(sum(secs) / max(len(secs), 1), 3), "p50_s": round(runinfo.percentile(secs, .5), 3),
+              "p95_s": round(runinfo.percentile(secs, .95), 3), "max_s": max(secs, default=0)}
+    adapter = None
+    if a.adapter:
+        adapter = {"path": a.adapter, "sha256": runinfo.sha256_dir(a.adapter)}
+    runinfo.write_json(meta_path, {
+        "kind": "infer", "started": started, "finished": runinfo.now(), "args": vars(a),
+        "ids": runinfo.ids_digest(s["id"] for s in items), "ids_file_sha256": runinfo.sha256_file(a.ids) if a.ids else None,
+        "model": a.model if a.backend != "oracle" else None, "adapter": adapter, "backend": a.backend,
+        "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
+        "timing": timing, "stops": dict(Counter(t["stop"] for _, t in out)),
+        "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit"})
+    print(json.dumps({"n": len(out), "out": a.out, **timing}))
 
 
 if __name__ == "__main__":

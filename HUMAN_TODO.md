@@ -13,9 +13,10 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
 
 ## Ngày 31/10, chiều và tối: bảng điều phối
 
-*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 20:51 ngày 15/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
+*Claude tạo lúc 15:30 ngày 31/10 và **cập nhật mỗi khi có việc hay quyết định đổi** (lần gần nhất 23:16 ngày 19/11). Bản này thay cho mục "Ngày 31/10" viết lúc sáng sớm (kế hoạch gốc: [`docs/PLAN_2026-10-31.md`](docs/PLAN_2026-10-31.md); diễn biến trong ngày: JOURNAL entry 32–44). Tóm tắt: agent đọc chữ ASR mất khoảng 20 điểm (dev_random 53,92 → 31,69; dev_lao 35,53 → 17,14), nên **fine-tune ASR là ưu tiên số 1**.*
 
 > **Thay đổi gần nhất** (mới nhất ở trên; chi tiết trong JOURNAL):
+> - **23:16 ngày 19/11:** **Vòng private: DataMate đã nộp lúc 23:15, điểm tạm −0,462. LifeMate đang chạy, xong khoảng 01:35; Claude nộp ngay khi kiểm đạt. Lịch tự chạy lúc 20:55 đã dừng ở bước đầu (hộp hỏi quyền), Claude làm tiếp trong phiên chính (B66).** (JOURNAL entry 171)
 > - **20:51 ngày 15/11:** **Vòng private đã đặt lịch: 20:55 thứ Năm 19/11 Claude tự tải, chạy và nộp bằng trình duyệt của Anh. Trước đó Anh đặt việc `zac-private-round` sang chế độ Auto, và tối thứ Năm để laptop bật, cắm sạc, mở app Claude và trình duyệt, trống 6 GB RAM (B66).** (JOURNAL entry 170)
 > - **20:22 ngày 15/11:** **Anh đã nộp Docker lần 1 cho cả LifeMate và DataMate (B65, B58 xong).** Còn 1 lần nộp mỗi bảng tới 11:59 thứ Hai, chỉ dùng nếu thấy lỗi. Giữ nguyên hai file trên Drive. Việc tiếp: vòng private từ 21:00 thứ Năm 19/11 (B66) (JOURNAL entry 169).
 > - **17:45 ngày 15/11:** **Cả hai file Docker đã lên Drive; Claude kiểm link mở được khi không đăng nhập, đủ byte. Anh nộp form "Solution Submission" trên portal: LifeMate (B65) và DataMate (B58); hạn 11:59 thứ Hai 16/11.** Vòng private: Anh và Claude chạy image đã nộp trên private test từ 21:00 thứ Năm 19/11 (B66) (JOURNAL entry 168).
@@ -303,6 +304,7 @@ Danh sách việc trong lúc laptop của Anh train qua đêm, và sáng hôm sa
   - **Anh làm sớm (2 phút):** app Claude → mục Scheduled → việc `zac-private-round` → đặt chế độ quyền **Auto**, để việc không dừng hỏi quyền khi không có ai. Đừng bấm "Run now" (việc chạy một lần rồi tắt).
   - **Tối thứ Năm, trước 21:00:** laptop bật, cắm sạc; app Claude mở; trình duyệt mở, vẫn đăng nhập trang thi; tắt app ChatGPT và bớt tab để trống ít nhất 6 GB RAM (hôm nay chỉ còn 4 GB).
   - Claude báo Anh khi thấy private test, khi nộp từng bảng, và khi có lỗi cần Anh.
+  - *(23:16 ngày 19/11: DataMate đã nộp lúc 23:15 (500 dòng), điểm tạm −0,462; mỗi bảng chỉ được nộp private 2 lần. LifeMate đang chạy (625 mẫu), xong khoảng 01:35; JOURNAL entry 171.)*
   - BTC công bố private test lúc 9:00 ngày 20/11 GMT+7, tức **21:00 thứ Năm 19/11 giờ máy**. Hạn nộp file: 23:59 ngày 23/11 GMT+7, tức **11:59 thứ Hai 23/11 giờ máy**.
   - Phải chạy đúng bản đã nộp Docker (BTC kiểm lại). Bảng private xếp theo thời điểm nộp, nên nộp sớm.
   - Giữ nguyên hai file Docker trên Drive (không xoá, không đổi quyền chia sẻ) tới khi BTC kiểm xong.

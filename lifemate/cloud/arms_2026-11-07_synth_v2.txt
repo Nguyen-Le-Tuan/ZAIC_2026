@@ -1,0 +1,16 @@
+# Pilot v2 of synthetic samples for unseen apps (JOURNAL entries 103-104). Run:
+#   bash lifemate/scripts/cloud_arms.sh lifemate/cloud/arms_2026-11-07_synth_v2.txt
+# Recipe of the 4B now in Docker (q4b4_fit_lao, JOURNAL entry 55): Qwen3-4B-Instruct-2507 in 4-bit (QLoRA, NF4),
+# 8-bit AdamW, LoRA r32/a64, lr 2e-4, 1 epoch, --max-len 6144, on sft/fit_lao.jsonl (the 6 apps of dev_lao removed).
+# "v2" arms add the rows of gen/sft_synth_lao_v2.jsonl: synthetic samples for exactly those 6 apps (recipe v2 of
+# lifemate.synth), checked in the simulator and by an independent solver. Two seeds per side, all on this machine,
+# because two trainings of one recipe differ by 2-4 points on a 262-sample dev (entry 101).
+# Each arm is rolled out on dev_lao twice: oracle text (runs/sft_<TAG>) and PhoWhisper-ft text (runs/sft_<TAG>_asr),
+# loaded in 4-bit with a 60 s budget like the local runs. Dev loss only at the end (--eval-every 100000).
+# Line order spreads the work: GPU 0 runs base_s0 then v2_s1, GPU 1 runs v2_s0 then base_s1.
+# Rule written before the run (scripts/pilot_rule.py): mean of the v2 seeds minus mean of the base seeds on
+# PhoWhisper-ft text >= +2.0, and on oracle text >= -2.0 -> keep v2 (next: samples for the 11 public apps).
+train TAG=q4b4_lao_base_s0 MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao TRAIN_ARGS=--load-4bit,--optim,adamw8bit,--max-len,6144,--eval-every,100000,--seed,0 EVAL_ARGS=--load-4bit,--time-budget,60 EVAL_LOSS=0 ASR_DEV=asr/train_dev_lao_phoft.jsonl
+train TAG=q4b4_lao_v2_s0   MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao TRAIN_ARGS=--load-4bit,--optim,adamw8bit,--max-len,6144,--eval-every,100000,--seed,0 EVAL_ARGS=--load-4bit,--time-budget,60 EVAL_LOSS=0 ASR_DEV=asr/train_dev_lao_phoft.jsonl EXTRA_SFT=gen/sft_synth_lao_v2.jsonl
+train TAG=q4b4_lao_v2_s1   MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao TRAIN_ARGS=--load-4bit,--optim,adamw8bit,--max-len,6144,--eval-every,100000,--seed,1 EVAL_ARGS=--load-4bit,--time-budget,60 EVAL_LOSS=0 ASR_DEV=asr/train_dev_lao_phoft.jsonl EXTRA_SFT=gen/sft_synth_lao_v2.jsonl
+train TAG=q4b4_lao_base_s1 MODEL=Qwen/Qwen3-4B-Instruct-2507 FIT=fit_lao DEV=dev_lao TRAIN_ARGS=--load-4bit,--optim,adamw8bit,--max-len,6144,--eval-every,100000,--seed,1 EVAL_ARGS=--load-4bit,--time-budget,60 EVAL_LOSS=0 ASR_DEV=asr/train_dev_lao_phoft.jsonl

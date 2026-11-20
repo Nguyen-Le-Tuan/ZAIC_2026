@@ -218,6 +218,123 @@ def test_sft_rows_from_accepted_sample():
     assert any(loss for _, loss in rows[0]["segments"])
 
 
+# ---------------------------------------------------------------- recipe v2
+
+NOTE = {"name": "notes.create", "arguments": {"title": "Đọc sách", "content": "đọc sách tối nay"}}
+
+
+def _g2(calls, category="execute", spec=None, turns=(), request="Giữ giùm anh cuốn đó nha"):
+    g = _g(calls, category, request)
+    g["spec"] = {"category": category, "other_app": None, "history": ""} | (spec or {})
+    g["turns"] = [copy.deepcopy(t) for t in turns]
+    return g
+
+
+def _check2(g):
+    from lifemate.synth import check_sample_v2
+    zt, tools, cat = _env()
+    return check_sample_v2(zt, g, tools, cat)
+
+
+PREV = {"request": "Thư viện có cuốn Dế Mèn không em", "reply": "Có, cuốn Dế Mèn phiêu lưu ký đang còn.", "calls": [SEARCH]}
+
+
+def test_v2_reuses_id_from_previous_turn():
+    reason, turn_results, results = _check2(_g2([RESERVE1], spec={"history": "ref"}, turns=[PREV]))
+    assert reason is None, reason
+    assert turn_results[0][0]["ok"] and results[0]["reservation"]["book_id"] == "book_01"
+
+
+def test_v2_reading_again_instead_of_reusing_rejected():
+    reason, _, _ = _check2(_g2([SEARCH, RESERVE1], spec={"history": "ref"}, turns=[PREV]))
+    assert reason and reason.startswith("spec_history") and "reuse" in reason, reason
+
+
+def test_v2_previous_turn_missing_or_unexpected_rejected():
+    reason, _, _ = _check2(_g2([SEARCH, RESERVE1], spec={"history": "ref"}))
+    assert reason and reason.startswith("spec_history"), reason
+    reason, _, _ = _check2(_g2([RESERVE1], turns=[PREV]))
+    assert reason and reason.startswith("spec_history"), reason
+
+
+def test_v2_previous_turn_with_invented_id_rejected():
+    bad = {**PREV, "calls": [RESERVE1]}
+    reason, _, _ = _check2(_g2([SEARCH, RESERVE1], spec={"history": "ref"}, turns=[bad]))
+    assert reason and reason.startswith("history_invented_id"), reason
+
+
+def test_v2_state_id_without_x_ref_must_come_from_a_result():
+    """Many schemas do not mark ID parameters with x-ref: an argument equal to a state ID still needs a read first."""
+    reason, _, _ = _check2(_g2([{"name": "library.search", "arguments": {"query": "book_02"}}, RESERVE1], request="Tìm sách giùm anh"))
+    assert reason and reason.startswith("invented_id"), reason
+
+
+def test_v2_no_call_request():
+    reason, _, _ = _check2(_g2([], "none", request="À thôi khỏi giữ sách nha, để mai anh tự ra"))
+    assert reason is None, reason
+    reason, _, _ = _check2(_g2([SEARCH], "none"))
+    assert reason and reason.startswith("bad_none"), reason
+
+
+def test_v2_category_must_follow_the_shape():
+    g = _g2([SEARCH, RESERVE1])
+    g["spec"]["category"] = "ask_missing"
+    reason, _, _ = _check2(g)
+    assert reason and reason.startswith("spec_category"), reason
+
+
+def test_v2_two_apps():
+    spec = {"other_app": "notes"}
+    reason, _, _ = _check2(_g2([NOTE, SEARCH, RESERVE1], spec=spec, request="Ghi chú tối nay đọc sách, rồi giữ cuốn Dế Mèn"))
+    assert reason is None, reason
+    reason, _, _ = _check2(_g2([SEARCH, RESERVE1], spec=spec))
+    assert reason and reason.startswith("spec_other_app"), reason
+
+
+def test_v2_solver_sees_the_state_after_the_previous_turn():
+    from lifemate.synth import solver_agrees_v2
+    zt, tools, cat = _env()
+    g = _g2([RESERVE1], spec={"history": "ref"}, turns=[PREV])
+    assert solver_agrees_v2(zt, g, [RESERVE1], tools, cat) is None
+    other = [{"name": "library.reserve", "arguments": {"book_id": "book_03"}}]
+    assert solver_agrees_v2(zt, g, other, tools, cat) == "solver: other final state"
+
+
+def test_v2_sft_rows_carry_the_history():
+    from lifemate.data import load_catalog
+    from lifemate.sft import build_all
+    from lifemate.synth import to_train_sample, turns_as_history
+    zt, tools, cat = _env()
+    g = _g2([RESERVE1], spec={"history": "ref"}, turns=[PREV])
+    reason, turn_results, results = _check2(g)
+    assert reason is None, reason
+    s = to_train_sample(g, results, turns_as_history(g["turns"], turn_results))
+    assert [h["role"] for h in s["history"]] == ["user", "assistant"]
+    apps = {x["id"]: x for x in cat["apps"]}
+    pool = {x["id"]: x for x in load_catalog("public_test")["apps"]} | apps
+    rows = build_all([s], tools, apps, pool, rename=0, p_remove=0.0, p_distract=0.0, p_lower=0.0, seed=0)
+    text = "".join(t for t, _ in rows[0]["segments"])
+    assert "Thư viện có cuốn Dế Mèn không em" in text and "Có, cuốn Dế Mèn phiêu lưu ký đang còn." in text
+    trained = "".join(t for t, loss in rows[0]["segments"] if loss)
+    assert "library.reserve" in trained and "library.search" not in trained  # the previous turn is context only
+
+
+def test_v2_shapes_follow_the_real_shares():
+    import random
+    from lifemate.synth import fit_samples, make_specs_v2
+    zt, tools, cat = _env()
+    apps = {x["id"]: x for x in cat["apps"]}
+    fit = Path(__file__).resolve().parents[2] / "splits" / "fit_lao.txt"
+    fits = fit_samples(DEFAULT_ROOT, str(fit), {"library"})
+    specs = make_specs_v2(2000, "library", fits, apps, {"library"}, zt, random.Random(0))
+    share = lambda f: sum(1 for x in specs if f(x)) / len(specs)  # noqa: E731
+    assert abs(share(lambda x: x[1]["category"] == "none") - 0.07) < 0.02
+    assert abs(share(lambda x: x[1]["history"] == "ref") - 0.20 * 0.93) < 0.03
+    assert abs(share(lambda x: bool(x[2]) or x[1]["history"] == "ref") - 0.65) < 0.04
+    assert all("library" in x[0]["installed_apps"] for x in specs)
+    assert all(x[1]["other_app"] in x[0]["installed_apps"] for x in specs if x[1]["other_app"])
+
+
 if __name__ == "__main__":
     failed = 0
     for name, fn in sorted((k, v) for k, v in globals().items() if k.startswith("test_") and callable(v)):

@@ -14,7 +14,8 @@
 #   bash lifemate/scripts/make_cloud_bundle.sh                       # from a checkout that has this script
 #   SRC=~/"Zalo AI Challenge" REF=origin/cloud-train WITH_AUDIO=1 bash .../make_cloud_bundle.sh
 # Env: SRC (folder with data/ and lifemate/{gen,ckpt,runs}; default: this checkout), REF (git ref, default HEAD),
-#      ADAPTERS (ckpt tags), RUNS (run prefixes), WITH_AUDIO=1|train, OUT (tarball path).
+#      ADAPTERS (ckpt tags), RUNS (run prefixes), WITH_AUDIO=1|train, OUT (tarball path),
+#      GEN_FILES (names under lifemate/gen to pack; default: the whole folder).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC=${SRC:-$HERE}
@@ -43,7 +44,15 @@ case $WITH_AUDIO in
   *) echo "WITH_AUDIO must be 0, 1 or train" >&2; exit 1 ;;
 esac
 (cd "$SRC/data" && tar -c "${skip[@]}" --exclude='.DS_Store' --exclude='__pycache__' train+public_test) | tar -x -C "$B/data"
-cp -a "$SRC/lifemate/gen" "$B/lifemate/gen"
+if [ -n "${GEN_FILES:-}" ]; then
+  mkdir -p "$B/lifemate/gen"
+  for f in $GEN_FILES; do
+    [ -f "$SRC/lifemate/gen/$f" ] || { echo "no $SRC/lifemate/gen/$f" >&2; exit 1; }
+    cp -a "$SRC/lifemate/gen/$f" "$B/lifemate/gen/"
+  done
+else
+  cp -a "$SRC/lifemate/gen" "$B/lifemate/gen"
+fi
 mkdir -p "$B/lifemate/asr"
 for f in "$SRC"/lifemate/asr/train_*; do
   if [ -f "$f" ]; then cp -a "$f" "$B/lifemate/asr/"; fi

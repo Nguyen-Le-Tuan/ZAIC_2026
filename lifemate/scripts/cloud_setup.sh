@@ -17,6 +17,8 @@ TORCH_VERSION=2.15.0
 declare -A REV=([Qwen/Qwen3-1.7B]=70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
                 [Qwen/Qwen3-4B-Instruct-2507]=cdbee75f17c01a7cc42f958dc650907174af0554)
 SMOKE_MODELS=${SMOKE_MODELS:-"Qwen/Qwen3-4B-Instruct-2507 Qwen/Qwen3-1.7B"}
+SMOKE_TRAIN_ARGS=${SMOKE_TRAIN_ARGS:-}   # e.g. "--load-4bit --optim adamw8bit --max-len 6144": measure the QLoRA recipe
+SMOKE_INFER_ARGS=${SMOKE_INFER_ARGS:-}   # e.g. "--load-4bit"
 stamp() { echo "[$(date '+%F %T')] $*"; }
 die() { echo "SETUP FAILED: $*" >&2; exit 1; }
 mkdir -p runs ckpt sft
@@ -110,11 +112,13 @@ fi
 stamp "5/5 GPU smoke test on GPU 0"
 for m in $SMOKE_MODELS; do
   t=$(echo "$m" | tr '/.' '__')
+  # shellcheck disable=SC2086
   CUDA_VISIBLE_DEVICES=0 $PY -m lifemate.train --model "$m" --data sft/fit_random.jsonl --max-steps 3 --log-every 1 \
-      --save-every 100000 --out "ckpt/_smoke_$t" --overwrite > "runs/cloud_smoke_train_$t.log" 2>&1 \
+      --save-every 100000 --out "ckpt/_smoke_$t" --overwrite $SMOKE_TRAIN_ARGS > "runs/cloud_smoke_train_$t.log" 2>&1 \
       || { tail -20 "runs/cloud_smoke_train_$t.log"; die "training smoke test of $m"; }
+  # shellcheck disable=SC2086
   CUDA_VISIBLE_DEVICES=0 $PY -m lifemate.infer --split train --ids splits/dev_random.txt --limit 2 --text oracle \
-      --backend hf --model "$m" --out "runs/cloud_smoke_infer_$t.jsonl" --trace "runs/cloud_smoke_infer_${t}_trace.jsonl" \
+      --backend hf --model "$m" $SMOKE_INFER_ARGS --out "runs/cloud_smoke_infer_$t.jsonl" --trace "runs/cloud_smoke_infer_${t}_trace.jsonl" \
       --overwrite > "runs/cloud_smoke_infer_$t.log" 2>&1 || { tail -20 "runs/cloud_smoke_infer_$t.log"; die "rollout smoke test of $m"; }
 done
 

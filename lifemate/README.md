@@ -15,6 +15,7 @@ Pipeline: ASR (~0.8B) → chuẩn hoá số → Qwen3-4B agent (vòng lặp gọ
 | `lifemate/sft.py` | Sinh dữ liệu SFT (ChatML + mask loss) bằng đúng code prompt của lúc suy luận. Gộp call độc lập vào một bước, tăng cường: đổi tên app/tool, gỡ app → `[]`, thêm app gây nhiễu (cả app của public_test), transcript kiểu ASR. Lượt history tắt mặc định vì quy ước khác đáp án. |
 | `scripts/check_sft.py` | Kiểm tra prompt SFT khớp từng ký tự với prompt của agent thật, gộp bước không mất call (100 điểm), ranh giới token ổn định. |
 | `lifemate/train.py` | LoRA SFT bằng vòng lặp PyTorch thuần: chỉ tính logits ở vị trí có loss, gradient checkpointing, batch 1 + tích luỹ gradient, `--load-4bit` cho QLoRA. Dev loss tính trên **mọi** dòng dev (`--eval-n 0`). Ghi `ckpt/<tag>/log.jsonl`, `run_info.json` (hash dữ liệu, id dev, commit), lưu adapter mỗi 100 bước và `final/`. Không ghi đè checkpoint đã có. |
+| `lifemate/submit.py`, `docker/` | Giao diện nộp Docker của BTC: `/code/predict.sh`, notebook đo thời gian, `start_jupyter.sh` (mục "Nộp Docker" bên dưới). `lifemate/seeding.py`: seed cố định lúc suy luận. |
 | `lifemate/runinfo.py` | Provenance: sha256 file/thư mục/danh sách id, commit git, phiên bản thư viện, chặn ghi đè kết quả cũ. |
 | `lifemate/eval_loss.py` | Loss teacher-forced của một checkpoint trên mọi dòng của một file SFT (chỉ để chẩn đoán; chọn checkpoint bằng điểm rollout). |
 | `lifemate/compare.py` | So sánh theo cặp nhiều lượt đánh giá trên cùng tập mẫu: điểm, call-F1, hash, từng loại, latency, Δ kèm bootstrap 95%, lát cắt theo độ dài history và dải id. |
@@ -75,6 +76,46 @@ model đã SFT thì không cần.
 
 Thử nghiệm so sánh nên chạy: `--history tagged` (thêm 2.838 lượt history, có gắn nhãn trong system prompt),
 `--rename 0/2/4`, `--asr-file` (transcript ASR k-fold khi phần ASR có kết quả).
+
+## Nộp Docker: giao diện của BTC (`docker/`)
+
+Theo hướng dẫn Docker của BTC ngày 04/11 (tóm tắt có số trang: `docs/BTC_DOCKER_GUIDE_2026-11-06.md` trên `main`).
+Dockerfile và base image (CUDA 13.2, torch có sm_120) là việc của leader; ở đây chỉ có ba file đặt ở `/code`:
+
+| File trong repo | Chép tới | Việc |
+|---|---|---|
+| `docker/predict.sh` | `/code/predict.sh` | Tự tìm split trong `/data` (thư mục có `<tên>_tools_catalog.json`), chạy `scripts/predict.sh` với cấu hình nộp (PhoWhisper-ft `ckpt/asr_phoft/merged`, Qwen3-4B-Instruct-2507 NF4 + `ckpt/q4b4_all/final`, 25 s/mẫu, warm-up, seed 0), file trung gian để trong thư mục tạm (không ghi vào `/data`), ghi `/result/submission.jsonl` và in `load model: … ms` / `predict: N mẫu, … ms, trung bình … ms/mẫu`. Không cần biến môi trường. |
+| `docker/start_jupyter.sh` | `/code/start_jupyter.sh` | `jupyter lab --port 9777 --ip 0.0.0.0`, mật khẩu/token `zac2026`, `--allow-root --no-browser`, đúng lệnh của BTC; chạy bằng cùng Python với `predict.sh`. |
+| `docker/predict_notebook.ipynb` | `/code/predict_notebook.ipynb` | Cùng hệ thống nhưng **từng mẫu một** (đọc wav → ASR → agent, một `ToolEnv` mỗi mẫu). Các ô: seed → nạp model → đọc test case → warm-up → vòng lặp; ghi `/result/jupyter_submission.jsonl`. |
+
+Mỗi dòng kết quả có `time` (mili giây, số nguyên). Với `predict.sh`: giây ASR của mẫu (lấy từ file ASR) + giây agent.
+Với notebook: từ trước khi tạo `ToolEnv` và đọc audio tới khi có `state_hash`. Cả hai không tính thời gian nạp model và
+warm-up. Phần dùng chung (cấu hình, tìm split, chạy từng mẫu) nằm ở `lifemate/submit.py`; seed ở `lifemate/seeding.py`.
+
+**Cách leader chép vào image** (một trong hai):
+
+```bash
+# A. cả thư mục lifemate/ làm /code (ckpt/asr_phoft/merged và ckpt/q4b4_all/final đi kèm), rồi đưa ba file ra gốc
+cp -r lifemate/. /code/ && cp /code/docker/predict.sh /code/docker/start_jupyter.sh /code/docker/predict_notebook.ipynb /code/
+# B. giữ code ở /app/lifemate như image 05/11 (phải cập nhật lên nhánh này), /code chỉ có ba file
+cp lifemate/docker/predict.sh lifemate/docker/start_jupyter.sh lifemate/docker/predict_notebook.ipynb /code/
+```
+
+- Script tìm code ở thư mục của chính nó, rồi thư mục cha, rồi `/app/lifemate`; Python là `.venv/bin/python` trong thư
+  mục code nếu có, nếu không thì `python3`. `jupyterlab` phải cài vào **đúng Python đó** (`pip install jupyterlab`).
+- Base model `Qwen/Qwen3-4B-Instruct-2507` phải nằm trong cache Hugging Face của image (chạy offline).
+- Kiểm nhanh trong image, không nạp model: `DRY_RUN=1 bash /code/predict.sh` (in split, đường dẫn, model có hay chưa).
+- Đã thử `start_jupyter.sh` với jupyterlab 4.6.6 / jupyter_server 2.21.1: cờ `--NotebookApp.*` của BTC vẫn chạy (chỉ báo
+  deprecated), nhập `zac2026` ở ô "Password or token" là vào được.
+
+**Thử trên laptop** (từ thư mục `lifemate/`, cùng script; các biến chỉ để thử, bản nộp không cần):
+
+```bash
+DATA_ROOT=../data/train+public_test SPLIT=public_test RESULT_DIR=runs/code_pub WORK=runs/code_pub/work bash docker/predict.sh
+# notebook: mở bằng jupyter từ docker/, hoặc chạy không giao diện; IDS=<file id> để chạy một phần
+DATA_ROOT=../data/train+public_test SPLIT=public_test RESULT_DIR=runs/nb_pub WORK=runs/nb_pub/work jupyter lab docker/
+.venv/bin/python -m lifemate.tests.test_submit   # test CPU: split, cấu hình, trường time, notebook với model giả, script bọc
+```
 
 ## Giao kèo giữa ASR và agent
 

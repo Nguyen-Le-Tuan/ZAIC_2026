@@ -22,6 +22,7 @@ import numpy as np
 
 from . import runinfo
 from .data import DEFAULT_ROOT, load_split, write_jsonl
+from .seeding import DEFAULT_SEED, seed_everything
 
 SR = 16000
 MAX_S = 30.0  # Whisper's window; the data's longest wav is 17.1 s, so no long-form decoding is needed
@@ -79,6 +80,17 @@ class Whisper:
             self.torch.cuda.synchronize()
         return [t.strip() for t in self.processor.batch_decode(ids, skip_special_tokens=True)]
 
+    def warmup(self, seconds: float = 1.0, max_new_tokens: int = 8) -> None:
+        """One untimed decode of silence right after loading, so the first wav does not pay one-off GPU setup in
+        its timed seconds. Whisper pads every input to 30 s, so the encoder runs at full size; output is discarded."""
+        x = self.processor.feature_extractor([np.zeros(int(SR * seconds), dtype=np.float32)], sampling_rate=SR,
+                                             return_tensors="pt").input_features.to(self.device, self.dtype)
+        with self.torch.inference_mode():
+            self.model.generate(x, language="vi", task="transcribe", num_beams=1, do_sample=False,
+                                max_new_tokens=max_new_tokens)
+        if self.device == "cuda":
+            self.torch.cuda.synchronize()
+
 
 def transcribe(asr, root_split: Path, paths: list[str], batch_size: int) -> list[dict]:
     """Rows in the order of `paths`. Batches group wavs of similar length so short ones do not wait for long ones."""
@@ -107,12 +119,15 @@ def main():
     ap.add_argument("--device")
     ap.add_argument("--dtype", choices=["fp16", "bf16", "fp32"])
     ap.add_argument("--batch-size", type=int, default=16)
+    ap.add_argument("--no-warmup", action="store_true", help="skip the untimed decode of silence after loading")
+    ap.add_argument("--seed", type=int, default=DEFAULT_SEED)
     ap.add_argument("--out", required=True)
     ap.add_argument("--overwrite", action="store_true")
     a = ap.parse_args()
 
     meta_path = Path(a.out).with_suffix(".meta.json")
     runinfo.refuse_existing(a.out, meta_path, overwrite=a.overwrite)
+    seed_everything(a.seed)
     started = runinfo.now()
     items = load_split(a.split, a.root)
     if a.ids:
@@ -124,13 +139,18 @@ def main():
     t0 = time.monotonic()
     asr = Whisper(a.model, a.revision, a.device, a.dtype)
     load_s = time.monotonic() - t0
+    warmup_s = None
+    if not a.no_warmup:
+        tw = time.monotonic()
+        asr.warmup()
+        warmup_s = round(time.monotonic() - tw, 3)
     rows = transcribe(asr, Path(a.root) / a.split, paths, a.batch_size)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     write_jsonl(a.out, rows)
 
     secs = [r["seconds"] for r in rows]
     audio_s = sum(r["audio_s"] for r in rows)
-    timing = {"load_s": round(load_s, 1), "decode_s": round(sum(secs), 1), "audio_s": round(audio_s, 1),
+    timing = {"load_s": round(load_s, 1), "warmup_s": warmup_s, "decode_s": round(sum(secs), 1), "audio_s": round(audio_s, 1),
               "rtf": round(sum(secs) / max(audio_s, 1e-9), 4), "mean_s": round(sum(secs) / max(len(secs), 1), 4),
               "p95_s": round(runinfo.percentile(secs, .95), 4), "max_s": max(secs, default=0)}
     runinfo.write_json(meta_path, {

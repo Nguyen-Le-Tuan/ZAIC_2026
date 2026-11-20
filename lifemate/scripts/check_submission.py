@@ -3,8 +3,9 @@
   .venv/bin/python scripts/check_submission.py runs/e2e_public_turbo.jsonl --split public_test \
       --asr-file runs/e2e_public_turbo_asr.jsonl --trace runs/e2e_public_turbo_trace.jsonl --json runs/e2e_public_turbo_check.json
 
-Fails (exit 1) on: a line that is not {"id", "tool_calls": [{"name", "arguments"}...], "state_hash": 64 hex}, duplicate
-ids, ids missing from or foreign to the split. Also runs the organiser's schema check (python -m zaic_tools --validate);
+Fails (exit 1) on: a line that is not {"id", "tool_calls": [{"name", "arguments"}...], "state_hash": 64 hex} plus an
+optional "time" (integer ms >= 0, the organisers' per-sample time; required with --require-time), duplicate ids, ids
+missing from or foreign to the split. Also runs the organiser's schema check (python -m zaic_tools --validate);
 schema errors are reported, not fatal, because rejected calls are part of a valid submission (the agent normally
 validates before calling, so expect 0).
 """
@@ -22,12 +23,17 @@ from lifemate.runinfo import percentile, read_ids, write_json  # noqa: E402
 HASH = re.compile(r"^[0-9a-f]{64}$")
 
 
-def structure_errors(rows: list[dict], want: list[str]) -> list[str]:
+KEYS = {"id", "tool_calls", "state_hash"}
+
+
+def structure_errors(rows: list[dict], want: list[str], require_time: bool = False) -> list[str]:
     errs = []
     for i, r in enumerate(rows):
-        if set(r) != {"id", "tool_calls", "state_hash"}:
+        if set(r) not in (KEYS, KEYS | {"time"}) or (require_time and "time" not in r):
             errs.append(f"line {i + 1}: keys {sorted(r)}")
             continue
+        if "time" in r and (type(r["time"]) is not int or r["time"] < 0):
+            errs.append(f"{r['id']}: time must be integer milliseconds >= 0, got {r['time']!r}")
         if not isinstance(r["state_hash"], str) or not HASH.match(r["state_hash"]):
             errs.append(f"{r['id']}: bad state_hash")
         calls = r["tool_calls"]
@@ -83,17 +89,19 @@ def main():
     ap.add_argument("--asr-file")
     ap.add_argument("--trace")
     ap.add_argument("--json")
+    ap.add_argument("--require-time", action="store_true", help="every row must carry the organisers' time field")
     a = ap.parse_args()
     items = load_split(a.split, a.root)
     if a.ids:
         keep = set(read_ids(a.ids))
         items = [s for s in items if s["id"] in keep]
     rows = load_jsonl(a.submission)
-    errs = structure_errors(rows, [s["id"] for s in items])
+    errs = structure_errors(rows, [s["id"] for s in items], require_time=a.require_time)
     res = {"submission": a.submission, "split": a.split, "lines": len(rows), "expected": len(items),
            "errors": errs, "ok": not errs, "zaic_tools_validate": schema_check(a.submission, a.split, a.root),
            "calls": sum(len(r.get("tool_calls") or []) for r in rows),
-           "empty_rows": sum(not r.get("tool_calls") for r in rows)}
+           "empty_rows": sum(not r.get("tool_calls") for r in rows),
+           "rows_with_time": sum("time" in r for r in rows)}
     if a.asr_file and a.trace:
         res["timing"] = timing(items, a.asr_file, a.trace)
     print(json.dumps({k: v for k, v in res.items() if k != "errors"} | {"errors": errs[:10]}, ensure_ascii=False, indent=1))

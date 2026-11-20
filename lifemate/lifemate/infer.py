@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -23,6 +22,7 @@ from . import runinfo
 from .agent import Agent, HFBackend, OpenAICompletionsBackend, OracleBackend, PrefixBackend, VLLMBackend
 from .data import DEFAULT_ROOT, catalog_tools, load_catalog, load_jsonl, load_split, write_jsonl, zaic_tools
 from .prompt import build_messages, to_chatml
+from .seeding import seed_everything
 
 WARMUP_TEXT = "Xin chào."
 
@@ -75,7 +75,7 @@ def main():
 
     meta_path = Path(a.out).with_suffix(".meta.json")
     runinfo.refuse_existing(a.out, a.trace, meta_path, overwrite=a.overwrite)
-    random.seed(a.seed)
+    seed_everything(a.seed)
     started = runinfo.now()
     zt = zaic_tools(a.split, a.root)
     cat = load_catalog(a.split, a.root)
@@ -90,6 +90,7 @@ def main():
     asr_secs = {r["audio"]: float(r.get("seconds", 0.0)) for r in asr_rows}
 
     shared = None
+    tl = time.monotonic()
     if a.backend == "openai":
         shared = OpenAICompletionsBackend(a.model, a.base_url, max_tokens=a.max_tokens)
     elif a.backend == "vllm":
@@ -98,6 +99,9 @@ def main():
         shared = HFBackend(a.model, a.adapter, max_tokens=a.max_tokens, load_4bit=a.load_4bit)
     if shared is not None and a.assistant_prefix:
         shared = PrefixBackend(shared, a.assistant_prefix.encode().decode("unicode_escape"))
+    load_s = round(time.monotonic() - tl, 3) if shared is not None else None
+    if load_s is not None:
+        print(json.dumps({"load_s": load_s}), flush=True)
     warmup_s = None
     if shared is not None and hasattr(shared, "warmup") and items and not a.no_warmup:
         tw = time.monotonic()
@@ -114,6 +118,9 @@ def main():
         agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard)
         trace = agent.run(item, env, user_text, hist, t0=t0, spent=spent)
         row = {"id": item["id"], "tool_calls": env.get_tool_calls(), "state_hash": env.get_state_hash()}
+        # organisers' `time` (guide p. 6-7): integer ms of the sample, before its audio is read to its result;
+        # here the sample's ASR seconds (from the ASR file) plus this process's seconds from t0 to now
+        row["time"] = int((spent + time.monotonic() - t0) * 1000)
         extra = {"asr_seconds": round(spent, 3)} if a.text == "asr" else {}
         return row, {"id": item["id"], "text": user_text, **extra, **trace}
 
@@ -137,11 +144,12 @@ def main():
         "ids": runinfo.ids_digest(s["id"] for s in items), "ids_file_sha256": runinfo.sha256_file(a.ids) if a.ids else None,
         "model": a.model if a.backend != "oracle" else None, "adapter": adapter, "backend": a.backend,
         "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
-        "timing": timing, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
+        "timing": timing, "load_s": load_s, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
         "id_guard_blocked": sum(len(s.get("blocked", [])) for _, t in out for s in t["steps"]),
         "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit. "
                 "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget. "
-                "warmup_s: the one untimed generation after loading, counted in no sample"})
+                "warmup_s: the one untimed generation after loading, counted in no sample. load_s: building the "
+                "backend (model load). Rows carry time = int ms of ASR seconds + this process's seconds per sample"})
     print(json.dumps({"n": len(out), "out": a.out, **timing}))
 
 

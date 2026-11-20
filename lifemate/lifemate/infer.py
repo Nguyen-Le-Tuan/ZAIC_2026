@@ -8,6 +8,11 @@ Examples:
   python -m lifemate.infer --split train --ids splits/dev_random.txt --text oracle --backend oracle
   python -m lifemate.infer --split train --ids splits/dev_random.txt --text oracle --backend openai \
       --model Qwen/Qwen3-4B-Instruct-2507 --workers 16 --out runs/zs_dev.jsonl
+  # hosted chat API, reference runs only (never in Docker; key from ~/.zac_meta_env; spend capped, see api_backend):
+  set -a; source ~/.zac_meta_env; set +a
+  python -m lifemate.infer --split train --ids splits/dev_random.txt --text asr --asr-file asr/x.jsonl \
+      --backend api --api-model muse-spark-1.3 --effort minimal --max-usd 1 --time-budget 900 --workers 8 \
+      --out runs/api_dev.jsonl --trace runs/api_dev_trace.jsonl
 """
 from __future__ import annotations
 
@@ -54,17 +59,24 @@ def main():
     ap.add_argument("--limit", type=int)
     ap.add_argument("--text", choices=["oracle", "asr"], default="oracle")
     ap.add_argument("--asr-file")
-    ap.add_argument("--backend", choices=["oracle", "openai", "vllm", "hf"], default="oracle")
+    ap.add_argument("--backend", choices=["oracle", "openai", "vllm", "hf", "api"], default="oracle")
     ap.add_argument("--model", default="Qwen/Qwen3-4B-Instruct-2507")
     ap.add_argument("--adapter", help="LoRA adapter dir (hf backend)")
     ap.add_argument("--load-4bit", action="store_true", help="hf backend: load the base model in 4-bit")
     ap.add_argument("--assistant-prefix", default="", help=r"forced start of each assistant turn, e.g. '<think>\n\n</think>\n\n' for zero-shot hybrid Qwen3")
     ap.add_argument("--base-url", default="http://localhost:8000/v1")
-    ap.add_argument("--workers", type=int, default=1, help=">1 only with --backend openai (dev runs; final runs use 1)")
+    ap.add_argument("--workers", type=int, default=1, help=">1 only with --backend openai or api (dev runs; final runs use 1)")
+    ap.add_argument("--api-model", default="muse-spark-1.3", help="--backend api: hosted model (Meta Model API)")
+    ap.add_argument("--effort", default="minimal", help="--backend api: reasoning_effort")
+    ap.add_argument("--max-usd", type=float, help="--backend api: spend cap of this run (its ledger)")
+    ap.add_argument("--total-usd", type=float, default=30.0, help="--backend api: cap on all ledgers in gen/ together")
+    ap.add_argument("--ledger", help="--backend api: usage ledger (default gen/agent_<out stem>_usage.jsonl)")
+    ap.add_argument("--cache", help="--backend api: reply cache (default gen/agent_<out stem>_cache.jsonl)")
     ap.add_argument("--time-budget", type=float, default=25.0,
                     help="seconds per sample, ASR included (with --text asr, the ASR file's per-wav seconds count)")
     ap.add_argument("--max-tokens", type=int, default=512, help="cap on generated tokens per step (gold steps: max 200)")
     ap.add_argument("--no-id-guard", action="store_true", help="do not block write calls with IDs never shown")
+    ap.add_argument("--drop-params", help="JSON from lifemate.rare_params: optional params removed from every call")
     ap.add_argument("--no-warmup", action="store_true",
                     help="skip the untimed warm-up generation after loading (hf/vllm backends)")
     ap.add_argument("--out", default="runs/submission.jsonl")
@@ -96,6 +108,14 @@ def main():
         shared = VLLMBackend(a.model, max_tokens=a.max_tokens)
     elif a.backend == "hf":
         shared = HFBackend(a.model, a.adapter, max_tokens=a.max_tokens, load_4bit=a.load_4bit)
+    elif a.backend == "api":
+        from .api_backend import ChatAPIBackend
+        if a.max_usd is None:
+            raise SystemExit("--backend api needs --max-usd")
+        stem = Path(a.out).stem
+        shared = ChatAPIBackend(a.api_model, a.ledger or f"gen/agent_{stem}_usage.jsonl",
+                                a.cache or f"gen/agent_{stem}_cache.jsonl", a.max_usd, a.total_usd, a.effort,
+                                purpose=f"agent {a.split} -> {a.out}")
     if shared is not None and a.assistant_prefix:
         shared = PrefixBackend(shared, a.assistant_prefix.encode().decode("unicode_escape"))
     warmup_s = None
@@ -105,13 +125,17 @@ def main():
         warmup_s = round(time.monotonic() - tw, 3)
         print(json.dumps({"warmup_s": warmup_s}), flush=True)
 
+    drop = None
+    if a.drop_params:
+        drop = {(r["tool"], r["param"]) for r in json.loads(Path(a.drop_params).read_text())["params"]}
+
     def infer(item):
         t0 = time.monotonic()
         env = zt.ToolEnv(a.split, item["id"], root=str(a.root))  # exactly one environment per sample
         llm = OracleBackend(item["label"]["tool_calls"]) if a.backend == "oracle" else shared
         user_text, hist = texts_for(item, a.text, asr)
         spent = asr_seconds_for(item, asr_secs) if a.text == "asr" else 0.0
-        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard)
+        agent = Agent(llm, tools, apps, time_budget=a.time_budget, id_guard=not a.no_id_guard, drop_params=drop)
         trace = agent.run(item, env, user_text, hist, t0=t0, spent=spent)
         row = {"id": item["id"], "tool_calls": env.get_tool_calls(), "state_hash": env.get_state_hash()}
         extra = {"asr_seconds": round(spent, 3)} if a.text == "asr" else {}
@@ -135,14 +159,18 @@ def main():
     runinfo.write_json(meta_path, {
         "kind": "infer", "started": started, "finished": runinfo.now(), "args": vars(a),
         "ids": runinfo.ids_digest(s["id"] for s in items), "ids_file_sha256": runinfo.sha256_file(a.ids) if a.ids else None,
-        "model": a.model if a.backend != "oracle" else None, "adapter": adapter, "backend": a.backend,
+        "model": {"oracle": None, "api": a.api_model}.get(a.backend, a.model),
+        "api": shared.summary() if a.backend == "api" else None, "adapter": adapter, "backend": a.backend,
         "code_sha256": runinfo.code_digest(), "git": runinfo.git_state(), "env": runinfo.env_info(),
         "timing": timing, "warmup_s": warmup_s, "stops": dict(Counter(t["stop"] for _, t in out)),
         "id_guard_blocked": sum(len(s.get("blocked", [])) for _, t in out for s in t["steps"]),
+        "drop_params": {"file": a.drop_params, "sha256": runinfo.sha256_file(a.drop_params), "n": len(drop),
+                        "calls_changed": sum(len(s.get("dropped", [])) for _, t in out for s in t["steps"])}
+        if a.drop_params else None,
         "note": "seconds are wall time per sample on this machine (agent only, no ASR); not the A30 limit. "
                 "With --text asr the sample's ASR seconds (trace asr_seconds) also count against --time-budget. "
                 "warmup_s: the one untimed generation after loading, counted in no sample"})
-    print(json.dumps({"n": len(out), "out": a.out, **timing}))
+    print(json.dumps({"n": len(out), "out": a.out, **timing, **({"api": shared.summary()} if a.backend == "api" else {})}))
 
 
 if __name__ == "__main__":
